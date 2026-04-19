@@ -1,0 +1,28 @@
+<Window x:Class="TtsCommunicationTool.App.SplashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        SizeToContent="WidthAndHeight">
+
+    <Border CornerRadius="16"
+            Background="#1E1E2E"
+            BorderBrush="#45475A"
+            BorderThickness="1"
+            Padding="0">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" BlurRadius="24" Opacity="0.6" ShadowDepth="4"/>
+        </Border.Effect>
+        <Grid>
+            <Image Source="/Splashscreen.png"
+                   Stretch="Uniform"
+                   MaxWidth="480"
+                   MaxHeight="320"/>
+        </Grid>
+    </Border>
+</Window>

@@ -50,7 +50,10 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         set
         {
             if (SetField(ref _inputText, value))
+            {
+                OnPropertyChanged(nameof(CharacterCount));
                 CommandManager.InvalidateRequerySuggested();
+            }
         }
     }
 
@@ -77,6 +80,13 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
 
     private async Task SendAsync()
     {
+        // Block if any audio is already playing (phrase or previous send)
+        if (_playbackState.IsPlaying || _audioRouter.IsPlaying)
+        {
+            StatusText = "Audio is still playing...";
+            return;
+        }
+
         var text = TextValidation.Sanitize(InputText);
         var (valid, error) = TextValidation.Validate(text);
         if (!valid)
@@ -91,7 +101,11 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
 
         try
         {
-            var result = await _tts.SynthesizeAsync(new TtsRequest { Text = text });
+            var result = await _tts.SynthesizeAsync(new TtsRequest
+            {
+                Text = text,
+                VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId
+            });
             if (!result.Success)
             {
                 StatusText = $"TTS error: {result.ErrorMessage}";
@@ -124,6 +138,67 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         {
             IsSending = false;
         }
+    }
+
+    /// <summary>
+    /// Captures the current text and starts TTS generation + playback asynchronously.
+    /// The overlay can close immediately after calling this.
+    /// </summary>
+    public void FireAndForgetSend()
+    {
+        // Block if any audio is already playing (phrase or previous send)
+        if (_playbackState.IsPlaying || _audioRouter.IsPlaying)
+        {
+            _log.Debug("FireAndForgetSend blocked — audio already playing.");
+            return;
+        }
+
+        var text = TextValidation.Sanitize(InputText);
+        var (valid, _) = TextValidation.Validate(text);
+        if (!valid) return;
+
+        InputText = string.Empty;
+        _log.Info($"Fire-and-forget sending text: {text}");
+
+        // Mark playing BEFORE Task.Run so the overlay coordinator sees it immediately
+        // and blocks re-open during the TTS generation + playback window.
+        _playbackState.IsPlaying = true;
+        _playbackState.CurrentText = text;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var result = await _tts.SynthesizeAsync(new TtsRequest
+                {
+                    Text = text,
+                    VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId
+                });
+                if (!result.Success)
+                {
+                    _log.Error($"TTS failed: {result.ErrorMessage}");
+                    _playbackState.Reset();
+                    return;
+                }
+
+                var cfg = _config.CurrentConfig;
+                var playback = new PlaybackRequest
+                {
+                    AudioData = result.AudioData!,
+                    SampleRate = result.SampleRate,
+                    Channels = result.Channels,
+                    BitsPerSample = result.BitsPerSample
+                };
+
+                await _audioRouter.PlayAsync(playback,
+                    cfg.AudioSettings.MonitorOutputDeviceId,
+                    cfg.AudioSettings.SecondaryOutputDeviceId);
+            }
+            catch (Exception ex)
+            {
+                _log.Error("Fire-and-forget send failed", ex);
+            }
+        });
     }
 
     private void Stop()

@@ -10,7 +10,11 @@ public sealed class SettingsViewModel : ViewModelBase
 {
     private readonly IConfigService _config;
     private readonly ILoggingService _log;
+    private readonly IPhraseCacheService _phraseCache;
+    private readonly IPhraseService _phraseService;
     private int _selectedTabIndex;
+    private bool _isRegenerating;
+    private string _regenerationStatus = string.Empty;
 
     public GeneralSettingsViewModel General { get; }
     public HotkeySettingsViewModel Hotkeys { get; }
@@ -25,6 +29,18 @@ public sealed class SettingsViewModel : ViewModelBase
         set => SetField(ref _selectedTabIndex, value);
     }
 
+    public bool IsRegenerating
+    {
+        get => _isRegenerating;
+        private set => SetField(ref _isRegenerating, value);
+    }
+
+    public string RegenerationStatus
+    {
+        get => _regenerationStatus;
+        private set => SetField(ref _regenerationStatus, value);
+    }
+
     public bool IsFirstRun { get; set; }
 
     public ICommand SaveCommand { get; }
@@ -35,6 +51,8 @@ public sealed class SettingsViewModel : ViewModelBase
     public SettingsViewModel(
         IConfigService config,
         ILoggingService log,
+        IPhraseCacheService phraseCache,
+        IPhraseService phraseService,
         GeneralSettingsViewModel general,
         HotkeySettingsViewModel hotkeys,
         AudioSettingsViewModel audio,
@@ -44,6 +62,8 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         _config = config;
         _log = log;
+        _phraseCache = phraseCache;
+        _phraseService = phraseService;
         General = general;
         Hotkeys = hotkeys;
         Audio = audio;
@@ -70,6 +90,8 @@ public sealed class SettingsViewModel : ViewModelBase
     private async Task SaveAsync()
     {
         var cfg = _config.CurrentConfig;
+        var previousVoiceId = cfg.VoiceSettings.SelectedVoiceId;
+
         General.ApplyTo(cfg.GeneralSettings);
         Hotkeys.ApplyTo(cfg.HotkeySettings);
         Audio.ApplyTo(cfg.AudioSettings);
@@ -78,6 +100,33 @@ public sealed class SettingsViewModel : ViewModelBase
 
         await _config.SaveAsync(cfg);
         _log.Info("Settings saved.");
+
+        // Detect voice change — regenerate all phrase caches with visible progress
+        var newVoiceId = cfg.VoiceSettings.SelectedVoiceId;
+        if (!string.Equals(previousVoiceId, newVoiceId, StringComparison.OrdinalIgnoreCase))
+        {
+            var phrases = _phraseService.GetAll();
+            if (phrases.Count > 0)
+            {
+                _log.Info($"Voice changed from '{previousVoiceId}' to '{newVoiceId}'. Regenerating {phrases.Count} phrase caches...");
+                IsRegenerating = true;
+                try
+                {
+                    for (int i = 0; i < phrases.Count; i++)
+                    {
+                        RegenerationStatus = $"Regenerating phrase {i + 1} of {phrases.Count}...";
+                        await _phraseCache.GenerateCacheAsync(phrases[i]);
+                    }
+                }
+                finally
+                {
+                    IsRegenerating = false;
+                    RegenerationStatus = string.Empty;
+                }
+                _log.Info("Phrase cache regeneration complete.");
+            }
+        }
+
         Saved?.Invoke(this, EventArgs.Empty);
     }
 

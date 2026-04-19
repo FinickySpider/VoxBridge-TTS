@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using TtsCommunicationTool.Core.Models;
@@ -16,6 +17,12 @@ public partial class SettingsWindow : Window
     {
         DataContext = vm;
         vm.Saved += (_, _) => Close();
+        Closing += (_, e) =>
+        {
+            // Block close while phrase cache regeneration is in progress
+            if (vm.IsRegenerating)
+                e.Cancel = true;
+        };
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
@@ -54,6 +61,16 @@ public partial class SettingsWindow : Window
 
         if (DataContext is SettingsViewModel vm)
             vm.Hotkeys.SetStopHotkey(binding);
+    }
+
+    private void PhraseHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        e.Handled = true;
+        var binding = CaptureHotkey(e);
+        if (binding is null) return;
+
+        if (DataContext is SettingsViewModel vm)
+            vm.Phrases.SetSelectedPhraseHotkey(binding);
     }
 
     /// <summary>

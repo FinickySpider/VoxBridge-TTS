@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,12 +11,28 @@ namespace TtsCommunicationTool.App;
 
 public partial class App : System.Windows.Application
 {
+    private static Mutex? _singleInstanceMutex;
     private ServiceProvider? _serviceProvider;
     private TrayIconManager? _trayManager;
+    private SettingsWindow? _settingsWindow;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // Single instance check
+        const string mutexName = "Global\\TtsCommunicationTool_SingleInstance";
+        _singleInstanceMutex = new Mutex(true, mutexName, out var createdNew);
+        if (!createdNew)
+        {
+            System.Windows.MessageBox.Show(
+                "TTS Communication Tool is already running.",
+                "Already Running",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            Shutdown();
+            return;
+        }
 
         // Global exception handlers
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
@@ -33,6 +50,14 @@ public partial class App : System.Windows.Application
         var config = _serviceProvider.GetRequiredService<IConfigService>();
         await config.LoadAsync();
         log.Info("Configuration loaded.");
+
+        // Show splash screen if enabled
+        SplashWindow? splash = null;
+        if (config.CurrentConfig.GeneralSettings.ShowSplashScreen)
+        {
+            splash = new SplashWindow();
+            splash.ShowSplash();
+        }
 
         // Check for config recovery notification
         var jsonConfig = config as JsonConfigService;
@@ -60,6 +85,24 @@ public partial class App : System.Windows.Application
             notify.ShowError($"TTS engine failed to initialize: {ex.Message}");
         }
 
+        // Wire up phrase cache service (late-bind to avoid circular DI)
+        var phraseService = _serviceProvider.GetRequiredService<IPhraseService>() as Infrastructure.Phrases.PhraseService;
+        var phraseCache = _serviceProvider.GetRequiredService<IPhraseCacheService>();
+        phraseService?.SetCacheService(phraseCache);
+
+        // Pre-generate cache for any phrases that don't have cached audio yet
+        if (tts.IsInitialized)
+        {
+            _ = Task.Run(async () =>
+            {
+                foreach (var phrase in _serviceProvider.GetRequiredService<IPhraseService>().GetAll())
+                {
+                    if (!phraseCache.HasCache(phrase.Id))
+                        await phraseCache.GenerateCacheAsync(phrase);
+                }
+            });
+        }
+
         // Set up tray icon
         _trayManager = _serviceProvider.GetRequiredService<TrayIconManager>();
         _trayManager.Initialize();
@@ -73,6 +116,9 @@ public partial class App : System.Windows.Application
 
         log.Info("Application started successfully.");
 
+        // Close splash now that everything is loaded
+        splash?.CloseNow();
+
         // First-run: auto-open settings
         if (isFirstRun)
         {
@@ -85,11 +131,26 @@ public partial class App : System.Windows.Application
     {
         if (_serviceProvider is null) return;
 
+        // Singleton: if settings already open, just activate
+        if (_settingsWindow is { IsVisible: true })
+        {
+            _settingsWindow.Activate();
+            return;
+        }
+
         var vm = _serviceProvider.GetRequiredService<SettingsViewModel>();
         vm.IsFirstRun = isFirstRun;
 
-        var window = new SettingsWindow(vm);
-        window.Show();
+        // Refresh all hotkeys after settings are saved
+        vm.Saved += (_, _) =>
+        {
+            var host = _serviceProvider.GetRequiredService<IHotkeyHost>();
+            host.RefreshAllHotkeys();
+        };
+
+        _settingsWindow = new SettingsWindow(vm);
+        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow.Show();
     }
 
     private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -126,6 +187,14 @@ public partial class App : System.Windows.Application
 
         _trayManager?.Dispose();
         _serviceProvider?.Dispose();
+
+        if (_singleInstanceMutex is not null)
+        {
+            _singleInstanceMutex.ReleaseMutex();
+            _singleInstanceMutex.Dispose();
+            _singleInstanceMutex = null;
+        }
+
         base.OnExit(e);
     }
 }

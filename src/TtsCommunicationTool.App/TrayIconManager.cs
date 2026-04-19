@@ -25,13 +25,26 @@ public sealed class TrayIconManager : IDisposable
         _notifyIcon = new NotifyIcon
         {
             Text = "TTS Communication Tool",
-            Icon = SystemIcons.Application,
+            Icon = LoadAppIcon(),
             Visible = true,
             ContextMenuStrip = CreateContextMenu()
         };
 
-        _notifyIcon.DoubleClick += (_, _) => _overlay.ToggleOverlay();
+        _notifyIcon.DoubleClick += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
         _log.Info("Tray icon created.");
+    }
+
+    private static Icon LoadAppIcon()
+    {
+        try
+        {
+            var uri = new Uri("pack://application:,,,/icon.ico", UriKind.Absolute);
+            var stream = System.Windows.Application.GetResourceStream(uri)?.Stream;
+            if (stream is not null)
+                return new Icon(stream);
+        }
+        catch { /* fall through to default */ }
+        return SystemIcons.Application;
     }
 
     private ContextMenuStrip CreateContextMenu()

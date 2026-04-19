@@ -83,6 +83,8 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
 
     public void LoadFrom(VoiceSettings s)
     {
+        // Reload voice list in case TTS was initialized after construction
+        LoadVoices();
         SelectedVoiceId = s.SelectedVoiceId;
         EngineName = s.EngineName;
     }

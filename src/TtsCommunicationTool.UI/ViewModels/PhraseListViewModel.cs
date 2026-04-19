@@ -9,10 +9,12 @@ namespace TtsCommunicationTool.UI.ViewModels;
 public sealed class PhraseListViewModel : ViewModelBase
 {
     private readonly IPhraseService _phraseService;
+    private readonly IPhraseCacheService _phraseCache;
     private readonly ITtsService _tts;
     private readonly IAudioRouterService _audioRouter;
     private readonly IConfigService _config;
     private readonly ILoggingService _log;
+    private readonly IHotkeyHost _hotkeyHost;
     private PhraseItem? _selectedPhrase;
 
     public ObservableCollection<PhraseItem> Phrases { get; } = new();
@@ -20,13 +22,35 @@ public sealed class PhraseListViewModel : ViewModelBase
     public PhraseItem? SelectedPhrase
     {
         get => _selectedPhrase;
-        set => SetField(ref _selectedPhrase, value);
+        set
+        {
+            if (SetField(ref _selectedPhrase, value))
+                OnPropertyChanged(nameof(SelectedPhraseHotkeyDisplay));
+        }
+    }
+
+    public string SelectedPhraseHotkeyDisplay
+    {
+        get
+        {
+            if (SelectedPhrase?.Hotkey is not { } hk)
+                return "(none)";
+
+            var parts = new List<string>();
+            if (hk.Ctrl) parts.Add("Ctrl");
+            if (hk.Alt) parts.Add("Alt");
+            if (hk.Shift) parts.Add("Shift");
+            if (hk.Win) parts.Add("Win");
+            if (!string.IsNullOrEmpty(hk.Key)) parts.Add(hk.Key);
+            return parts.Count > 0 ? string.Join("+", parts) : "(none)";
+        }
     }
 
     public ICommand AddCommand { get; }
     public ICommand DeleteCommand { get; }
     public ICommand PlayCommand { get; }
     public ICommand RefreshCommand { get; }
+    public ICommand ClearHotkeyCommand { get; }
 
     // For inline editing
     private string _editName = string.Empty;
@@ -46,21 +70,26 @@ public sealed class PhraseListViewModel : ViewModelBase
 
     public PhraseListViewModel(
         IPhraseService phraseService,
+        IPhraseCacheService phraseCache,
         ITtsService tts,
         IAudioRouterService audioRouter,
         IConfigService config,
-        ILoggingService log)
+        ILoggingService log,
+        IHotkeyHost hotkeyHost)
     {
         _phraseService = phraseService;
+        _phraseCache = phraseCache;
         _tts = tts;
         _audioRouter = audioRouter;
         _config = config;
         _log = log;
+        _hotkeyHost = hotkeyHost;
 
         AddCommand = new RelayCommand(AddPhrase);
         DeleteCommand = new RelayCommand(DeleteSelected, () => SelectedPhrase is not null);
         PlayCommand = new AsyncRelayCommand(PlaySelectedAsync, () => SelectedPhrase is not null);
         RefreshCommand = new RelayCommand(Refresh);
+        ClearHotkeyCommand = new RelayCommand(ClearSelectedHotkey, () => SelectedPhrase is not null);
 
         Refresh();
     }
@@ -101,14 +130,49 @@ public sealed class PhraseListViewModel : ViewModelBase
             Refresh();
     }
 
+    public void SetSelectedPhraseHotkey(HotkeyBinding binding)
+    {
+        if (SelectedPhrase is null) return;
+        SelectedPhrase.Hotkey = binding;
+        SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
+        _phraseService.Update(SelectedPhrase);
+        _hotkeyHost.RegisterPhraseHotkeys();
+        OnPropertyChanged(nameof(SelectedPhraseHotkeyDisplay));
+        Refresh();
+    }
+
+    private void ClearSelectedHotkey()
+    {
+        if (SelectedPhrase is null) return;
+        SelectedPhrase.Hotkey = null;
+        SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
+        _phraseService.Update(SelectedPhrase);
+        _hotkeyHost.RegisterPhraseHotkeys();
+        OnPropertyChanged(nameof(SelectedPhraseHotkeyDisplay));
+        Refresh();
+    }
+
     private async Task PlaySelectedAsync()
     {
         if (SelectedPhrase is null) return;
 
+        var cfg = _config.CurrentConfig;
+
+        // Try cached audio first
+        var cached = _phraseCache.GetCachedAudio(SelectedPhrase.Id);
+        if (cached is not null)
+        {
+            await _audioRouter.PlayAsync(cached,
+                cfg.AudioSettings.MonitorOutputDeviceId,
+                cfg.AudioSettings.SecondaryOutputDeviceId);
+            return;
+        }
+
+        // Fallback: generate on-the-fly and cache it
         var ttsResult = await _tts.SynthesizeAsync(new TtsRequest
         {
             Text = SelectedPhrase.Text,
-            VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId
+            VoiceId = cfg.VoiceSettings.SelectedVoiceId
         });
 
         if (!ttsResult.Success || ttsResult.AudioData is null)
@@ -116,6 +180,9 @@ public sealed class PhraseListViewModel : ViewModelBase
             _log.Warn($"Phrase playback failed: {ttsResult.ErrorMessage}");
             return;
         }
+
+        // Cache for next time
+        _ = _phraseCache.GenerateCacheAsync(SelectedPhrase);
 
         var playback = new PlaybackRequest
         {
@@ -125,7 +192,6 @@ public sealed class PhraseListViewModel : ViewModelBase
             BitsPerSample = ttsResult.BitsPerSample
         };
 
-        var cfg = _config.CurrentConfig;
         await _audioRouter.PlayAsync(playback,
             cfg.AudioSettings.MonitorOutputDeviceId,
             cfg.AudioSettings.SecondaryOutputDeviceId);

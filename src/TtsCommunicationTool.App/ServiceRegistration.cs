@@ -27,11 +27,13 @@ public static class ServiceRegistration
         services.AddSingleton<IAudioRouterService, DualOutputAudioRouter>();
         services.AddSingleton<ITtsService, KokoroTtsService>();
         services.AddSingleton<IPhraseService, PhraseService>();
+        services.AddSingleton<IPhraseCacheService, PhraseCacheService>();
         services.AddSingleton<INotificationService, WpfNotificationService>();
 
         // App-level services
         services.AddSingleton<TrayIconManager>();
         services.AddSingleton<HotkeyHostWindow>();
+        services.AddSingleton<IHotkeyHost>(sp => sp.GetRequiredService<HotkeyHostWindow>());
         services.AddSingleton<OverlayCoordinator>();
         services.AddSingleton<IOverlayCoordinator>(sp => sp.GetRequiredService<OverlayCoordinator>());
 

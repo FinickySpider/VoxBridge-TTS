@@ -84,6 +84,7 @@ public sealed class GlobalHotkeyService : IHotkeyService
     private static uint KeyToVk(string key)
     {
         // Map common key names to virtual key codes
+        // WPF Key enum ToString() values and common aliases
         return key.ToUpperInvariant() switch
         {
             "SPACE" => 0x20,
@@ -95,8 +96,8 @@ public sealed class GlobalHotkeyService : IHotkeyService
             "INSERT" or "INS" => 0x2D,
             "HOME" => 0x24,
             "END" => 0x23,
-            "PAGEUP" or "PGUP" => 0x21,
-            "PAGEDOWN" or "PGDN" => 0x22,
+            "PAGEUP" or "PGUP" or "PRIOR" => 0x21,
+            "PAGEDOWN" or "PGDN" or "NEXT" => 0x22,
             "UP" => 0x26,
             "DOWN" => 0x28,
             "LEFT" => 0x25,
@@ -104,7 +105,34 @@ public sealed class GlobalHotkeyService : IHotkeyService
             "F1" => 0x70, "F2" => 0x71, "F3" => 0x72, "F4" => 0x73,
             "F5" => 0x74, "F6" => 0x75, "F7" => 0x76, "F8" => 0x77,
             "F9" => 0x78, "F10" => 0x79, "F11" => 0x7A, "F12" => 0x7B,
-            "OEM_3" or "TILDE" or "`" => 0xC0,
+            // Number keys (WPF Key.D0-D9 ToString gives "D0"-"D9")
+            "D0" => 0x30, "D1" => 0x31, "D2" => 0x32, "D3" => 0x33,
+            "D4" => 0x34, "D5" => 0x35, "D6" => 0x36, "D7" => 0x37,
+            "D8" => 0x38, "D9" => 0x39,
+            // NumPad keys (WPF Key.NumPadX ToString)
+            "NUMPAD0" => 0x60, "NUMPAD1" => 0x61, "NUMPAD2" => 0x62,
+            "NUMPAD3" => 0x63, "NUMPAD4" => 0x64, "NUMPAD5" => 0x65,
+            "NUMPAD6" => 0x66, "NUMPAD7" => 0x67, "NUMPAD8" => 0x68,
+            "NUMPAD9" => 0x69,
+            "MULTIPLY" => 0x6A, "ADD" => 0x6B, "SUBTRACT" => 0x6D,
+            "DECIMAL" => 0x6E, "DIVIDE" => 0x6F,
+            // OEM keys (WPF Key.OemX ToString values)
+            "OEM_3" or "OEMTILDE" or "`" => 0xC0,
+            "OEMMINUS" or "OEM_MINUS" => 0xBD,
+            "OEMPLUS" or "OEM_PLUS" => 0xBB,
+            "OEMOPENBRACKETS" => 0xDB,
+            "OEM6" or "OEMCLOSEBRACKETS" => 0xDD,
+            "OEM5" or "OEMPIPE" => 0xDC,
+            "OEM1" or "OEMSEMICOLON" => 0xBA,
+            "OEMQUOTES" or "OEM7" => 0xDE,
+            "OEMCOMMA" => 0xBC,
+            "OEMPERIOD" => 0xBE,
+            "OEMQUESTION" or "OEM2" => 0xBF,
+            // Caps/Num/Scroll lock
+            "CAPITAL" or "CAPSLOCK" => 0x14,
+            "NUMLOCK" => 0x90,
+            "SCROLL" or "SCROLLLOCK" => 0x91,
+            // Single printable char (A-Z, 0-9)
             var k when k.Length == 1 && char.IsLetterOrDigit(k[0]) => (uint)char.ToUpper(k[0]),
             _ => 0
         };

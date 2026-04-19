@@ -4,22 +4,9 @@ namespace TtsCommunicationTool.UI.ViewModels;
 
 public sealed class GeneralSettingsViewModel : ViewModelBase
 {
-    private bool _closeToTray;
-    private bool _minimizeToTray;
     private bool _startWithWindows;
     private bool _showNotifications;
-
-    public bool CloseToTray
-    {
-        get => _closeToTray;
-        set => SetField(ref _closeToTray, value);
-    }
-
-    public bool MinimizeToTray
-    {
-        get => _minimizeToTray;
-        set => SetField(ref _minimizeToTray, value);
-    }
+    private bool _showSplashScreen;
 
     public bool StartWithWindows
     {
@@ -33,19 +20,23 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         set => SetField(ref _showNotifications, value);
     }
 
+    public bool ShowSplashScreen
+    {
+        get => _showSplashScreen;
+        set => SetField(ref _showSplashScreen, value);
+    }
+
     public void LoadFrom(GeneralSettings s)
     {
-        CloseToTray = s.CloseToTray;
-        MinimizeToTray = s.MinimizeToTray;
         StartWithWindows = s.StartWithWindows;
         ShowNotifications = s.ShowNotifications;
+        ShowSplashScreen = s.ShowSplashScreen;
     }
 
     public void ApplyTo(GeneralSettings s)
     {
-        s.CloseToTray = CloseToTray;
-        s.MinimizeToTray = MinimizeToTray;
         s.StartWithWindows = StartWithWindows;
         s.ShowNotifications = ShowNotifications;
+        s.ShowSplashScreen = ShowSplashScreen;
     }
 }

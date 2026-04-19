@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:TtsCommunicationTool.UI.ViewModels"
+        xmlns:conv="clr-namespace:TtsCommunicationTool.UI.Converters"
         Title="Settings — TTS Communication Tool"
         Width="680" Height="540"
         WindowStartupLocation="CenterScreen"
@@ -10,6 +11,11 @@
         ResizeMode="CanResizeWithGrip">
 
     <Window.Resources>
+        <conv:EmptyStringToVisibilityConverter x:Key="EmptyToVisibleConverter"/>
+        <conv:HotkeyBindingDisplayConverter x:Key="HotkeyDisplayConverter"/>
+        <conv:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+
         <!-- Shared styles for dark-themed controls -->
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="FontSize" Value="16"/>
@@ -48,6 +54,95 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="FontSize" Value="13"/>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Background" Value="#2B2B3D"/>
+                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                        <Setter Property="Padding" Value="8,6"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter Property="Background" Value="#45475A"/>
+                                <Setter Property="Foreground" Value="#CDD6F4"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#45475A"/>
+                                <Setter Property="Foreground" Value="#CDD6F4"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          Focusable="False"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="4">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="20"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Path x:Name="Arrow" Grid.Column="1"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                      Data="M 0 0 L 4 4 L 8 0 Z"
+                                                      Fill="#6C7086"/>
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="ContentSite"
+                                              IsHitTestVisible="False"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              Margin="10,3,23,3"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left">
+                                <ContentPresenter.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                    </Style>
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
+                            <Popup x:Name="Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Grid x:Name="DropDown"
+                                      SnapsToDevicePixels="True"
+                                      MinWidth="{TemplateBinding ActualWidth}"
+                                      MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder"
+                                            Background="#2B2B3D"
+                                            BorderBrush="#45475A"
+                                            BorderThickness="1"
+                                            CornerRadius="4"/>
+                                    <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="ActionButton" TargetType="Button">
@@ -177,20 +272,16 @@
                     <StackPanel Margin="8,0">
                         <TextBlock Text="General" Style="{StaticResource SectionHeader}"/>
 
-                        <CheckBox Content="Close to system tray instead of exiting"
-                                  IsChecked="{Binding General.CloseToTray}"
-                                  Style="{StaticResource SettingsCheckBox}"/>
-
-                        <CheckBox Content="Minimize to system tray"
-                                  IsChecked="{Binding General.MinimizeToTray}"
-                                  Style="{StaticResource SettingsCheckBox}"/>
-
                         <CheckBox Content="Start with Windows"
                                   IsChecked="{Binding General.StartWithWindows}"
                                   Style="{StaticResource SettingsCheckBox}"/>
 
                         <CheckBox Content="Show toast notifications"
                                   IsChecked="{Binding General.ShowNotifications}"
+                                  Style="{StaticResource SettingsCheckBox}"/>
+
+                        <CheckBox Content="Show splash screen on startup"
+                                  IsChecked="{Binding General.ShowSplashScreen}"
                                   Style="{StaticResource SettingsCheckBox}"/>
                     </StackPanel>
                 </ScrollViewer>
@@ -390,13 +481,42 @@
                              Foreground="#CDD6F4"
                              BorderBrush="#45475A"
                              Margin="8,0">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="#CDD6F4"/>
+                                <Setter Property="Padding" Value="4,2"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#45475A"/>
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#3B3B55"/>
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Margin="4,2">
-                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"/>
-                                    <TextBlock Text="{Binding Text}" Foreground="#6C7086" FontSize="11"
-                                               TextTrimming="CharacterEllipsis" MaxWidth="500"/>
-                                </StackPanel>
+                                <Grid Margin="4,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" Foreground="#CDD6F4"/>
+                                        <TextBlock Text="{Binding Text}" Foreground="#6C7086" FontSize="11"
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="400"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Hotkey, Converter={StaticResource HotkeyDisplayConverter}}"
+                                               Foreground="#89B4FA" FontSize="11"
+                                               VerticalAlignment="Center"
+                                               Margin="8,0,0,0"/>
+                                </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
@@ -408,21 +528,26 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox Text="{Binding Phrases.EditName, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource SettingsTextBox}"
-                                     Margin="0,0,4,0">
-                                <TextBox.Tag>
-                                    <sys:String xmlns:sys="clr-namespace:System;assembly=mscorlib">Phrase name...</sys:String>
-                                </TextBox.Tag>
-                            </TextBox>
-                            <TextBox Grid.Column="1"
-                                     Text="{Binding Phrases.EditText, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource SettingsTextBox}"
-                                     Margin="4,0,0,0">
-                                <TextBox.Tag>
-                                    <sys:String xmlns:sys="clr-namespace:System;assembly=mscorlib">Phrase text...</sys:String>
-                                </TextBox.Tag>
-                            </TextBox>
+                            <Grid Margin="0,0,4,0">
+                                <TextBox x:Name="PhraseNameBox"
+                                         Text="{Binding Phrases.EditName, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource SettingsTextBox}"/>
+                                <TextBlock Text="Phrase name..."
+                                           Foreground="#6C7086" FontSize="13"
+                                           IsHitTestVisible="False"
+                                           Margin="10,7,0,0"
+                                           Visibility="{Binding Phrases.EditName, Converter={StaticResource EmptyToVisibleConverter}}"/>
+                            </Grid>
+                            <Grid Grid.Column="1" Margin="4,0,0,0">
+                                <TextBox x:Name="PhraseTextBox"
+                                         Text="{Binding Phrases.EditText, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource SettingsTextBox}"/>
+                                <TextBlock Text="Phrase text..."
+                                           Foreground="#6C7086" FontSize="13"
+                                           IsHitTestVisible="False"
+                                           Margin="10,7,0,0"
+                                           Visibility="{Binding Phrases.EditText, Converter={StaticResource EmptyToVisibleConverter}}"/>
+                            </Grid>
                         </Grid>
                         <StackPanel Orientation="Horizontal">
                             <Button Content="Add" Command="{Binding Phrases.AddCommand}"
@@ -430,8 +555,33 @@
                             <Button Content="Delete" Command="{Binding Phrases.DeleteCommand}"
                                     Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
                             <Button Content="▶ Play" Command="{Binding Phrases.PlayCommand}"
-                                    Style="{StaticResource SecondaryButton}"/>
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
                         </StackPanel>
+
+                        <!-- Hotkey assignment for selected phrase -->
+                        <Grid Margin="0,8,0,0"
+                              Visibility="{Binding Phrases.SelectedPhrase, Converter={StaticResource NullToCollapsedConverter}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Hotkey:" Style="{StaticResource FieldLabel}"/>
+                            <TextBox Grid.Column="1"
+                                     x:Name="PhraseHotkeyBox"
+                                     Text="{Binding Phrases.SelectedPhraseHotkeyDisplay, Mode=OneWay}"
+                                     Style="{StaticResource SettingsTextBox}"
+                                     IsReadOnly="True"
+                                     Cursor="Hand"
+                                     PreviewKeyDown="PhraseHotkeyBox_PreviewKeyDown"
+                                     GotFocus="HotkeyBox_GotFocus"
+                                     LostFocus="HotkeyBox_LostFocus"
+                                     Margin="8,0"/>
+                            <Button Grid.Column="2"
+                                    Content="Clear"
+                                    Command="{Binding Phrases.ClearHotkeyCommand}"
+                                    Style="{StaticResource SecondaryButton}"/>
+                        </Grid>
                     </StackPanel>
                 </Grid>
             </TabItem>
@@ -454,5 +604,33 @@
                 </StackPanel>
             </DockPanel>
         </Border>
+
+        <!-- Phrase regeneration overlay — blocks entire window with progress -->
+        <Grid Grid.RowSpan="2"
+              Panel.ZIndex="100"
+              Visibility="{Binding IsRegenerating, Converter={StaticResource BoolToVisConverter}}">
+            <Grid.Background>
+                <SolidColorBrush Color="#1E1E2E" Opacity="0.92"/>
+            </Grid.Background>
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="Regenerating Phrases"
+                           FontSize="20" FontWeight="SemiBold"
+                           Foreground="#89B4FA"
+                           HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock Text="Voice changed — re-generating cached audio."
+                           FontSize="12" Foreground="#A6ADC8"
+                           HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                <TextBlock Text="{Binding RegenerationStatus}"
+                           FontSize="14" Foreground="#CDD6F4"
+                           HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                <ProgressBar IsIndeterminate="True"
+                             Width="320" Height="4"
+                             Foreground="#89B4FA" Background="#45475A"
+                             BorderThickness="0"/>
+                <TextBlock Text="Please wait — do not close this window."
+                           FontSize="11" Foreground="#6C7086"
+                           HorizontalAlignment="Center" Margin="0,12,0,0"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

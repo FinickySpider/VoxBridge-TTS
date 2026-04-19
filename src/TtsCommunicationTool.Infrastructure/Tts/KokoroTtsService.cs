@@ -37,7 +37,12 @@ public sealed class KokoroTtsService : ITtsService, IDisposable
             // LoadModel downloads the ONNX model if not cached and loads it.
             // Run on thread pool to avoid blocking UI.
             _tts = await Task.Run(() => KokoroTTS.LoadModel(), ct);
-            _log.Info("Kokoro TTS engine initialized successfully.");
+
+            // Explicitly load voice files so GetAvailableVoices() works immediately.
+            // GetVoice() lazy-loads them, but Voices list is empty until first access.
+            await Task.Run(() => KokoroVoiceManager.LoadVoicesFromPath(), ct);
+
+            _log.Info($"Kokoro TTS engine initialized successfully. {KokoroVoiceManager.Voices.Count} voices loaded.");
         }
         catch (Exception ex)
         {

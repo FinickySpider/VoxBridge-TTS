@@ -10,7 +10,8 @@
         ShowInTaskbar="False"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        KeyDown="Window_KeyDown">
+        PreviewKeyDown="Window_PreviewKeyDown"
+        Deactivated="OverlayWindow_Deactivated">
 
     <Border Background="#E61E1E2E"
             CornerRadius="12"
@@ -42,9 +43,11 @@
                      Background="Transparent"
                      BorderThickness="0"
                      CaretBrush="#89B4FA"
-                     AcceptsReturn="False"
-                     VerticalContentAlignment="Center"
-                     Padding="4,0">
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Hidden"
+                     VerticalContentAlignment="Top"
+                     Padding="4,4">
                 <TextBox.Style>
                     <Style TargetType="TextBox">
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -54,7 +57,7 @@
 
             <!-- Send Button -->
             <Button Grid.Row="0" Grid.Column="1"
-                    Command="{Binding SendCommand}"
+                    Click="SendButton_Click"
                     Width="50" Height="36"
                     Margin="8,0,0,0"
                     Cursor="Hand"

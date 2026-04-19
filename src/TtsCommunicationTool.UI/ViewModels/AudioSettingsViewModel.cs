@@ -82,14 +82,14 @@ public sealed class AudioSettingsViewModel : ViewModelBase
     {
         var audio = await GenerateTestAudio();
         if (audio is null) return;
-        await _audioRouter.PlayAsync(audio, _selectedMonitorDeviceId, null);
+        await _audioRouter.PlayAsync(audio, null, _selectedMonitorDeviceId);
     }
 
     private async Task TestSecondaryAsync()
     {
         var audio = await GenerateTestAudio();
         if (audio is null) return;
-        await _audioRouter.PlayAsync(audio, null, _selectedSecondaryDeviceId);
+        await _audioRouter.PlayAsync(audio, _selectedSecondaryDeviceId, null);
     }
 
     private async Task TestBothAsync()
