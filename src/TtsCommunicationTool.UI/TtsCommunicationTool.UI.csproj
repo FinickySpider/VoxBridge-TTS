@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>TtsCommunicationTool.UI</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TtsCommunicationTool.Core\TtsCommunicationTool.Core.csproj" />
+    <ProjectReference Include="..\TtsCommunicationTool.Infrastructure\TtsCommunicationTool.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,7 +1,7 @@
 ---
 id: FEAT-011
 type: feature
-status: planned
+status: complete
 priority: high
 phase: PHASE-01
 sprint: SPRINT-02

@@ -1,7 +1,7 @@
 ---
 id: PHASE-01
 type: phase
-status: active
+status: complete
 owner: ""
 ---
 
@@ -50,17 +50,17 @@ Deliver a daily-usable TTS communication tool with the complete core workflow: h
 
 ## Completion Criteria
 
-- [ ] App launches and runs in system tray
-- [ ] Overlay opens reliably from configured hotkey
-- [ ] Overlay input is automatically focused
-- [ ] User can type text and press Enter to speak
-- [ ] Empty input is rejected safely
-- [ ] Speech is generated using Kokoro
-- [ ] Speech plays to both configured outputs simultaneously
-- [ ] Stop hotkey interrupts playback
-- [ ] User can choose output devices in settings
-- [ ] User can test outputs in settings
-- [ ] User can create, edit, delete, and play phrases
-- [ ] Settings persist across restart
-- [ ] App handles missing devices and hotkey conflicts visibly
-- [ ] App is usable for real-world trial in Discord/VRChat workflow
+- [x] App launches and runs in system tray
+- [x] Overlay opens reliably from configured hotkey
+- [x] Overlay input is automatically focused
+- [x] User can type text and press Enter to speak
+- [x] Empty input is rejected safely
+- [x] Speech is generated using Kokoro
+- [x] Speech plays to both configured outputs simultaneously
+- [x] Stop hotkey interrupts playback
+- [x] User can choose output devices in settings
+- [x] User can test outputs in settings
+- [x] User can create, edit, delete, and play phrases
+- [x] Settings persist across restart
+- [x] App handles missing devices and hotkey conflicts visibly
+- [x] App is usable for real-world trial in Discord/VRChat workflow

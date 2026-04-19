@@ -1,7 +1,7 @@
 ---
 id: SPRINT-02
 type: sprint
-status: planned
+status: complete
 phase: PHASE-01
 timebox: ""
 owner: ""

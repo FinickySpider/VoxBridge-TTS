@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TtsCommunicationTool.App/TtsCommunicationTool.App.csproj" />
+    <Project Path="src/TtsCommunicationTool.Core/TtsCommunicationTool.Core.csproj" />
+    <Project Path="src/TtsCommunicationTool.Infrastructure/TtsCommunicationTool.Infrastructure.csproj" />
+    <Project Path="src/TtsCommunicationTool.Tests/TtsCommunicationTool.Tests.csproj" />
+    <Project Path="src/TtsCommunicationTool.UI/TtsCommunicationTool.UI.csproj" />
+  </Folder>
+</Solution>

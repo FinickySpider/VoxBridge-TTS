@@ -1,0 +1,15 @@
+<Application x:Class="TtsCommunicationTool.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <!-- Dark theme base resources -->
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E2E"/>
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#2B2B3D"/>
+        <SolidColorBrush x:Key="ForegroundBrush" Color="#CDD6F4"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#89B4FA"/>
+        <SolidColorBrush x:Key="ErrorBrush" Color="#F38BA8"/>
+        <SolidColorBrush x:Key="DimTextBrush" Color="#6C7086"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#45475A"/>
+    </Application.Resources>
+</Application>
