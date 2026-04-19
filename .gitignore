@@ -1,0 +1,74 @@
+
+# ─── OS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── .NET / Visual Studio ────────────────────────────────────────────────────
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+*.vsidx
+*.vspx
+*.vssettings
+
+# Build outputs
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# NuGet
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+packages/
+!**/[Pp]ackages/build/
+
+# Publish output
+publish/
+PublishProfiles/
+
+# ─── App Runtime Data ────────────────────────────────────────────────────────
+# These live in %AppData% at runtime — ignore any local copies
+config.json
+config.invalid.backup.json
+*.log
+
+# ─── Test Results ────────────────────────────────────────────────────────────
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage*/
+
+# ─── Rider ───────────────────────────────────────────────────────────────────
+.idea/
+*.sln.iml
+
+# ─── VS Code ─────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# ─── Environment ─────────────────────────────────────────────────────────────
+.env
+.env.*
+
+# ─── Misc ────────────────────────────────────────────────────────────────────
+node_modules/
+dist/
