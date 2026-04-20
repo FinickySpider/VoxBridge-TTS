@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Windows;
 using System.Windows.Forms;
 using TtsCommunicationTool.Core.Interfaces;
+using TtsCommunicationTool.Core.State;
 
 namespace TtsCommunicationTool.App;
 
@@ -9,15 +10,18 @@ public sealed class TrayIconManager : IDisposable
 {
     private readonly IOverlayCoordinator _overlay;
     private readonly ILoggingService _log;
+    private readonly RecentMessagesState _recentMessages;
     private NotifyIcon? _notifyIcon;
+    private ToolStripMenuItem? _recentMenuItem;
 
     /// <summary>Raised when the user clicks "Settings" in the tray menu.</summary>
     public event EventHandler? SettingsRequested;
 
-    public TrayIconManager(IOverlayCoordinator overlay, ILoggingService log)
+    public TrayIconManager(IOverlayCoordinator overlay, ILoggingService log, RecentMessagesState recentMessages)
     {
         _overlay = overlay;
         _log = log;
+        _recentMessages = recentMessages;
     }
 
     public void Initialize()
@@ -50,10 +54,15 @@ public sealed class TrayIconManager : IDisposable
     private ContextMenuStrip CreateContextMenu()
     {
         var menu = new ContextMenuStrip();
+        menu.Opening += OnMenuOpening;
 
         var showOverlay = new ToolStripMenuItem("Show Overlay");
         showOverlay.Click += (_, _) => _overlay.ShowOverlay();
         menu.Items.Add(showOverlay);
+
+        // Recent Messages submenu — rebuilt dynamically on each open
+        _recentMenuItem = new ToolStripMenuItem("Recent Messages");
+        menu.Items.Add(_recentMenuItem);
 
         var settings = new ToolStripMenuItem("Settings");
         settings.Click += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
@@ -70,6 +79,31 @@ public sealed class TrayIconManager : IDisposable
         menu.Items.Add(exit);
 
         return menu;
+    }
+
+    private void OnMenuOpening(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (_recentMenuItem is null) return;
+
+        _recentMenuItem.DropDownItems.Clear();
+        var recents = _recentMessages.GetAll();
+
+        if (recents.Count == 0)
+        {
+            var empty = new ToolStripMenuItem("(none)") { Enabled = false };
+            _recentMenuItem.DropDownItems.Add(empty);
+        }
+        else
+        {
+            foreach (var text in recents)
+            {
+                var display = text.Length > 50 ? text[..47] + "…" : text;
+                var item = new ToolStripMenuItem(display);
+                var captured = text; // capture for closure
+                item.Click += (_, _) => _overlay.ShowOverlayWithText(captured);
+                _recentMenuItem.DropDownItems.Add(item);
+            }
+        }
     }
 
     public void Dispose()

@@ -16,8 +16,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     private readonly IConfigService _config;
     private readonly ILoggingService _log;
     private readonly PlaybackState _playbackState;
+    private readonly RecentMessagesState _recentMessages;
     private string _inputText = string.Empty;
-    private string _statusText = "Ready";
+    private string _statusText = string.Empty;  // Empty = idle (no noise)
     private bool _isSending;
 
     public OverlayViewModel(
@@ -25,13 +26,15 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         IAudioRouterService audioRouter,
         IConfigService config,
         ILoggingService log,
-        PlaybackState playbackState)
+        PlaybackState playbackState,
+        RecentMessagesState recentMessages)
     {
         _tts = tts;
         _audioRouter = audioRouter;
         _config = config;
         _log = log;
         _playbackState = playbackState;
+        _recentMessages = recentMessages;
 
         SendCommand = new AsyncRelayCommand(SendAsync, () => CanSend);
         StopCommand = new RelayCommand(Stop, () => _playbackState.IsPlaying);
@@ -40,7 +43,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         _audioRouter.PlaybackFinished += (_, _) =>
         {
             _playbackState.Reset();
-            StatusText = "Ready";
+            StatusText = string.Empty;
         };
     }
 
@@ -96,7 +99,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         }
 
         IsSending = true;
-        StatusText = "Generating speech...";
+        StatusText = "Generating...";
         _log.Info($"Sending text: {text}");
 
         try
@@ -113,7 +116,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
                 return;
             }
 
-            StatusText = "Playing...";
+            StatusText = "Speaking...";
             _playbackState.IsPlaying = true;
             _playbackState.CurrentText = text;
 
@@ -126,12 +129,16 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
                 BitsPerSample = result.BitsPerSample
             };
 
-            await _audioRouter.PlayAsync(playback, cfg.AudioSettings.MonitorOutputDeviceId, cfg.AudioSettings.SecondaryOutputDeviceId);
+            await _audioRouter.PlayAsync(playback,
+                cfg.AudioSettings.MonitorOutputDeviceId,
+                cfg.AudioSettings.SecondaryOutputDeviceId,
+                cfg.AudioSettings.MonitorVolume,
+                cfg.AudioSettings.SecondaryVolume);
             InputText = string.Empty;
         }
         catch (Exception ex)
         {
-            StatusText = "Playback error.";
+            StatusText = "Error — see log.";
             _log.Error("Send failed", ex);
         }
         finally
@@ -164,6 +171,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         // and blocks re-open during the TTS generation + playback window.
         _playbackState.IsPlaying = true;
         _playbackState.CurrentText = text;
+        _recentMessages.Add(text);
 
         _ = Task.Run(async () =>
         {
@@ -192,7 +200,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
 
                 await _audioRouter.PlayAsync(playback,
                     cfg.AudioSettings.MonitorOutputDeviceId,
-                    cfg.AudioSettings.SecondaryOutputDeviceId);
+                    cfg.AudioSettings.SecondaryOutputDeviceId,
+                    cfg.AudioSettings.MonitorVolume,
+                    cfg.AudioSettings.SecondaryVolume);
             }
             catch (Exception ex)
             {
@@ -205,7 +215,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     {
         _audioRouter.StopAll();
         _playbackState.Reset();
-        StatusText = "Stopped.";
+        StatusText = string.Empty;
         _log.Info("Playback stopped by user.");
     }
 

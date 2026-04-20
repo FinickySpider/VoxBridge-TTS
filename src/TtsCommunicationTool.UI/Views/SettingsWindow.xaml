@@ -12,6 +12,7 @@
 
     <Window.Resources>
         <conv:EmptyStringToVisibilityConverter x:Key="EmptyToVisibleConverter"/>
+        <conv:NonEmptyStringToVisibilityConverter x:Key="NonEmptyToVisibleConverter"/>
         <conv:HotkeyBindingDisplayConverter x:Key="HotkeyDisplayConverter"/>
         <conv:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
@@ -308,6 +309,7 @@
                                      Style="{StaticResource SettingsTextBox}"
                                      IsReadOnly="True"
                                      Cursor="Hand"
+                                     ToolTip="Click here then press any key combination to set the overlay toggle hotkey."
                                      PreviewKeyDown="OverlayHotkeyBox_PreviewKeyDown"
                                      GotFocus="HotkeyBox_GotFocus"
                                      LostFocus="HotkeyBox_LostFocus"/>
@@ -325,6 +327,7 @@
                                      Style="{StaticResource SettingsTextBox}"
                                      IsReadOnly="True"
                                      Cursor="Hand"
+                                     ToolTip="Click here then press any key combination to set the stop-playback hotkey."
                                      PreviewKeyDown="StopHotkeyBox_PreviewKeyDown"
                                      GotFocus="HotkeyBox_GotFocus"
                                      LostFocus="HotkeyBox_LostFocus"/>
@@ -354,6 +357,7 @@
                                       SelectedValue="{Binding Audio.SelectedMonitorDeviceId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="FriendlyName"
+                                      ToolTip="The audio device you hear yourself on (headphones, speakers, etc.)."
                                       Style="{StaticResource SettingsComboBox}"/>
                         </Grid>
 
@@ -368,6 +372,7 @@
                                       SelectedValue="{Binding Audio.SelectedSecondaryDeviceId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="FriendlyName"
+                                      ToolTip="The secondary output device (VB-Cable, virtual audio cable for Discord/VRChat, etc.)."
                                       Style="{StaticResource SettingsComboBox}"/>
                         </Grid>
 
@@ -385,6 +390,62 @@
                         <TextBlock Text="{Binding Audio.DeviceWarning}"
                                    Foreground="#FAB387" FontSize="12"
                                    TextWrapping="Wrap" Margin="0,8,0,0"/>
+
+                        <TextBlock Text="Volume" Style="{StaticResource SectionHeader}" Margin="0,16,0,8"/>
+
+                        <!-- Monitor Volume -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="40"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Monitor:" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                            <Slider Grid.Column="1"
+                                    Minimum="0" Maximum="100"
+                                    Value="{Binding Audio.MonitorVolume}"
+                                    TickFrequency="10"
+                                    IsSnapToTickEnabled="False"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"
+                                       Foreground="#CDD6F4" FontSize="12"
+                                       Margin="6,0,0,0">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0}%">
+                                        <Binding Path="Audio.MonitorVolume"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </Grid>
+
+                        <!-- Secondary Volume -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="40"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Secondary:" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                            <Slider Grid.Column="1"
+                                    Minimum="0" Maximum="100"
+                                    Value="{Binding Audio.SecondaryVolume}"
+                                    TickFrequency="10"
+                                    IsSnapToTickEnabled="False"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"
+                                       Foreground="#CDD6F4" FontSize="12"
+                                       Margin="6,0,0,0">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0}%">
+                                        <Binding Path="Audio.SecondaryVolume"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </Grid>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -458,6 +519,13 @@
                                      Text="{Binding Appearance.FontSize, UpdateSourceTrigger=PropertyChanged}"
                                      Style="{StaticResource SettingsTextBox}"/>
                         </Grid>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <Button Content="Reset Overlay Position"
+                                    Command="{Binding ResetOverlayPositionCommand}"
+                                    Style="{StaticResource SecondaryButton}"
+                                    ToolTip="Clears the saved overlay position so it opens centred on screen next time."/>
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -556,7 +624,16 @@
                                     Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
                             <Button Content="▶ Play" Command="{Binding Phrases.PlayCommand}"
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                            <Button Content="Import..." Command="{Binding Phrases.ImportCommand}"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                            <Button Content="Export..." Command="{Binding Phrases.ExportCommand}"
+                                    Style="{StaticResource SecondaryButton}"/>
                         </StackPanel>
+
+                        <TextBlock Text="{Binding Phrases.PhraseStatusMessage}"
+                                   Foreground="#A6E3A1" FontSize="12"
+                                   Visibility="{Binding Phrases.PhraseStatusMessage, Converter={StaticResource NonEmptyToVisibleConverter}}"
+                                   Margin="0,4,0,0" TextWrapping="Wrap"/>
 
                         <!-- Hotkey assignment for selected phrase -->
                         <Grid Margin="0,8,0,0"
@@ -597,6 +674,12 @@
                 <Button Content="Reset Defaults" Command="{Binding ResetDefaultsCommand}"
                         Style="{StaticResource SecondaryButton}" DockPanel.Dock="Left"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock Text="{Binding SaveError}"
+                               Foreground="#F38BA8" FontSize="12"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap" MaxWidth="340"
+                               Margin="0,0,12,0"
+                               Visibility="{Binding SaveError, Converter={StaticResource NonEmptyToVisibleConverter}}"/>
                     <Button Content="Cancel" Style="{StaticResource SecondaryButton}"
                             Margin="0,0,8,0" Click="Cancel_Click"/>
                     <Button Content="Save" Command="{Binding SaveCommand}"

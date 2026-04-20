@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Core.Models;
 using TtsCommunicationTool.Core.Validation;
@@ -98,5 +100,92 @@ public sealed class PhraseService : IPhraseService
         existing.UpdatedUtc = DateTime.UtcNow;
         _ = _configService.SaveAsync(_configService.CurrentConfig);
         return OperationResult.Ok();
+    }
+
+    public string ExportToJson()
+    {
+        var phrases = GetAll();
+        var dto = new PhraseExportFile
+        {
+            Version = 1,
+            Phrases = phrases.Select(p => new PhraseExportItem
+            {
+                Name = p.Name,
+                Text = p.Text,
+                Hotkey = p.Hotkey,
+                SortOrder = p.SortOrder
+            }).ToList()
+        };
+        return JsonSerializer.Serialize(dto, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    public OperationResult ImportFromJson(string json, out int addedCount)
+    {
+        addedCount = 0;
+        PhraseExportFile? dto;
+        try
+        {
+            dto = JsonSerializer.Deserialize<PhraseExportFile>(json);
+        }
+        catch (JsonException)
+        {
+            return OperationResult.Fail("Invalid JSON file format.");
+        }
+
+        if (dto is null || dto.Phrases is null)
+            return OperationResult.Fail("File does not contain valid phrase data.");
+
+        var existingNames = GetAll().Select(p => p.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var nextSort = GetAll().Count > 0 ? GetAll().Max(p => p.SortOrder) + 1 : 0;
+
+        foreach (var item in dto.Phrases)
+        {
+            if (string.IsNullOrWhiteSpace(item.Name) || string.IsNullOrWhiteSpace(item.Text))
+                continue;
+
+            var name = existingNames.Contains(item.Name) ? item.Name + " (imported)" : item.Name;
+            existingNames.Add(name);
+
+            var phrase = new PhraseItem
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = name,
+                Text = item.Text,
+                Hotkey = item.Hotkey,
+                SortOrder = nextSort++
+            };
+
+            var result = Add(phrase);
+            if (result.Success) addedCount++;
+        }
+
+        _log.Info($"Imported {addedCount} phrases from JSON.");
+        return OperationResult.Ok();
+    }
+
+    // --- DTOs for import/export ---
+
+    private sealed class PhraseExportFile
+    {
+        [JsonPropertyName("version")]
+        public int Version { get; set; }
+
+        [JsonPropertyName("phrases")]
+        public List<PhraseExportItem>? Phrases { get; set; }
+    }
+
+    private sealed class PhraseExportItem
+    {
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonPropertyName("text")]
+        public string Text { get; set; } = string.Empty;
+
+        [JsonPropertyName("hotkey")]
+        public HotkeyBinding? Hotkey { get; set; }
+
+        [JsonPropertyName("sortOrder")]
+        public int SortOrder { get; set; }
     }
 }

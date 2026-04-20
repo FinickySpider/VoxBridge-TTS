@@ -7,17 +7,17 @@ Single source of truth. The agent starts here.
 TTS Communication Tool
 
 ## Active Phase
-- (none — PHASE-01 complete, PHASE-02 not yet started)
+- [PHASE-02: Usability Hardening](../phases/PHASE-02-usability-hardening.md) — complete
 
 ## Active Sprint
-- (none — all PHASE-01 sprints complete)
+- (none — PHASE-02 complete)
 
 ## In Progress
 - (none)
 
 ## Phases
 - [PHASE-01: Foundation & Core Loop](../phases/PHASE-01-foundation-and-core-loop.md) — complete
-- [PHASE-02: Usability Hardening](../phases/PHASE-02-usability-hardening.md) — planned
+- [PHASE-02: Usability Hardening](../phases/PHASE-02-usability-hardening.md) — complete
 - [PHASE-03: Comfort & Expression](../phases/PHASE-03-comfort-and-expression.md) — planned
 - [PHASE-04: Advanced & Deferred](../phases/PHASE-04-advanced-and-deferred.md) — planned
 
@@ -25,6 +25,8 @@ TTS Communication Tool
 - [SPRINT-01](../sprints/SPRINT-01.md) — complete (PHASE-01)
 - [SPRINT-02](../sprints/SPRINT-02.md) — complete (PHASE-01)
 - [SPRINT-03](../sprints/SPRINT-03.md) — complete (PHASE-01)
+- [SPRINT-04](../sprints/SPRINT-04.md) — complete (PHASE-02)
+- [SPRINT-05](../sprints/SPRINT-05.md) — complete (PHASE-02)
 
 ## Features
 - [FEAT-001: Solution scaffold](../features/FEAT-001-solution-scaffold.md) — complete (SPRINT-01)
@@ -47,6 +49,13 @@ TTS Communication Tool
 - [FEAT-018: Phrase system](../features/FEAT-018-phrase-system.md) — complete (SPRINT-03)
 - [FEAT-019: First-run setup](../features/FEAT-019-first-run-setup.md) — complete (SPRINT-03)
 - [FEAT-020: Error handling](../features/FEAT-020-error-handling.md) — complete (SPRINT-03)
+- [FEAT-021: Overlay status bar](../features/FEAT-021-overlay-status-bar.md) — complete (SPRINT-04)
+- [FEAT-022: Overlay position persistence](../features/FEAT-022-overlay-position-persist.md) — complete (SPRINT-04)
+- [FEAT-023: Per-output volume controls](../features/FEAT-023-per-output-volume.md) — complete (SPRINT-04)
+- [FEAT-024: Hotkey conflict detection](../features/FEAT-024-hotkey-conflict-detection.md) — complete (SPRINT-04)
+- [FEAT-025: Recent phrases/messages](../features/FEAT-025-recent-phrases.md) — complete (SPRINT-05)
+- [FEAT-026: Phrase import/export](../features/FEAT-026-phrase-import-export.md) — complete (SPRINT-05)
+- [FEAT-027: Settings organization improvements](../features/FEAT-027-settings-organization.md) — complete (SPRINT-05)
 
 ## Refactors
 - [REFACTOR-001: Config recovery](../refactors/REFACTOR-001-config-recovery.md) — complete (SPRINT-03)

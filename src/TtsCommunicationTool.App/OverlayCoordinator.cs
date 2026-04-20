@@ -64,8 +64,25 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
             _overlayWindow.Height = overlaySettings.Height;
             _overlayWindow.SetFontSize(overlaySettings.FontSize);
 
-            _overlayWindow.Closed += (_, _) =>
+            // Restore last position if saved and on-screen; otherwise center
+            if (overlaySettings.Left.HasValue && overlaySettings.Top.HasValue &&
+                IsOnScreen(overlaySettings.Left.Value, overlaySettings.Top.Value, overlaySettings.Width, overlaySettings.Height))
             {
+                _overlayWindow.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
+                _overlayWindow.Left = overlaySettings.Left.Value;
+                _overlayWindow.Top = overlaySettings.Top.Value;
+            }
+
+            _overlayWindow.Closed += (s, e) =>
+            {
+                // Save position from the closing window instance
+                if (s is TtsCommunicationTool.UI.Views.OverlayWindow closedWindow)
+                {
+                    var cfg = _config.CurrentConfig;
+                    cfg.OverlaySettings.Left = closedWindow.Left;
+                    cfg.OverlaySettings.Top = closedWindow.Top;
+                    _ = _config.SaveAsync(cfg);
+                }
                 _overlayWindow = null;
                 _appState.IsOverlayVisible = false;
             };
@@ -78,6 +95,14 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
         {
             _isOpening = false;
         }
+    }
+
+    public void ShowOverlayWithText(string text)
+    {
+        ShowOverlay();
+        // If overlay opened successfully, pre-fill the input
+        if (_overlayWindow?.DataContext is TtsCommunicationTool.UI.ViewModels.OverlayViewModel vm)
+            vm.InputText = text;
     }
 
     public void HideOverlay()
@@ -108,5 +133,24 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
             HideOverlay();
         else
             ShowOverlay();
+    }
+
+    /// <summary>
+    /// Returns true if the window position puts at least part of the title-bar
+    /// area on one of the current screens (guards against off-screen positions
+    /// after display changes).
+    /// </summary>
+    private static bool IsOnScreen(double left, double top, double width, double height)
+    {
+        // Check that the centre of the window is on any screen
+        var cx = left + width / 2;
+        var cy = top + height / 2;
+        foreach (var screen in System.Windows.Forms.Screen.AllScreens)
+        {
+            var b = screen.Bounds;
+            if (cx >= b.Left && cx <= b.Right && cy >= b.Top && cy <= b.Bottom)
+                return true;
+        }
+        return false;
     }
 }

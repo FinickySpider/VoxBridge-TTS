@@ -19,6 +19,7 @@ public static class ServiceRegistration
         services.AddSingleton<AppRuntimeState>();
         services.AddSingleton<OverlayState>();
         services.AddSingleton<PlaybackState>();
+        services.AddSingleton<RecentMessagesState>();
 
         // Infrastructure services
         services.AddSingleton<ILoggingService, FileLoggingService>();

@@ -21,6 +21,7 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
     private readonly IPhraseCacheService _phraseCache;
     private readonly ILoggingService _log;
     private readonly PlaybackState _playbackState;
+    private readonly RecentMessagesState _recentMessages;
     private GlobalHotkeyService? _hotkeyService;
 
     public HotkeyHostWindow(
@@ -30,7 +31,8 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
         IPhraseService phraseService,
         IPhraseCacheService phraseCache,
         ILoggingService log,
-        PlaybackState playbackState)
+        PlaybackState playbackState,
+        RecentMessagesState recentMessages)
     {
         _config = config;
         _overlay = overlay;
@@ -39,6 +41,7 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
         _phraseCache = phraseCache;
         _log = log;
         _playbackState = playbackState;
+        _recentMessages = recentMessages;
 
         Width = 0;
         Height = 0;
@@ -163,6 +166,11 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
             _playbackState.IsPlaying = true;
             _playbackState.CurrentText = $"[Phrase: {phraseId}]";
 
+            // Track the phrase text in recent messages
+            var phraseForRecent = _phraseService.GetById(phraseId);
+            if (phraseForRecent is not null)
+                _recentMessages.Add(phraseForRecent.Text);
+
             // Try cached audio first
             var cached = _phraseCache.GetCachedAudio(phraseId);
             if (cached is not null)
@@ -170,7 +178,9 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
                 var cfg = _config.CurrentConfig;
                 await _audioRouter.PlayAsync(cached,
                     cfg.AudioSettings.MonitorOutputDeviceId,
-                    cfg.AudioSettings.SecondaryOutputDeviceId);
+                    cfg.AudioSettings.SecondaryOutputDeviceId,
+                    cfg.AudioSettings.MonitorVolume,
+                    cfg.AudioSettings.SecondaryVolume);
                 return;
             }
 
@@ -190,7 +200,9 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
                 var cfg = _config.CurrentConfig;
                 await _audioRouter.PlayAsync(audio,
                     cfg.AudioSettings.MonitorOutputDeviceId,
-                    cfg.AudioSettings.SecondaryOutputDeviceId);
+                    cfg.AudioSettings.SecondaryOutputDeviceId,
+                    cfg.AudioSettings.MonitorVolume,
+                    cfg.AudioSettings.SecondaryVolume);
             }
         }
         catch (Exception ex)

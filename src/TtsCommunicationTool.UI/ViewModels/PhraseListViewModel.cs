@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Input;
+using Microsoft.Win32;
 using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Core.Models;
 using TtsCommunicationTool.UI.Commands;
@@ -51,10 +53,19 @@ public sealed class PhraseListViewModel : ViewModelBase
     public ICommand PlayCommand { get; }
     public ICommand RefreshCommand { get; }
     public ICommand ClearHotkeyCommand { get; }
+    public ICommand ImportCommand { get; }
+    public ICommand ExportCommand { get; }
 
     // For inline editing
     private string _editName = string.Empty;
     private string _editText = string.Empty;
+    private string _phraseStatusMessage = string.Empty;
+
+    public string PhraseStatusMessage
+    {
+        get => _phraseStatusMessage;
+        private set => SetField(ref _phraseStatusMessage, value);
+    }
 
     public string EditName
     {
@@ -90,6 +101,8 @@ public sealed class PhraseListViewModel : ViewModelBase
         PlayCommand = new AsyncRelayCommand(PlaySelectedAsync, () => SelectedPhrase is not null);
         RefreshCommand = new RelayCommand(Refresh);
         ClearHotkeyCommand = new RelayCommand(ClearSelectedHotkey, () => SelectedPhrase is not null);
+        ImportCommand = new RelayCommand(ImportPhrases);
+        ExportCommand = new RelayCommand(ExportPhrases, () => Phrases.Count > 0);
 
         Refresh();
     }
@@ -164,7 +177,9 @@ public sealed class PhraseListViewModel : ViewModelBase
         {
             await _audioRouter.PlayAsync(cached,
                 cfg.AudioSettings.MonitorOutputDeviceId,
-                cfg.AudioSettings.SecondaryOutputDeviceId);
+                cfg.AudioSettings.SecondaryOutputDeviceId,
+                cfg.AudioSettings.MonitorVolume,
+                cfg.AudioSettings.SecondaryVolume);
             return;
         }
 
@@ -194,6 +209,67 @@ public sealed class PhraseListViewModel : ViewModelBase
 
         await _audioRouter.PlayAsync(playback,
             cfg.AudioSettings.MonitorOutputDeviceId,
-            cfg.AudioSettings.SecondaryOutputDeviceId);
+            cfg.AudioSettings.SecondaryOutputDeviceId,
+            cfg.AudioSettings.MonitorVolume,
+            cfg.AudioSettings.SecondaryVolume);
+    }
+
+    private void ExportPhrases()
+    {
+        var dlg = new SaveFileDialog
+        {
+            Title = "Export Phrases",
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            DefaultExt = "json",
+            FileName = "tts-phrases"
+        };
+
+        if (dlg.ShowDialog() != true) return;
+
+        try
+        {
+            var json = _phraseService.ExportToJson();
+            File.WriteAllText(dlg.FileName, json, System.Text.Encoding.UTF8);
+            PhraseStatusMessage = $"Exported {Phrases.Count} phrase(s) to {Path.GetFileName(dlg.FileName)}.";
+            _log.Info($"Phrases exported to '{dlg.FileName}'.");
+        }
+        catch (Exception ex)
+        {
+            PhraseStatusMessage = "Export failed — see log.";
+            _log.Error("Phrase export failed", ex);
+        }
+    }
+
+    private void ImportPhrases()
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title = "Import Phrases",
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            DefaultExt = "json"
+        };
+
+        if (dlg.ShowDialog() != true) return;
+
+        try
+        {
+            var json = File.ReadAllText(dlg.FileName, System.Text.Encoding.UTF8);
+            var result = _phraseService.ImportFromJson(json, out var count);
+            if (!result.Success)
+            {
+                PhraseStatusMessage = $"Import failed: {result.ErrorMessage}";
+                _log.Warn($"Phrase import failed: {result.ErrorMessage}");
+                return;
+            }
+
+            Refresh();
+            PhraseStatusMessage = $"Imported {count} phrase(s).";
+            _log.Info($"Imported {count} phrases from '{dlg.FileName}'.");
+        }
+        catch (Exception ex)
+        {
+            PhraseStatusMessage = "Import failed — see log.";
+            _log.Error("Phrase import failed", ex);
+        }
     }
 }

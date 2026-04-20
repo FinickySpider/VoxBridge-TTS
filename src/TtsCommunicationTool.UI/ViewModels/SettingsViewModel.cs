@@ -15,6 +15,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private int _selectedTabIndex;
     private bool _isRegenerating;
     private string _regenerationStatus = string.Empty;
+    private string _saveError = string.Empty;
 
     public GeneralSettingsViewModel General { get; }
     public HotkeySettingsViewModel Hotkeys { get; }
@@ -41,10 +42,18 @@ public sealed class SettingsViewModel : ViewModelBase
         private set => SetField(ref _regenerationStatus, value);
     }
 
+    /// <summary>Non-empty when save is blocked due to validation errors.</summary>
+    public string SaveError
+    {
+        get => _saveError;
+        private set => SetField(ref _saveError, value);
+    }
+
     public bool IsFirstRun { get; set; }
 
     public ICommand SaveCommand { get; }
     public ICommand ResetDefaultsCommand { get; }
+    public ICommand ResetOverlayPositionCommand { get; }
 
     public event EventHandler? Saved;
 
@@ -73,6 +82,7 @@ public sealed class SettingsViewModel : ViewModelBase
 
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         ResetDefaultsCommand = new RelayCommand(ResetDefaults);
+        ResetOverlayPositionCommand = new AsyncRelayCommand(ResetOverlayPositionAsync);
 
         LoadFromConfig();
     }
@@ -89,6 +99,22 @@ public sealed class SettingsViewModel : ViewModelBase
 
     private async Task SaveAsync()
     {
+        // Block save if real-time hotkey conflict warning is active
+        if (!string.IsNullOrEmpty(Hotkeys.ValidationMessage))
+        {
+            SaveError = Hotkeys.ValidationMessage;
+            return;
+        }
+
+        // Check for duplicate phrase hotkeys
+        var conflictError = CheckPhraseHotkeyConflicts();
+        if (conflictError is not null)
+        {
+            SaveError = conflictError;
+            return;
+        }
+
+        SaveError = string.Empty;
         var cfg = _config.CurrentConfig;
         var previousVoiceId = cfg.VoiceSettings.SelectedVoiceId;
 
@@ -130,6 +156,22 @@ public sealed class SettingsViewModel : ViewModelBase
         Saved?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Returns an error string if any two phrases share the same hotkey, else null.</summary>
+    private string? CheckPhraseHotkeyConflicts()
+    {
+        var phrases = _phraseService.GetAll();
+        var seen = new Dictionary<TtsCommunicationTool.Core.Models.HotkeyBinding, string>();
+        foreach (var p in phrases)
+        {
+            if (p.Hotkey is null || p.Hotkey.IsEmpty) continue;
+            if (seen.TryGetValue(p.Hotkey, out var existingName))
+                return $"Phrases '{existingName}' and '{p.Name}' share the same hotkey ({p.Hotkey})."
+                    + " Remove the duplicate before saving.";
+            seen[p.Hotkey] = p.Name;
+        }
+        return null;
+    }
+
     private void ResetDefaults()
     {
         var defaults = _config.GetDefaults();
@@ -139,5 +181,14 @@ public sealed class SettingsViewModel : ViewModelBase
         Voice.LoadFrom(defaults.VoiceSettings);
         Appearance.LoadFrom(defaults.OverlaySettings);
         _log.Info("Settings reset to defaults.");
+    }
+
+    private async Task ResetOverlayPositionAsync()
+    {
+        var cfg = _config.CurrentConfig;
+        cfg.OverlaySettings.Left = null;
+        cfg.OverlaySettings.Top = null;
+        await _config.SaveAsync(cfg);
+        _log.Info("Overlay position reset to centre-screen.");
     }
 }

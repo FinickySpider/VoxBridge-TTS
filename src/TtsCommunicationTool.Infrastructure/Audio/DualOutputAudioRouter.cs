@@ -22,7 +22,9 @@ public sealed class DualOutputAudioRouter : IAudioRouterService
 
     public event EventHandler? PlaybackFinished;
 
-    public async Task PlayAsync(PlaybackRequest request, string? monitorDeviceId, string? secondaryDeviceId, CancellationToken ct = default)
+    public async Task PlayAsync(PlaybackRequest request, string? monitorDeviceId, string? secondaryDeviceId,
+        float monitorVolume = 1.0f, float secondaryVolume = 1.0f,
+        CancellationToken ct = default)
     {
         StopAll();
 
@@ -31,18 +33,18 @@ public sealed class DualOutputAudioRouter : IAudioRouterService
 
         if (!string.IsNullOrEmpty(monitorDeviceId))
         {
-            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, monitorDeviceId, ct));
+            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, monitorDeviceId, Math.Clamp(monitorVolume, 0f, 1f), ct));
         }
 
         if (!string.IsNullOrEmpty(secondaryDeviceId))
         {
-            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, secondaryDeviceId, ct));
+            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, secondaryDeviceId, Math.Clamp(secondaryVolume, 0f, 1f), ct));
         }
 
         if (tasks.Count == 0)
         {
-            // Play on default device
-            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, null, ct));
+            // Play on default device using monitor volume
+            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, null, Math.Clamp(monitorVolume, 0f, 1f), ct));
         }
 
         await Task.WhenAll(tasks);
@@ -69,7 +71,7 @@ public sealed class DualOutputAudioRouter : IAudioRouterService
         }
     }
 
-    private async Task PlayOnDeviceAsync(byte[] audioData, WaveFormat format, string? deviceId, CancellationToken ct)
+    private async Task PlayOnDeviceAsync(byte[] audioData, WaveFormat format, string? deviceId, float volume, CancellationToken ct)
     {
         var tcs = new TaskCompletionSource();
         WasapiOut? player = null;
@@ -101,6 +103,7 @@ public sealed class DualOutputAudioRouter : IAudioRouterService
                 tcs.TrySetCanceled();
             });
 
+            player.Volume = volume;
             player.Play();
             await tcs.Task;
         }

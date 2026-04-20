@@ -4,7 +4,9 @@ namespace TtsCommunicationTool.Core.Interfaces;
 
 public interface IAudioRouterService : IDisposable
 {
-    Task PlayAsync(PlaybackRequest request, string? monitorDeviceId, string? secondaryDeviceId, CancellationToken ct = default);
+    Task PlayAsync(PlaybackRequest request, string? monitorDeviceId, string? secondaryDeviceId,
+        float monitorVolume = 1.0f, float secondaryVolume = 1.0f,
+        CancellationToken ct = default);
     void StopAll();
     bool IsPlaying { get; }
     event EventHandler? PlaybackFinished;

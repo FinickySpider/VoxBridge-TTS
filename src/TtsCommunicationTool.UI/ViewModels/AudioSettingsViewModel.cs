@@ -16,6 +16,8 @@ public sealed class AudioSettingsViewModel : ViewModelBase
     private string _selectedMonitorDeviceId = string.Empty;
     private string _selectedSecondaryDeviceId = string.Empty;
     private string _deviceWarning = string.Empty;
+    private int _monitorVolume = 100;
+    private int _secondaryVolume = 100;
 
     public ObservableCollection<AudioDeviceInfo> OutputDevices { get; } = new();
 
@@ -35,6 +37,20 @@ public sealed class AudioSettingsViewModel : ViewModelBase
     {
         get => _deviceWarning;
         set => SetField(ref _deviceWarning, value);
+    }
+
+    /// <summary>Monitor output volume as an integer percent (0–100).</summary>
+    public int MonitorVolume
+    {
+        get => _monitorVolume;
+        set => SetField(ref _monitorVolume, Math.Clamp(value, 0, 100));
+    }
+
+    /// <summary>Secondary output volume as an integer percent (0–100).</summary>
+    public int SecondaryVolume
+    {
+        get => _secondaryVolume;
+        set => SetField(ref _secondaryVolume, Math.Clamp(value, 0, 100));
     }
 
     public ICommand RefreshDevicesCommand { get; }
@@ -120,6 +136,8 @@ public sealed class AudioSettingsViewModel : ViewModelBase
     {
         SelectedMonitorDeviceId = s.MonitorOutputDeviceId;
         SelectedSecondaryDeviceId = s.SecondaryOutputDeviceId;
+        MonitorVolume = (int)Math.Round(s.MonitorVolume * 100);
+        SecondaryVolume = (int)Math.Round(s.SecondaryVolume * 100);
         RefreshDevices();
     }
 
@@ -127,6 +145,8 @@ public sealed class AudioSettingsViewModel : ViewModelBase
     {
         s.MonitorOutputDeviceId = SelectedMonitorDeviceId;
         s.SecondaryOutputDeviceId = SelectedSecondaryDeviceId;
+        s.MonitorVolume = MonitorVolume / 100f;
+        s.SecondaryVolume = SecondaryVolume / 100f;
 
         // Cache friendly names
         var monitor = OutputDevices.FirstOrDefault(d => d.Id == SelectedMonitorDeviceId);

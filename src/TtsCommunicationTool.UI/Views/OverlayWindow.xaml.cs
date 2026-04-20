@@ -101,6 +101,13 @@ public partial class OverlayWindow : Window
         }
     }
 
+    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // Allow dragging from anywhere except the input textbox so typing isn't interrupted
+        if (e.OriginalSource is not System.Windows.Controls.TextBox)
+            DragMove();
+    }
+
     /// <summary>
     /// Close the window only once — prevents the crash from Deactivated firing
     /// during an already-in-progress Close (e.g., from Send or Escape).
