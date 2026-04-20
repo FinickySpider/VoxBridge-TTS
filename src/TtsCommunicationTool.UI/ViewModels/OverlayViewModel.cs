@@ -45,6 +45,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             _playbackState.Reset();
             StatusText = string.Empty;
         };
+
+        // Reflect external playback state changes (e.g. phrase hotkeys) in the status bar
+        _playbackState.PropertyChanged += OnPlaybackStateChanged;
     }
 
     public string InputText
@@ -222,7 +225,21 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     private void Clear()
     {
         InputText = string.Empty;
-        StatusText = "Ready";
+        StatusText = string.Empty;
+    }
+
+    private void OnPlaybackStateChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(PlaybackState.IsPlaying)) return;
+        System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
+        {
+            // Only set "Speaking..." from external sources (e.g. phrase hotkeys).
+            // SendAsync already manages its own "Generating..." / "Speaking..." flow.
+            if (_playbackState.IsPlaying && string.IsNullOrEmpty(StatusText))
+                StatusText = "Speaking...";
+            else if (!_playbackState.IsPlaying && StatusText == "Speaking...")
+                StatusText = string.Empty;
+        });
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
