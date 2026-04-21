@@ -34,6 +34,8 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
         _playbackState = playbackState;
     }
 
+    public event EventHandler? SettingsRequested;
+
     public bool IsOverlayVisible => _overlayWindow is not null || _isOpening;
 
     public void ShowOverlay()
@@ -86,6 +88,7 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
                 _overlayWindow = null;
                 _appState.IsOverlayVisible = false;
             };
+            _overlayWindow.SettingsRequested += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
             _overlayWindow.Show();
             _overlayWindow.FocusInput();
             _appState.IsOverlayVisible = true;

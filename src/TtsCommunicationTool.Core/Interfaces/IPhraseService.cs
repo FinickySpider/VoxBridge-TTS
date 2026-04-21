@@ -16,8 +16,8 @@ public interface IPhraseService
 
     /// <summary>
     /// Parses a previously exported JSON string and merges phrases into the list.
-    /// Duplicate names get a " (imported)" suffix.
-    /// Returns the number of phrases added, or an error message.
+    /// Duplicate names get a unique "(imported)" suffix.
+    /// Conflicting hotkeys are automatically cleared.
     /// </summary>
-    OperationResult ImportFromJson(string json, out int addedCount);
+    PhraseImportResult ImportFromJson(string json);
 }
