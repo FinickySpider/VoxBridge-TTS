@@ -114,7 +114,7 @@
                                 <Border x:Name="IconBorder" Background="Transparent">
                                     <TextBlock x:Name="GearIcon"
                                                Text="&#x2699;"
-                                               FontSize="13"
+                                               FontSize="14"
                                                Foreground="#6C7086"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"

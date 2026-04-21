@@ -294,7 +294,7 @@
                     <StackPanel Margin="8,0">
                         <TextBlock Text="Hotkeys" Style="{StaticResource SectionHeader}"/>
 
-                        <TextBlock Text="Click a field, then press the desired key combination."
+                        <TextBlock Text="Click a field, then press the desired key combination. Esc clears a binding."
                                    Foreground="#6C7086" FontSize="12" Margin="0,0,0,16"/>
 
                         <Grid Margin="0,0,0,12">

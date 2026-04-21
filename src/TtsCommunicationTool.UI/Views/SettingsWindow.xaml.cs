@@ -20,6 +20,12 @@ public partial class SettingsWindow : Window
         DataContext = vm;
         vm.Saved += (_, _) => Close();
         vm.Phrases.ImportCompleted += OnImportCompleted;
+        // Cancel any active hotkey capture when the user switches tabs
+        vm.PropertyChanged += (_, pe) =>
+        {
+            if (pe.PropertyName == nameof(SettingsViewModel.SelectedTabIndex))
+                CancelCapture();
+        };
         Closing += (_, e) =>
         {
             // Block close while phrase cache regeneration or import dialog is in progress
@@ -49,60 +55,162 @@ public partial class SettingsWindow : Window
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 
-    // ----- Hotkey capture logic -----
+    // ----- Hotkey capture state -----
+
+    private System.Windows.Controls.TextBox? _capturingBox;
+
+    private static readonly System.Windows.Media.SolidColorBrush _captureActiveBrush =
+        new(System.Windows.Media.Color.FromRgb(0x3B, 0x3B, 0x55));
+    private static readonly System.Windows.Media.SolidColorBrush _captureNormalBrush =
+        new(System.Windows.Media.Color.FromRgb(0x2B, 0x2B, 0x3D));
+
+    /// <summary>
+    /// Cancels the current capture: restores the box background, clears any pending
+    /// validation message, and nulls the tracking reference.
+    /// </summary>
+    private void CancelCapture()
+    {
+        if (_capturingBox is null) return;
+        _capturingBox.Background = _captureNormalBrush;
+        _capturingBox = null;
+        if (DataContext is SettingsViewModel vm)
+            vm.Hotkeys.ValidationMessage = string.Empty;
+    }
 
     private void HotkeyBox_GotFocus(object sender, RoutedEventArgs e)
     {
-        if (sender is System.Windows.Controls.TextBox tb)
-            tb.Background = new System.Windows.Media.SolidColorBrush(
-                System.Windows.Media.Color.FromRgb(0x3B, 0x3B, 0x55));
+        if (sender is not System.Windows.Controls.TextBox tb) return;
+        // Un-highlight previous box if switching between hotkey fields
+        if (_capturingBox is not null && _capturingBox != tb)
+            _capturingBox.Background = _captureNormalBrush;
+        _capturingBox = tb;
+        tb.Background = _captureActiveBrush;
     }
 
     private void HotkeyBox_LostFocus(object sender, RoutedEventArgs e)
     {
-        if (sender is System.Windows.Controls.TextBox tb)
-            tb.Background = new System.Windows.Media.SolidColorBrush(
-                System.Windows.Media.Color.FromRgb(0x2B, 0x2B, 0x3D));
+        if (sender is not System.Windows.Controls.TextBox tb) return;
+        // Defer: GotFocus of the next element fires after LostFocus in WPF, so by
+        // the time this lambda runs _capturingBox is already updated to the new box
+        // if focus just moved to another hotkey field.
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (_capturingBox == tb)
+                CancelCapture();
+        });
     }
+
+    // ----- Overlay hotkey -----
 
     private void OverlayHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         e.Handled = true;
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        if (key == Key.Escape)
+        {
+            if (DataContext is SettingsViewModel vm) vm.Hotkeys.ClearOverlayHotkey();
+            CancelCapture();
+            Keyboard.ClearFocus();
+            return;
+        }
+
         var binding = CaptureHotkey(e);
         if (binding is null) return;
 
-        if (DataContext is SettingsViewModel vm)
-            vm.Hotkeys.SetOverlayHotkey(binding);
+        if (DataContext is SettingsViewModel svm)
+        {
+            svm.Hotkeys.SetOverlayHotkey(binding);
+            if (string.IsNullOrEmpty(svm.Hotkeys.ValidationMessage))
+            {
+                CancelCapture();
+                Keyboard.ClearFocus();
+            }
+        }
     }
+
+    // ----- Stop hotkey -----
 
     private void StopHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         e.Handled = true;
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        if (key == Key.Escape)
+        {
+            if (DataContext is SettingsViewModel vm) vm.Hotkeys.ClearStopHotkey();
+            CancelCapture();
+            Keyboard.ClearFocus();
+            return;
+        }
+
         var binding = CaptureHotkey(e);
         if (binding is null) return;
 
-        if (DataContext is SettingsViewModel vm)
-            vm.Hotkeys.SetStopHotkey(binding);
+        if (DataContext is SettingsViewModel svm)
+        {
+            svm.Hotkeys.SetStopHotkey(binding);
+            if (string.IsNullOrEmpty(svm.Hotkeys.ValidationMessage))
+            {
+                CancelCapture();
+                Keyboard.ClearFocus();
+            }
+        }
     }
+
+    // ----- Settings hotkey -----
 
     private void SettingsHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         e.Handled = true;
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        if (key == Key.Escape)
+        {
+            if (DataContext is SettingsViewModel vm) vm.Hotkeys.ClearSettingsHotkey();
+            CancelCapture();
+            Keyboard.ClearFocus();
+            return;
+        }
+
         var binding = CaptureHotkey(e);
         if (binding is null) return;
 
-        if (DataContext is SettingsViewModel vm)
-            vm.Hotkeys.SetSettingsHotkey(binding);
+        if (DataContext is SettingsViewModel svm)
+        {
+            svm.Hotkeys.SetSettingsHotkey(binding);
+            if (string.IsNullOrEmpty(svm.Hotkeys.ValidationMessage))
+            {
+                CancelCapture();
+                Keyboard.ClearFocus();
+            }
+        }
     }
+
+    // ----- Phrase hotkey -----
 
     private void PhraseHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         e.Handled = true;
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        if (key == Key.Escape)
+        {
+            if (DataContext is SettingsViewModel vm) vm.Phrases.ClearHotkeyCommand.Execute(null);
+            CancelCapture();
+            Keyboard.ClearFocus();
+            return;
+        }
+
         var binding = CaptureHotkey(e);
         if (binding is null) return;
 
-        if (DataContext is SettingsViewModel vm)
-            vm.Phrases.SetSelectedPhraseHotkey(binding);
+        if (DataContext is SettingsViewModel svm)
+        {
+            svm.Phrases.SetSelectedPhraseHotkey(binding);
+            CancelCapture();
+            Keyboard.ClearFocus();
+        }
     }
 
     /// <summary>

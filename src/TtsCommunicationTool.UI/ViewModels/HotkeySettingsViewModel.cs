@@ -42,6 +42,27 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
     public HotkeyBinding StopHotkey => _stopHotkey;
     public HotkeyBinding SettingsHotkey => _settingsHotkey;
 
+    public void ClearOverlayHotkey()
+    {
+        _overlayHotkey = new HotkeyBinding();
+        OverlayHotkeyDisplay = "(none)";
+        ValidationMessage = string.Empty;
+    }
+
+    public void ClearStopHotkey()
+    {
+        _stopHotkey = new HotkeyBinding();
+        StopHotkeyDisplay = "(none)";
+        ValidationMessage = string.Empty;
+    }
+
+    public void ClearSettingsHotkey()
+    {
+        _settingsHotkey = new HotkeyBinding();
+        SettingsHotkeyDisplay = "(none)";
+        ValidationMessage = string.Empty;
+    }
+
     public void SetOverlayHotkey(HotkeyBinding binding)
     {
         var (valid, error) = HotkeyValidation.Validate(binding);
