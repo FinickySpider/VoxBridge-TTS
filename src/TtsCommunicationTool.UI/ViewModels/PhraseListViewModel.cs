@@ -64,7 +64,7 @@ public sealed class PhraseListViewModel : ViewModelBase
     public string PhraseStatusMessage
     {
         get => _phraseStatusMessage;
-        private set => SetField(ref _phraseStatusMessage, value);
+        set => SetField(ref _phraseStatusMessage, value);
     }
 
     public string EditName
@@ -78,6 +78,12 @@ public sealed class PhraseListViewModel : ViewModelBase
         get => _editText;
         set => SetField(ref _editText, value);
     }
+
+    /// <summary>Result of the most recent successful import. Used by the import progress dialog.</summary>
+    public PhraseImportResult? LastImportResult { get; private set; }
+
+    /// <summary>Raised after a successful import so the view can show the progress dialog.</summary>
+    public event EventHandler? ImportCompleted;
 
     public PhraseListViewModel(
         IPhraseService phraseService,
@@ -254,7 +260,7 @@ public sealed class PhraseListViewModel : ViewModelBase
         try
         {
             var json = File.ReadAllText(dlg.FileName, System.Text.Encoding.UTF8);
-            var result = _phraseService.ImportFromJson(json, out var count);
+            var result = _phraseService.ImportFromJson(json);
             if (!result.Success)
             {
                 PhraseStatusMessage = $"Import failed: {result.ErrorMessage}";
@@ -262,14 +268,35 @@ public sealed class PhraseListViewModel : ViewModelBase
                 return;
             }
 
+            LastImportResult = result;
             Refresh();
-            PhraseStatusMessage = $"Imported {count} phrase(s).";
-            _log.Info($"Imported {count} phrases from '{dlg.FileName}'.");
+            ImportCompleted?.Invoke(this, EventArgs.Empty);
+            _log.Info($"Imported {result.AddedCount} phrases from '{dlg.FileName}'.");
         }
         catch (Exception ex)
         {
             PhraseStatusMessage = "Import failed — see log.";
             _log.Error("Phrase import failed", ex);
+        }
+    }
+
+    /// <summary>
+    /// Caches audio for all phrases in the last import result.
+    /// Call from the import progress dialog.
+    /// </summary>
+    public async Task CacheImportedPhrasesAsync(
+        IProgress<(int current, int total)> progress,
+        CancellationToken ct = default)
+    {
+        if (LastImportResult is null) return;
+        var ids = LastImportResult.AddedPhraseIds;
+        for (int i = 0; i < ids.Count; i++)
+        {
+            ct.ThrowIfCancellationRequested();
+            var phrase = _phraseService.GetById(ids[i]);
+            if (phrase is not null)
+                await _phraseCache.GenerateCacheAsync(phrase);
+            progress.Report((i + 1, ids.Count));
         }
     }
 }

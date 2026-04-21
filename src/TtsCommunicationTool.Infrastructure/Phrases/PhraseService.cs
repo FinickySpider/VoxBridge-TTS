@@ -119,9 +119,8 @@ public sealed class PhraseService : IPhraseService
         return JsonSerializer.Serialize(dto, new JsonSerializerOptions { WriteIndented = true });
     }
 
-    public OperationResult ImportFromJson(string json, out int addedCount)
+    public PhraseImportResult ImportFromJson(string json)
     {
-        addedCount = 0;
         PhraseExportFile? dto;
         try
         {
@@ -129,38 +128,83 @@ public sealed class PhraseService : IPhraseService
         }
         catch (JsonException)
         {
-            return OperationResult.Fail("Invalid JSON file format.");
+            return PhraseImportResult.Fail("Invalid JSON file format.");
         }
 
         if (dto is null || dto.Phrases is null)
-            return OperationResult.Fail("File does not contain valid phrase data.");
+            return PhraseImportResult.Fail("File does not contain valid phrase data.");
 
-        var existingNames = GetAll().Select(p => p.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var nextSort = GetAll().Count > 0 ? GetAll().Max(p => p.SortOrder) + 1 : 0;
+        var existing = GetAll();
+        var existingNames = existing
+            .Select(p => p.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        // Track hotkeys used by existing AND already-imported-in-this-batch phrases
+        var usedHotkeys = existing
+            .Where(p => p.Hotkey is not null && !p.Hotkey.IsEmpty)
+            .Select(p => p.Hotkey!)
+            .ToHashSet();
+
+        var nextSort = existing.Count > 0 ? existing.Max(p => p.SortOrder) + 1 : 0;
+        var addedIds = new List<string>();
+        int namesChanged = 0;
+        int hotkeysCleared = 0;
 
         foreach (var item in dto.Phrases)
         {
             if (string.IsNullOrWhiteSpace(item.Name) || string.IsNullOrWhiteSpace(item.Text))
                 continue;
 
-            var name = existingNames.Contains(item.Name) ? item.Name + " (imported)" : item.Name;
-            existingNames.Add(name);
+            // Unique name: "Name", "Name (imported)", "Name (imported 2)", ...
+            var candidate = item.Name;
+            if (existingNames.Contains(candidate))
+            {
+                namesChanged++;
+                candidate = item.Name + " (imported)";
+                int n = 2;
+                while (existingNames.Contains(candidate))
+                    candidate = item.Name + $" (imported {n++})";
+            }
+            existingNames.Add(candidate);
+
+            // Clear hotkey if it conflicts with any existing or already-imported phrase
+            HotkeyBinding? hotkey = item.Hotkey;
+            if (hotkey is not null && !hotkey.IsEmpty)
+            {
+                if (usedHotkeys.Contains(hotkey))
+                {
+                    hotkey = null;
+                    hotkeysCleared++;
+                }
+                else
+                {
+                    usedHotkeys.Add(hotkey);
+                }
+            }
 
             var phrase = new PhraseItem
             {
                 Id = Guid.NewGuid().ToString(),
-                Name = name,
+                Name = candidate,
                 Text = item.Text,
-                Hotkey = item.Hotkey,
+                Hotkey = hotkey,
                 SortOrder = nextSort++
             };
 
             var result = Add(phrase);
-            if (result.Success) addedCount++;
+            if (result.Success)
+                addedIds.Add(phrase.Id);
         }
 
-        _log.Info($"Imported {addedCount} phrases from JSON.");
-        return OperationResult.Ok();
+        _log.Info($"Imported {addedIds.Count} phrases ({namesChanged} names changed, {hotkeysCleared} hotkeys cleared).");
+        return new PhraseImportResult
+        {
+            Success = true,
+            AddedCount = addedIds.Count,
+            NamesChangedCount = namesChanged,
+            HotkeysCleared = hotkeysCleared,
+            AddedPhraseIds = addedIds
+        };
     }
 
     // --- DTOs for import/export ---
