@@ -8,6 +8,8 @@ namespace TtsCommunicationTool.UI.Views;
 
 public partial class SettingsWindow : Window
 {
+    private bool _importDialogOpen;
+
     public SettingsWindow()
     {
         InitializeComponent();
@@ -17,12 +19,32 @@ public partial class SettingsWindow : Window
     {
         DataContext = vm;
         vm.Saved += (_, _) => Close();
+        vm.Phrases.ImportCompleted += OnImportCompleted;
         Closing += (_, e) =>
         {
-            // Block close while phrase cache regeneration is in progress
-            if (vm.IsRegenerating)
+            // Block close while phrase cache regeneration or import dialog is in progress
+            if (vm.IsRegenerating || _importDialogOpen)
                 e.Cancel = true;
         };
+    }
+
+    private void OnImportCompleted(object? sender, EventArgs e)
+    {
+        if (DataContext is not SettingsViewModel vm) return;
+        var result = vm.Phrases.LastImportResult;
+        if (result is null) return;
+
+        _importDialogOpen = true;
+        var dialog = new ImportProgressWindow(result, vm.Phrases.CacheImportedPhrasesAsync);
+        dialog.Owner = this;
+        dialog.Closed += (_, _) =>
+        {
+            _importDialogOpen = false;
+            // Update status message after dialog closes
+            vm.Phrases.PhraseStatusMessage =
+                $"Imported {result.AddedCount} phrase(s).";
+        };
+        dialog.ShowDialog();
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
@@ -61,6 +83,16 @@ public partial class SettingsWindow : Window
 
         if (DataContext is SettingsViewModel vm)
             vm.Hotkeys.SetStopHotkey(binding);
+    }
+
+    private void SettingsHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        e.Handled = true;
+        var binding = CaptureHotkey(e);
+        if (binding is null) return;
+
+        if (DataContext is SettingsViewModel vm)
+            vm.Hotkeys.SetSettingsHotkey(binding);
     }
 
     private void PhraseHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)

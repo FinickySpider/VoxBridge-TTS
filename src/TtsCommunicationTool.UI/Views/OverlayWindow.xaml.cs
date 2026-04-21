@@ -14,6 +14,9 @@ public partial class OverlayWindow : Window
 
     private bool _isClosing;
 
+    /// <summary>Raised when the user clicks the gear button to open settings. The overlay will close.</summary>
+    public event EventHandler? SettingsRequested;
+
     public OverlayWindow()
     {
         InitializeComponent();
@@ -99,6 +102,18 @@ public partial class OverlayWindow : Window
                 e.Handled = true;
                 break;
         }
+    }
+
+    private void GearButton_Click(object sender, RoutedEventArgs e)
+    {
+        // Close the overlay first so it releases foreground ownership,
+        // then open settings on the next dispatcher cycle — this prevents
+        // the overlay's close from handing focus back to the background app
+        // and minimising/hiding the settings window that just opened.
+        SafeClose();
+        Dispatcher.BeginInvoke(
+            () => SettingsRequested?.Invoke(this, EventArgs.Empty),
+            System.Windows.Threading.DispatcherPriority.Background);
     }
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

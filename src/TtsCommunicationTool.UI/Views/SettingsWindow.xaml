@@ -333,6 +333,24 @@
                                      LostFocus="HotkeyBox_LostFocus"/>
                         </Grid>
 
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Open Settings:" Style="{StaticResource FieldLabel}"/>
+                            <TextBox Grid.Column="1"
+                                     x:Name="SettingsHotkeyBox"
+                                     Text="{Binding Hotkeys.SettingsHotkeyDisplay, Mode=OneWay}"
+                                     Style="{StaticResource SettingsTextBox}"
+                                     IsReadOnly="True"
+                                     Cursor="Hand"
+                                     ToolTip="Click here then press any key combination to set the open-settings hotkey. Optional — leave as (none) to disable."
+                                     PreviewKeyDown="SettingsHotkeyBox_PreviewKeyDown"
+                                     GotFocus="HotkeyBox_GotFocus"
+                                     LostFocus="HotkeyBox_LostFocus"/>
+                        </Grid>
+
                         <TextBlock Text="{Binding Hotkeys.ValidationMessage}"
                                    Foreground="#F38BA8" FontSize="12"
                                    TextWrapping="Wrap" Margin="0,4"/>

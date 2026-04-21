@@ -111,8 +111,13 @@ public partial class App : System.Windows.Application
 
         // Create invisible host window for hotkey messages
         var hotkeyHost = _serviceProvider.GetRequiredService<HotkeyHostWindow>();
+        hotkeyHost.SettingsRequested += (_, _) => OpenSettings();
         hotkeyHost.Show();
         hotkeyHost.Hide();
+
+        // Wire overlay gear-button → open settings
+        var overlayCoordinator = _serviceProvider.GetRequiredService<IOverlayCoordinator>();
+        overlayCoordinator.SettingsRequested += (_, _) => OpenSettings();
 
         log.Info("Application started successfully.");
 

@@ -15,4 +15,7 @@ public sealed class HotkeySettings
         Shift = true,
         Key = "Back"
     };
+
+    /// <summary>Global hotkey to open the Settings window. Empty = unbound.</summary>
+    public HotkeyBinding SettingsHotkey { get; set; } = new();
 }

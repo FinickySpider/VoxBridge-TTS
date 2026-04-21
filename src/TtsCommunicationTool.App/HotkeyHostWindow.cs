@@ -52,6 +52,8 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
         Loaded += OnLoaded;
     }
 
+    public event EventHandler? SettingsRequested;
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         var hwnd = new WindowInteropHelper(this).Handle;
@@ -81,6 +83,15 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
             _log.Warn($"Failed to register stop hotkey: {stopResult.ErrorMessage}");
         else
             _log.Info($"Registered stop hotkey: {cfg.HotkeySettings.StopHotkey}");
+
+        if (!cfg.HotkeySettings.SettingsHotkey.IsEmpty)
+        {
+            var settingsResult = _hotkeyService.Register("settings", cfg.HotkeySettings.SettingsHotkey);
+            if (!settingsResult.Success)
+                _log.Warn($"Failed to register settings hotkey: {settingsResult.ErrorMessage}");
+            else
+                _log.Info($"Registered settings hotkey: {cfg.HotkeySettings.SettingsHotkey}");
+        }
 
         // Register phrase hotkeys
         RegisterPhraseHotkeys();
@@ -140,6 +151,9 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
                 _audioRouter.StopAll();
                 _playbackState.Reset();
                 _log.Info("Playback stopped by stop hotkey.");
+                break;
+            case "settings":
+                Dispatcher.Invoke(() => SettingsRequested?.Invoke(this, EventArgs.Empty));
                 break;
             default:
                 if (id.StartsWith("phrase:"))

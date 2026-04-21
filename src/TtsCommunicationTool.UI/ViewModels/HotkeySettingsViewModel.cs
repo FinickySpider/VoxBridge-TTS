@@ -7,10 +7,12 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
 {
     private string _overlayHotkeyDisplay = string.Empty;
     private string _stopHotkeyDisplay = string.Empty;
+    private string _settingsHotkeyDisplay = string.Empty;
     private string _validationMessage = string.Empty;
 
     private HotkeyBinding _overlayHotkey = new();
     private HotkeyBinding _stopHotkey = new();
+    private HotkeyBinding _settingsHotkey = new();
 
     public string OverlayHotkeyDisplay
     {
@@ -24,6 +26,12 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
         set => SetField(ref _stopHotkeyDisplay, value);
     }
 
+    public string SettingsHotkeyDisplay
+    {
+        get => _settingsHotkeyDisplay;
+        set => SetField(ref _settingsHotkeyDisplay, value);
+    }
+
     public string ValidationMessage
     {
         get => _validationMessage;
@@ -32,6 +40,7 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
 
     public HotkeyBinding OverlayHotkey => _overlayHotkey;
     public HotkeyBinding StopHotkey => _stopHotkey;
+    public HotkeyBinding SettingsHotkey => _settingsHotkey;
 
     public void SetOverlayHotkey(HotkeyBinding binding)
     {
@@ -45,6 +54,12 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
         if (HotkeyValidation.AreConflicting(binding, _stopHotkey))
         {
             ValidationMessage = "Overlay hotkey conflicts with Stop hotkey.";
+            return;
+        }
+
+        if (!_settingsHotkey.IsEmpty && HotkeyValidation.AreConflicting(binding, _settingsHotkey))
+        {
+            ValidationMessage = "Overlay hotkey conflicts with Settings hotkey.";
             return;
         }
 
@@ -68,8 +83,44 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
             return;
         }
 
+        if (!_settingsHotkey.IsEmpty && HotkeyValidation.AreConflicting(binding, _settingsHotkey))
+        {
+            ValidationMessage = "Stop hotkey conflicts with Settings hotkey.";
+            return;
+        }
+
         _stopHotkey = binding;
         StopHotkeyDisplay = binding.ToString();
+        ValidationMessage = string.Empty;
+    }
+
+    public void SetSettingsHotkey(HotkeyBinding binding)
+    {
+        // Allow clearing by pressing Escape (empty binding is acceptable)
+        if (!binding.IsEmpty)
+        {
+            var (valid, error) = HotkeyValidation.Validate(binding);
+            if (!valid)
+            {
+                ValidationMessage = error!;
+                return;
+            }
+
+            if (HotkeyValidation.AreConflicting(binding, _overlayHotkey))
+            {
+                ValidationMessage = "Settings hotkey conflicts with Overlay hotkey.";
+                return;
+            }
+
+            if (HotkeyValidation.AreConflicting(binding, _stopHotkey))
+            {
+                ValidationMessage = "Settings hotkey conflicts with Stop hotkey.";
+                return;
+            }
+        }
+
+        _settingsHotkey = binding;
+        SettingsHotkeyDisplay = binding.IsEmpty ? "(none)" : binding.ToString();
         ValidationMessage = string.Empty;
     }
 
@@ -77,8 +128,10 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
     {
         _overlayHotkey = s.OverlayHotkey;
         _stopHotkey = s.StopHotkey;
+        _settingsHotkey = s.SettingsHotkey;
         OverlayHotkeyDisplay = s.OverlayHotkey.ToString();
         StopHotkeyDisplay = s.StopHotkey.ToString();
+        SettingsHotkeyDisplay = s.SettingsHotkey.IsEmpty ? "(none)" : s.SettingsHotkey.ToString();
         ValidationMessage = string.Empty;
     }
 
@@ -86,5 +139,6 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
     {
         s.OverlayHotkey = _overlayHotkey;
         s.StopHotkey = _stopHotkey;
+        s.SettingsHotkey = _settingsHotkey;
     }
 }
