@@ -90,7 +90,11 @@ public sealed class DualOutputAudioRouter : IAudioRouterService
             }
 
             var stream = new RawSourceWaveStream(new MemoryStream(audioData), format);
-            player.Init(stream);
+            // Use SampleChannel for software volume control (per-stream gain).
+            // WasapiOut.Volume changes the system endpoint master volume and is unreliable
+            // in shared mode, so we apply gain in the audio pipeline instead.
+            var sampleChannel = new NAudio.Wave.SampleProviders.SampleChannel(stream) { Volume = volume };
+            player.Init(sampleChannel);
 
             lock (_lock)
                 _activePlayers.Add(player);
@@ -103,7 +107,6 @@ public sealed class DualOutputAudioRouter : IAudioRouterService
                 tcs.TrySetCanceled();
             });
 
-            player.Volume = volume;
             player.Play();
             await tcs.Task;
         }
