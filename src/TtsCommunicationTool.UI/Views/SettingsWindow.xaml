@@ -284,6 +284,24 @@
                         <CheckBox Content="Show splash screen on startup"
                                   IsChecked="{Binding General.ShowSplashScreen}"
                                   Style="{StaticResource SettingsCheckBox}"/>
+
+                        <Separator Background="#45475A" Margin="0,12,0,12"/>
+                        <TextBlock Text="Transcript" Style="{StaticResource SectionHeader}" Margin="0,0,0,4"/>
+
+                        <CheckBox Content="Log spoken messages to transcript file"
+                                  IsChecked="{Binding General.EnableTranscriptLogging}"
+                                  Style="{StaticResource SettingsCheckBox}"/>
+
+                        <TextBlock Text="Saves every sent message with a timestamp to a plain text file in your AppData folder."
+                                   Foreground="#6C7086" FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,8"/>
+
+                        <Button Content="Open Transcript File"
+                                Command="{Binding General.OpenTranscriptCommand}"
+                                Style="{StaticResource SecondaryButton}"
+                                HorizontalAlignment="Left"
+                                Margin="0,0,0,4"/>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -472,27 +490,86 @@
             <TabItem Header="Voice">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
                     <StackPanel Margin="8,0">
-                        <TextBlock Text="Voice" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock Text="Voice Engine" Style="{StaticResource SectionHeader}"/>
 
-                        <TextBlock Foreground="#6C7086" FontSize="12" Margin="0,0,0,12">
-                            <Run Text="Engine:"/>
-                            <Run Text="{Binding Voice.EngineName, Mode=OneWay}" Foreground="#CDD6F4"/>
-                        </TextBlock>
+                        <!-- Engine selector -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <RadioButton Content="Kokoro (Offline)"
+                                         Foreground="#CDD6F4" GroupName="EngineGroup"
+                                         IsChecked="{Binding Voice.IsKokoro, Mode=TwoWay}"
+                                         Margin="0,0,16,0"/>
+                            <RadioButton Content="ElevenLabs (Online)"
+                                         Foreground="#CDD6F4" GroupName="EngineGroup"
+                                         IsChecked="{Binding Voice.IsElevenLabs, Mode=TwoWay}"/>
+                        </StackPanel>
 
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Voice:" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox Grid.Column="1"
-                                      ItemsSource="{Binding Voice.AvailableVoices}"
-                                      SelectedValue="{Binding Voice.SelectedVoiceId}"
-                                      SelectedValuePath="Id"
-                                      DisplayMemberPath="DisplayName"
-                                      Style="{StaticResource SettingsComboBox}"/>
-                        </Grid>
+                        <!-- ── Kokoro section ───────────────── -->
+                        <StackPanel Visibility="{Binding Voice.IsKokoro, Converter={StaticResource BoolToVisConverter}}">
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Voice:" Style="{StaticResource FieldLabel}"/>
+                                <ComboBox Grid.Column="1"
+                                          ItemsSource="{Binding Voice.AvailableVoices}"
+                                          SelectedValue="{Binding Voice.SelectedVoiceId}"
+                                          SelectedValuePath="Id"
+                                          DisplayMemberPath="DisplayName"
+                                          Style="{StaticResource SettingsComboBox}"/>
+                            </Grid>
+                        </StackPanel>
 
+                        <!-- ── ElevenLabs section ───────────── -->
+                        <StackPanel Visibility="{Binding Voice.IsElevenLabs, Converter={StaticResource BoolToVisConverter}}">
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="API Key:" Style="{StaticResource FieldLabel}"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding Voice.ElevenLabsApiKey, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource SettingsTextBox}"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Model:" Style="{StaticResource FieldLabel}"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding Voice.ElevenLabsModelId, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource SettingsTextBox}"/>
+                            </Grid>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Button Content="Fetch Voices"
+                                        Command="{Binding Voice.FetchElevenLabsVoicesCommand}"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding Voice.ElevenLabsStatus}"
+                                           Foreground="#89B4FA" FontSize="12"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Voice:" Style="{StaticResource FieldLabel}"/>
+                                <ComboBox Grid.Column="1"
+                                          ItemsSource="{Binding Voice.ElevenLabsVoices}"
+                                          SelectedValue="{Binding Voice.ElevenLabsSelectedVoiceId}"
+                                          SelectedValuePath="Id"
+                                          DisplayMemberPath="DisplayName"
+                                          Style="{StaticResource SettingsComboBox}"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Test Voice (both engines) -->
                         <Button Content="Test Voice" Command="{Binding Voice.TestVoiceCommand}"
                                 Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left"/>
                     </StackPanel>
@@ -553,15 +630,90 @@
                 <Grid Margin="0,16,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <TextBlock Text="Quick Phrases" Style="{StaticResource SectionHeader}" Margin="8,0"/>
 
+                    <!-- Search / filter bar -->
+                    <Grid Grid.Row="1" Margin="8,6,8,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Search box -->
+                        <Grid Margin="0,0,6,0">
+                            <TextBox Text="{Binding Phrases.FilterText, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource SettingsTextBox}"/>
+                            <TextBlock Text="Search phrases..."
+                                       Foreground="#6C7086" FontSize="12"
+                                       IsHitTestVisible="False"
+                                       Margin="10,7,0,0"
+                                       Visibility="{Binding Phrases.FilterText, Converter={StaticResource EmptyToVisibleConverter}}"/>
+                        </Grid>
+
+                        <!-- Category filter -->
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding Phrases.Categories}"
+                                  SelectedItem="{Binding Phrases.SelectedCategory}"
+                                  Margin="0,0,6,0"
+                                  Background="#2B2B3D"
+                                  Foreground="#CDD6F4"
+                                  BorderBrush="#45475A"
+                                  Padding="8,5">
+                            <ComboBox.Resources>
+                                <Style TargetType="ComboBoxItem">
+                                    <Setter Property="Background" Value="#2B2B3D"/>
+                                    <Setter Property="Foreground" Value="#CDD6F4"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter Property="Background" Value="#45475A"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Resources>
+                        </ComboBox>
+
+                        <!-- Favorites toggle -->
+                        <ToggleButton Grid.Column="2"
+                                      IsChecked="{Binding Phrases.ShowFavoritesOnly}"
+                                      Padding="10,5"
+                                      Background="#2B2B3D"
+                                      Foreground="#CDD6F4"
+                                      BorderBrush="#45475A"
+                                      BorderThickness="1"
+                                      Cursor="Hand"
+                                      ToolTip="Show favorites only">
+                            <ToggleButton.Style>
+                                <Style TargetType="ToggleButton">
+                                    <Setter Property="Background" Value="#2B2B3D"/>
+                                    <Setter Property="Foreground" Value="#CDD6F4"/>
+                                    <Setter Property="BorderBrush" Value="#45475A"/>
+                                    <Setter Property="BorderThickness" Value="1"/>
+                                    <Setter Property="Padding" Value="10,5"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter Property="Background" Value="#45475A"/>
+                                            <Setter Property="Foreground" Value="#F9E2AF"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#3B3B55"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ToggleButton.Style>
+                            <TextBlock Text="&#x2605; Favorites" FontSize="12"/>
+                        </ToggleButton>
+                    </Grid>
+
                     <!-- Phrase list -->
-                    <ListBox Grid.Row="1"
-                             ItemsSource="{Binding Phrases.Phrases}"
+                    <ListBox Grid.Row="2"
+                             ItemsSource="{Binding Phrases.FilteredPhrases}"
                              SelectedItem="{Binding Phrases.SelectedPhrase}"
                              Background="#2B2B3D"
                              Foreground="#CDD6F4"
@@ -589,15 +741,58 @@
                             <DataTemplate>
                                 <Grid Margin="4,2">
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" Foreground="#CDD6F4"/>
-                                        <TextBlock Text="{Binding Text}" Foreground="#6C7086" FontSize="11"
-                                                   TextTrimming="CharacterEllipsis" MaxWidth="400"/>
-                                    </StackPanel>
+                                    <!-- Favorite star -->
+                                    <TextBlock Grid.Column="0"
+                                               Text="&#x2605;"
+                                               FontSize="12"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,4,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#45475A"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                                        <Setter Property="Foreground" Value="#F9E2AF"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <!-- Pin indicator -->
                                     <TextBlock Grid.Column="1"
+                                               Text="&#x1F4CC;"
+                                               FontSize="11"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,4,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Opacity" Value="0"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                                        <Setter Property="Opacity" Value="1"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <!-- Name + text -->
+                                    <StackPanel Grid.Column="2">
+                                        <DockPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" Foreground="#CDD6F4"/>
+                                            <TextBlock Text="{Binding Category}" FontSize="11" Foreground="#6C7086"
+                                                       Margin="6,0,0,0" VerticalAlignment="Center"
+                                                       Visibility="{Binding Category, Converter={StaticResource NonEmptyToVisibleConverter}}"/>
+                                        </DockPanel>
+                                        <TextBlock Text="{Binding Text}" Foreground="#6C7086" FontSize="11"
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="380"/>
+                                    </StackPanel>
+                                    <!-- Hotkey -->
+                                    <TextBlock Grid.Column="3"
                                                Text="{Binding Hotkey, Converter={StaticResource HotkeyDisplayConverter}}"
                                                Foreground="#89B4FA" FontSize="11"
                                                VerticalAlignment="Center"
@@ -608,11 +803,13 @@
                     </ListBox>
 
                     <!-- Add/Delete/Play controls -->
-                    <StackPanel Grid.Row="2" Margin="8,12,8,0">
+                    <StackPanel Grid.Row="3" Margin="8,12,8,0">
+                        <!-- Input row: name, text, category -->
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
                             <Grid Margin="0,0,4,0">
                                 <TextBox x:Name="PhraseNameBox"
@@ -624,7 +821,7 @@
                                            Margin="10,7,0,0"
                                            Visibility="{Binding Phrases.EditName, Converter={StaticResource EmptyToVisibleConverter}}"/>
                             </Grid>
-                            <Grid Grid.Column="1" Margin="4,0,0,0">
+                            <Grid Grid.Column="1" Margin="4,0,4,0">
                                 <TextBox x:Name="PhraseTextBox"
                                          Text="{Binding Phrases.EditText, UpdateSourceTrigger=PropertyChanged}"
                                          Style="{StaticResource SettingsTextBox}"/>
@@ -634,6 +831,15 @@
                                            Margin="10,7,0,0"
                                            Visibility="{Binding Phrases.EditText, Converter={StaticResource EmptyToVisibleConverter}}"/>
                             </Grid>
+                            <Grid Grid.Column="2" Margin="0,0,0,0">
+                                <TextBox Text="{Binding Phrases.EditCategory, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource SettingsTextBox}"/>
+                                <TextBlock Text="Category..."
+                                           Foreground="#6C7086" FontSize="13"
+                                           IsHitTestVisible="False"
+                                           Margin="10,7,0,0"
+                                           Visibility="{Binding Phrases.EditCategory, Converter={StaticResource EmptyToVisibleConverter}}"/>
+                            </Grid>
                         </Grid>
                         <StackPanel Orientation="Horizontal">
                             <Button Content="Add" Command="{Binding Phrases.AddCommand}"
@@ -642,6 +848,12 @@
                                     Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
                             <Button Content="▶ Play" Command="{Binding Phrases.PlayCommand}"
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                            <Button Content="★ Fav" Command="{Binding Phrases.ToggleFavoriteCommand}"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
+                                    ToolTip="Toggle favorite on selected phrase"/>
+                            <Button Content="📌 Pin" Command="{Binding Phrases.TogglePinnedCommand}"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
+                                    ToolTip="Toggle pin on selected phrase"/>
                             <Button Content="Import..." Command="{Binding Phrases.ImportCommand}"
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
                             <Button Content="Export..." Command="{Binding Phrases.ExportCommand}"

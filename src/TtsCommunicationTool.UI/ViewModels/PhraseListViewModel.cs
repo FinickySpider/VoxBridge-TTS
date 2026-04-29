@@ -18,8 +18,13 @@ public sealed class PhraseListViewModel : ViewModelBase
     private readonly ILoggingService _log;
     private readonly IHotkeyHost _hotkeyHost;
     private PhraseItem? _selectedPhrase;
+    private string _filterText = string.Empty;
+    private string _selectedCategory = "All";
+    private bool _showFavoritesOnly;
 
     public ObservableCollection<PhraseItem> Phrases { get; } = new();
+    public ObservableCollection<PhraseItem> FilteredPhrases { get; } = new();
+    public ObservableCollection<string> Categories { get; } = new();
 
     public PhraseItem? SelectedPhrase
     {
@@ -55,10 +60,13 @@ public sealed class PhraseListViewModel : ViewModelBase
     public ICommand ClearHotkeyCommand { get; }
     public ICommand ImportCommand { get; }
     public ICommand ExportCommand { get; }
+    public ICommand ToggleFavoriteCommand { get; }
+    public ICommand TogglePinnedCommand { get; }
 
     // For inline editing
     private string _editName = string.Empty;
     private string _editText = string.Empty;
+    private string _editCategory = string.Empty;
     private string _phraseStatusMessage = string.Empty;
 
     public string PhraseStatusMessage
@@ -77,6 +85,42 @@ public sealed class PhraseListViewModel : ViewModelBase
     {
         get => _editText;
         set => SetField(ref _editText, value);
+    }
+
+    public string EditCategory
+    {
+        get => _editCategory;
+        set => SetField(ref _editCategory, value);
+    }
+
+    public string FilterText
+    {
+        get => _filterText;
+        set
+        {
+            if (SetField(ref _filterText, value))
+                ApplyFilter();
+        }
+    }
+
+    public string SelectedCategory
+    {
+        get => _selectedCategory;
+        set
+        {
+            if (SetField(ref _selectedCategory, value))
+                ApplyFilter();
+        }
+    }
+
+    public bool ShowFavoritesOnly
+    {
+        get => _showFavoritesOnly;
+        set
+        {
+            if (SetField(ref _showFavoritesOnly, value))
+                ApplyFilter();
+        }
     }
 
     /// <summary>Result of the most recent successful import. Used by the import progress dialog.</summary>
@@ -109,6 +153,8 @@ public sealed class PhraseListViewModel : ViewModelBase
         ClearHotkeyCommand = new RelayCommand(ClearSelectedHotkey, () => SelectedPhrase is not null);
         ImportCommand = new RelayCommand(ImportPhrases);
         ExportCommand = new RelayCommand(ExportPhrases, () => Phrases.Count > 0);
+        ToggleFavoriteCommand = new RelayCommand(ToggleFavorite, () => SelectedPhrase is not null);
+        TogglePinnedCommand = new RelayCommand(TogglePinned, () => SelectedPhrase is not null);
 
         Refresh();
     }
@@ -118,6 +164,51 @@ public sealed class PhraseListViewModel : ViewModelBase
         Phrases.Clear();
         foreach (var p in _phraseService.GetAll())
             Phrases.Add(p);
+        RebuildCategories();
+        ApplyFilter();
+    }
+
+    private void RebuildCategories()
+    {
+        var prev = SelectedCategory;
+        Categories.Clear();
+        Categories.Add("All");
+        foreach (var cat in _phraseService.GetAll()
+            .Select(p => p.Category)
+            .Where(c => !string.IsNullOrEmpty(c))
+            .Distinct()
+            .OrderBy(c => c))
+        {
+            Categories.Add(cat!);
+        }
+        // Restore selection if still valid, else default to All
+        SelectedCategory = Categories.Contains(prev) ? prev : "All";
+    }
+
+    private void ApplyFilter()
+    {
+        var query = Phrases.AsEnumerable();
+
+        if (_showFavoritesOnly)
+            query = query.Where(p => p.IsFavorite);
+
+        if (!string.IsNullOrEmpty(_selectedCategory) && _selectedCategory != "All")
+            query = query.Where(p => string.Equals(p.Category, _selectedCategory, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(_filterText))
+        {
+            var ft = _filterText.Trim().ToLowerInvariant();
+            query = query.Where(p =>
+                p.Name.ToLowerInvariant().Contains(ft) ||
+                p.Text.ToLowerInvariant().Contains(ft));
+        }
+
+        // Pinned first, then by SortOrder
+        var results = query.OrderByDescending(p => p.IsPinned).ThenBy(p => p.SortOrder).ToList();
+
+        FilteredPhrases.Clear();
+        foreach (var p in results)
+            FilteredPhrases.Add(p);
     }
 
     private void AddPhrase()
@@ -129,6 +220,7 @@ public sealed class PhraseListViewModel : ViewModelBase
         {
             Name = EditName.Trim(),
             Text = EditText.Trim(),
+            Category = string.IsNullOrWhiteSpace(EditCategory) ? null : EditCategory.Trim(),
             SortOrder = Phrases.Count
         };
 
@@ -137,6 +229,7 @@ public sealed class PhraseListViewModel : ViewModelBase
         {
             EditName = string.Empty;
             EditText = string.Empty;
+            EditCategory = string.Empty;
             Refresh();
         }
     }
@@ -168,6 +261,24 @@ public sealed class PhraseListViewModel : ViewModelBase
         _phraseService.Update(SelectedPhrase);
         _hotkeyHost.RegisterPhraseHotkeys();
         OnPropertyChanged(nameof(SelectedPhraseHotkeyDisplay));
+        Refresh();
+    }
+
+    private void ToggleFavorite()
+    {
+        if (SelectedPhrase is null) return;
+        SelectedPhrase.IsFavorite = !SelectedPhrase.IsFavorite;
+        SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
+        _phraseService.Update(SelectedPhrase);
+        Refresh();
+    }
+
+    private void TogglePinned()
+    {
+        if (SelectedPhrase is null) return;
+        SelectedPhrase.IsPinned = !SelectedPhrase.IsPinned;
+        SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
+        _phraseService.Update(SelectedPhrase);
         Refresh();
     }
 

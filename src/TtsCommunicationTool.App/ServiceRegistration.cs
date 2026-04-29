@@ -1,3 +1,4 @@
+using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Core.State;
@@ -6,6 +7,7 @@ using TtsCommunicationTool.Infrastructure.Config;
 using TtsCommunicationTool.Infrastructure.Logging;
 using TtsCommunicationTool.Infrastructure.Phrases;
 using TtsCommunicationTool.Infrastructure.TextReplacement;
+using TtsCommunicationTool.Infrastructure.Transcript;
 using TtsCommunicationTool.Infrastructure.Tts;
 using TtsCommunicationTool.UI.Services;
 using TtsCommunicationTool.UI.ViewModels;
@@ -27,11 +29,16 @@ public static class ServiceRegistration
         services.AddSingleton<IConfigService, JsonConfigService>();
         services.AddSingleton<IAudioDeviceService, WasapiAudioDeviceService>();
         services.AddSingleton<IAudioRouterService, DualOutputAudioRouter>();
-        services.AddSingleton<ITtsService, KokoroTtsService>();
+        services.AddSingleton<HttpClient>();
+        services.AddSingleton<KokoroTtsService>();
+        services.AddSingleton<ElevenLabsTtsService>();
+        services.AddSingleton<TtsRouter>();
+        services.AddSingleton<ITtsService>(sp => sp.GetRequiredService<TtsRouter>());
         services.AddSingleton<IPhraseService, PhraseService>();
         services.AddSingleton<IPhraseCacheService, PhraseCacheService>();
         services.AddSingleton<INotificationService, WpfNotificationService>();
         services.AddSingleton<ITextReplacementService, TextReplacementService>();
+        services.AddSingleton<ITranscriptService, TranscriptService>();
 
         // App-level services
         services.AddSingleton<TrayIconManager>();

@@ -10,4 +10,5 @@ public sealed class AppConfig
     public OverlaySettings OverlaySettings { get; set; } = new();
     public List<PhraseItem> Phrases { get; set; } = new();
     public TextReplacementSettings TextReplacements { get; set; } = new();
+    public ElevenLabsSettings ElevenLabs { get; set; } = new();
 }

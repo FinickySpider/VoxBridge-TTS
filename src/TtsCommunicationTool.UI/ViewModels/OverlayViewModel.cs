@@ -16,10 +16,12 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     private readonly IConfigService _config;
     private readonly ILoggingService _log;
     private readonly ITextReplacementService _textReplacement;
+    private readonly ITranscriptService _transcript;
     private readonly PlaybackState _playbackState;
     private readonly RecentMessagesState _recentMessages;
     private string _inputText = string.Empty;
     private string _statusText = string.Empty;  // Empty = idle (no noise)
+    private StatusSeverity _statusSeverity = StatusSeverity.None;
     private bool _isSending;
 
     public OverlayViewModel(
@@ -28,6 +30,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         IConfigService config,
         ILoggingService log,
         ITextReplacementService textReplacement,
+        ITranscriptService transcript,
         PlaybackState playbackState,
         RecentMessagesState recentMessages)
     {
@@ -36,6 +39,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         _config = config;
         _log = log;
         _textReplacement = textReplacement;
+        _transcript = transcript;
         _playbackState = playbackState;
         _recentMessages = recentMessages;
 
@@ -72,6 +76,12 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         set => SetField(ref _statusText, value);
     }
 
+    public StatusSeverity StatusSeverity
+    {
+        get => _statusSeverity;
+        private set => SetField(ref _statusSeverity, value);
+    }
+
     public bool IsSending
     {
         get => _isSending;
@@ -82,6 +92,12 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
 
     public int MaxLength => TextValidation.MaxInputLength;
     public int CharacterCount => InputText.Length;
+
+    /// <summary>Last spoken text, or null if nothing has been sent this session.</summary>
+    public string? LastMessage => _recentMessages.GetAll().FirstOrDefault();
+
+    /// <summary>True when there is a message available to resend.</summary>
+    public bool HasRecentMessage => LastMessage is not null;
 
     public ICommand SendCommand { get; }
     public ICommand StopCommand { get; }
@@ -107,7 +123,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         text = _textReplacement.Apply(text);
 
         IsSending = true;
-        StatusText = "Generating...";
+        SetStatus("Generating...", StatusSeverity.Info);
         _log.Info($"Sending text: {text}");
 
         try
@@ -119,14 +135,18 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             });
             if (!result.Success)
             {
-                StatusText = $"TTS error: {result.ErrorMessage}";
+                SetStatus($"TTS error: {result.ErrorMessage}", StatusSeverity.Error);
                 _log.Error($"TTS failed: {result.ErrorMessage}");
                 return;
             }
 
-            StatusText = "Speaking...";
+            SetStatus("Speaking...", StatusSeverity.Info);
             _playbackState.IsPlaying = true;
             _playbackState.CurrentText = text;
+            _recentMessages.Add(text);
+            OnPropertyChanged(nameof(LastMessage));
+            OnPropertyChanged(nameof(HasRecentMessage));
+            _ = _transcript.LogAsync(text);
 
             var cfg = _config.CurrentConfig;
             var playback = new PlaybackRequest
@@ -146,7 +166,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            StatusText = "Error — see log.";
+            SetStatus("Error — see log.", StatusSeverity.Error);
             _log.Error("Send failed", ex);
         }
         finally
@@ -182,6 +202,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         _playbackState.IsPlaying = true;
         _playbackState.CurrentText = text;
         _recentMessages.Add(text);
+        OnPropertyChanged(nameof(LastMessage));
+        OnPropertyChanged(nameof(HasRecentMessage));
+        _ = _transcript.LogAsync(text);
 
         _ = Task.Run(async () =>
         {
@@ -225,14 +248,20 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     {
         _audioRouter.StopAll();
         _playbackState.Reset();
-        StatusText = string.Empty;
+        SetStatus(string.Empty, StatusSeverity.None);
         _log.Info("Playback stopped by user.");
     }
 
     private void Clear()
     {
         InputText = string.Empty;
-        StatusText = string.Empty;
+        SetStatus(string.Empty, StatusSeverity.None);
+    }
+
+    private void SetStatus(string text, StatusSeverity severity = StatusSeverity.None)
+    {
+        StatusText = text;
+        StatusSeverity = severity;
     }
 
     private void OnPlaybackStateChanged(object? sender, PropertyChangedEventArgs e)
@@ -243,9 +272,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             // Only set "Speaking..." from external sources (e.g. phrase hotkeys).
             // SendAsync already manages its own "Generating..." / "Speaking..." flow.
             if (_playbackState.IsPlaying && string.IsNullOrEmpty(StatusText))
-                StatusText = "Speaking...";
+                SetStatus("Speaking...", StatusSeverity.Info);
             else if (!_playbackState.IsPlaying && StatusText == "Speaking...")
-                StatusText = string.Empty;
+                SetStatus(string.Empty, StatusSeverity.None);
         });
     }
 

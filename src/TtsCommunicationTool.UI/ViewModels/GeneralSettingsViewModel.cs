@@ -1,12 +1,22 @@
+using System.Diagnostics;
+using System.IO;
+using System.Windows.Input;
 using TtsCommunicationTool.Core.Models;
+using TtsCommunicationTool.UI.Commands;
 
 namespace TtsCommunicationTool.UI.ViewModels;
 
 public sealed class GeneralSettingsViewModel : ViewModelBase
 {
+    private static readonly string TranscriptPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "TtsCommunicationTool",
+        "transcript.txt");
+
     private bool _startWithWindows;
     private bool _showNotifications;
     private bool _showSplashScreen;
+    private bool _enableTranscriptLogging;
 
     public bool StartWithWindows
     {
@@ -26,11 +36,27 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         set => SetField(ref _showSplashScreen, value);
     }
 
+    public bool EnableTranscriptLogging
+    {
+        get => _enableTranscriptLogging;
+        set => SetField(ref _enableTranscriptLogging, value);
+    }
+
+    /// <summary>True when the transcript file exists on disk.</summary>
+    public bool HasTranscriptFile => File.Exists(TranscriptPath);
+
+    public ICommand OpenTranscriptCommand { get; } = new RelayCommand(() =>
+    {
+        if (!File.Exists(TranscriptPath)) return;
+        Process.Start(new ProcessStartInfo { FileName = TranscriptPath, UseShellExecute = true });
+    });
+
     public void LoadFrom(GeneralSettings s)
     {
         StartWithWindows = s.StartWithWindows;
         ShowNotifications = s.ShowNotifications;
         ShowSplashScreen = s.ShowSplashScreen;
+        EnableTranscriptLogging = s.EnableTranscriptLogging;
     }
 
     public void ApplyTo(GeneralSettings s)
@@ -38,5 +64,6 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         s.StartWithWindows = StartWithWindows;
         s.ShowNotifications = ShowNotifications;
         s.ShowSplashScreen = ShowSplashScreen;
+        s.EnableTranscriptLogging = EnableTranscriptLogging;
     }
 }

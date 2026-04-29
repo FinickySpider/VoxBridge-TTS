@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using TtsCommunicationTool.UI.ViewModels;
 
 namespace TtsCommunicationTool.UI.Views;
@@ -21,6 +23,19 @@ public partial class OverlayWindow : Window
     {
         InitializeComponent();
         Activated += OverlayWindow_Activated;
+    }
+
+    private void OverlayWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (!SystemParameters.ClientAreaAnimation)
+            return;
+
+        Opacity = 0;
+        BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1,
+            new Duration(TimeSpan.FromMilliseconds(150)))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        });
     }
 
     /// <summary>
@@ -72,6 +87,21 @@ public partial class OverlayWindow : Window
         {
             vm.FireAndForgetSend();
             SafeClose();
+        }
+    }
+
+    private void ResendButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is OverlayViewModel vm)
+        {
+            var last = vm.LastMessage;
+            if (last is null) return;
+            vm.InputText = last;
+            if (vm.CanSend)
+            {
+                vm.FireAndForgetSend();
+                SafeClose();
+            }
         }
     }
 

@@ -7,10 +7,10 @@ Single source of truth. The agent starts here.
 TTS Communication Tool
 
 ## Active Phase
-- [PHASE-02: Usability Hardening](../phases/PHASE-02-usability-hardening.md) — complete
+- [PHASE-03: Comfort & Expression](../phases/PHASE-03-comfort-and-expression.md) — complete (Phase 3 fully complete)
 
 ## Active Sprint
-- (none — PHASE-02 complete)
+- none — planning Phase 4 next
 
 ## In Progress
 - (none)
@@ -18,7 +18,7 @@ TTS Communication Tool
 ## Phases
 - [PHASE-01: Foundation & Core Loop](../phases/PHASE-01-foundation-and-core-loop.md) — complete
 - [PHASE-02: Usability Hardening](../phases/PHASE-02-usability-hardening.md) — complete
-- [PHASE-03: Comfort & Expression](../phases/PHASE-03-comfort-and-expression.md) — planned
+- [PHASE-03: Comfort & Expression](../phases/PHASE-03-comfort-and-expression.md) — complete
 - [PHASE-04: Advanced & Deferred](../phases/PHASE-04-advanced-and-deferred.md) — planned
 
 ## Sprints
@@ -27,6 +27,9 @@ TTS Communication Tool
 - [SPRINT-03](../sprints/SPRINT-03.md) — complete (PHASE-01)
 - [SPRINT-04](../sprints/SPRINT-04.md) — complete (PHASE-02)
 - [SPRINT-05](../sprints/SPRINT-05.md) — complete (PHASE-02)
+- [SPRINT-06](../sprints/SPRINT-06.md) — complete (PHASE-03)
+- [SPRINT-07](../sprints/SPRINT-07.md) — complete (PHASE-03)
+- [SPRINT-08](../sprints/SPRINT-08.md) — complete (PHASE-03)
 
 ## Features
 - [FEAT-001: Solution scaffold](../features/FEAT-001-solution-scaffold.md) — complete (SPRINT-01)
@@ -56,6 +59,12 @@ TTS Communication Tool
 - [FEAT-025: Recent phrases/messages](../features/FEAT-025-recent-phrases.md) — complete (SPRINT-05)
 - [FEAT-026: Phrase import/export](../features/FEAT-026-phrase-import-export.md) — complete (SPRINT-05)
 - [FEAT-027: Settings organization improvements](../features/FEAT-027-settings-organization.md) — complete (SPRINT-05)
+- [FEAT-028: Visual polish and subtle animations](../features/FEAT-028-visual-polish-animations.md) — complete (SPRINT-06)
+- [FEAT-029: Better send/success feedback](../features/FEAT-029-send-success-feedback.md) — complete (SPRINT-06)
+- [FEAT-030: Phrase categories, search, favorites, pinning](../features/FEAT-030-phrase-categories-search.md) — complete (SPRINT-07)
+- [FEAT-031: Repeat last / resend](../features/FEAT-031-repeat-last-resend.md) — complete (SPRINT-06)
+- [FEAT-032: Transcript logging](../features/FEAT-032-transcript-logging.md) — complete (SPRINT-06)
+- [FEAT-033: Optional ElevenLabs voice path](../features/FEAT-033-elevenlabs-voice-path.md) — complete (SPRINT-08)
 
 ## Refactors
 - [REFACTOR-001: Config recovery](../refactors/REFACTOR-001-config-recovery.md) — complete (SPRINT-03)
