@@ -175,6 +175,18 @@ public sealed class SettingsViewModel : ViewModelBase
         Saved?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Silently saves the window dimensions to config without triggering a full settings validation/save.
+    /// Called from SettingsWindow.Closing so size is always persisted.
+    /// </summary>
+    public async Task SaveWindowDimensionsAsync()
+    {
+        var cfg = _config.CurrentConfig;
+        cfg.GeneralSettings.SettingsWindowWidth = General.SettingsWindowWidth;
+        cfg.GeneralSettings.SettingsWindowHeight = General.SettingsWindowHeight;
+        await _config.SaveAsync(cfg);
+    }
+
     /// <summary>Returns an error string if any two phrases share the same hotkey, else null.</summary>
     private string? CheckPhraseHotkeyConflicts()
     {

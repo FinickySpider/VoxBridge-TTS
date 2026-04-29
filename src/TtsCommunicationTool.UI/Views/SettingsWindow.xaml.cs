@@ -20,6 +20,20 @@ public partial class SettingsWindow : Window
         DataContext = vm;
         vm.Saved += (_, _) => Close();
         vm.Phrases.ImportCompleted += OnImportCompleted;
+
+        // Restore persisted window size
+        Width = vm.General.SettingsWindowWidth;
+        Height = vm.General.SettingsWindowHeight;
+
+        // Persist window size changes immediately (before save)
+        SizeChanged += (_, e) =>
+        {
+            if (DataContext is SettingsViewModel svm && WindowState == WindowState.Normal)
+            {
+                svm.General.SettingsWindowWidth = e.NewSize.Width;
+                svm.General.SettingsWindowHeight = e.NewSize.Height;
+            }
+        };
         // Cancel any active hotkey capture when the user switches tabs
         vm.PropertyChanged += (_, pe) =>
         {
@@ -30,7 +44,12 @@ public partial class SettingsWindow : Window
         {
             // Block close while phrase cache regeneration or import dialog is in progress
             if (vm.IsRegenerating || _importDialogOpen)
+            {
                 e.Cancel = true;
+                return;
+            }
+            // Always persist the current window size (fire-and-forget, non-blocking)
+            _ = vm.SaveWindowDimensionsAsync();
         };
     }
 

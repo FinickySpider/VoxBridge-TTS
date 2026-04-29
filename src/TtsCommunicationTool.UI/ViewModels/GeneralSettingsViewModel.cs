@@ -49,6 +49,10 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         set => SetField(ref _keepOverlayText, value);
     }
 
+    // Window dimensions are persisted independently — not tracked by IsDirty
+    public double SettingsWindowWidth { get; set; } = 680;
+    public double SettingsWindowHeight { get; set; } = 540;
+
     /// <summary>True when the transcript file exists on disk.</summary>
     public bool HasTranscriptFile => File.Exists(TranscriptPath);
 
@@ -65,6 +69,8 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         ShowSplashScreen = s.ShowSplashScreen;
         EnableTranscriptLogging = s.EnableTranscriptLogging;
         KeepOverlayText = s.KeepOverlayText;
+        SettingsWindowWidth = s.SettingsWindowWidth > 400 ? s.SettingsWindowWidth : 680;
+        SettingsWindowHeight = s.SettingsWindowHeight > 300 ? s.SettingsWindowHeight : 540;
     }
 
     public void ApplyTo(GeneralSettings s)
@@ -74,5 +80,7 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         s.ShowSplashScreen = ShowSplashScreen;
         s.EnableTranscriptLogging = EnableTranscriptLogging;
         s.KeepOverlayText = KeepOverlayText;
+        s.SettingsWindowWidth = SettingsWindowWidth;
+        s.SettingsWindowHeight = SettingsWindowHeight;
     }
 }

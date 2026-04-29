@@ -208,10 +208,17 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
             _playbackState.CurrentText = text;
             var processed = _textReplacement.Apply(text);
 
+            var cfg = _config.CurrentConfig;
+            // For Kokoro, pass the selected voice; for ElevenLabs pass empty so the
+            // ElevenLabsTtsService falls back to its own configured voice ID.
+            var voiceId = cfg.VoiceSettings.Engine == TtsCommunicationTool.Core.Models.VoiceEngine.Kokoro
+                ? cfg.VoiceSettings.SelectedVoiceId
+                : string.Empty;
+
             var result = await _tts.SynthesizeAsync(new TtsRequest
             {
                 Text = processed,
-                VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId
+                VoiceId = voiceId
             });
 
             if (!result.Success)
@@ -222,7 +229,6 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
                 return;
             }
 
-            var cfg = _config.CurrentConfig;
             var playback = new PlaybackRequest
             {
                 AudioData = result.AudioData!,

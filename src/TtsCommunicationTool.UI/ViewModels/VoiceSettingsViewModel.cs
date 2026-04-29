@@ -10,6 +10,7 @@ namespace TtsCommunicationTool.UI.ViewModels;
 public sealed class VoiceSettingsViewModel : ViewModelBase
 {
     private readonly ITtsService _tts;
+    private readonly KokoroTtsService _kokoro;
     private readonly ElevenLabsTtsService _elevenLabs;
     private readonly IAudioRouterService _audioRouter;
     private readonly IConfigService _config;
@@ -17,6 +18,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
 
     // ── Kokoro ───────────────────────────────────────────────────────────────
     private string _selectedVoiceId = string.Empty;
+    private string _savedKokoroVoiceId = string.Empty;  // remembered when switching to ElevenLabs
     private string _engineName = "Kokoro";
 
     // ── Engine selection ─────────────────────────────────────────────────────
@@ -26,12 +28,19 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         get => _engine;
         set
         {
-            if (SetField(ref _engine, value))
-            {
-                OnPropertyChanged(nameof(IsKokoro));
-                OnPropertyChanged(nameof(IsElevenLabs));
-                LoadVoices();
-            }
+            if (_engine == value) return;
+            // Save Kokoro voice before switching away
+            if (_engine == VoiceEngine.Kokoro && !string.IsNullOrEmpty(_selectedVoiceId))
+                _savedKokoroVoiceId = _selectedVoiceId;
+
+            SetField(ref _engine, value);
+            OnPropertyChanged(nameof(IsKokoro));
+            OnPropertyChanged(nameof(IsElevenLabs));
+            LoadVoices();
+
+            // Restore Kokoro voice when switching back
+            if (_engine == VoiceEngine.Kokoro && !string.IsNullOrEmpty(_savedKokoroVoiceId))
+                SelectedVoiceId = _savedKokoroVoiceId;
         }
     }
     public bool IsKokoro
@@ -100,12 +109,14 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
 
     public VoiceSettingsViewModel(
         ITtsService tts,
+        KokoroTtsService kokoro,
         ElevenLabsTtsService elevenLabs,
         IAudioRouterService audioRouter,
         IConfigService config,
         ILoggingService log)
     {
         _tts = tts;
+        _kokoro = kokoro;
         _elevenLabs = elevenLabs;
         _audioRouter = audioRouter;
         _config = config;
@@ -119,6 +130,8 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     private void LoadVoices()
     {
         AvailableVoices.Clear();
+        // Always use the concrete Kokoro service for Kokoro voices — TtsRouter routes
+        // to the active engine which may not be Kokoro if ElevenLabs is saved config.
         if (_engine == VoiceEngine.ElevenLabs)
         {
             foreach (var v in _elevenLabs.GetAvailableVoices())
@@ -126,7 +139,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         }
         else
         {
-            foreach (var v in _tts.GetAvailableVoices())
+            foreach (var v in _kokoro.GetAvailableVoices())
                 AvailableVoices.Add(v);
         }
     }
@@ -199,6 +212,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
 
     public void LoadFrom(VoiceSettings s)
     {
+        _savedKokoroVoiceId = s.SelectedVoiceId;  // remember the persisted Kokoro voice
         LoadVoices();
         SelectedVoiceId = s.SelectedVoiceId;
         EngineName = s.EngineName;
