@@ -165,17 +165,11 @@
                     </Button>
                     <!-- Char counter — right side, most muted -->
                     <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding CharacterCountDisplay}"
                                VerticalAlignment="Center"
                                Foreground="#45475A"
                                FontSize="11"
-                               FontFamily="Segoe UI">
-                        <TextBlock.Text>
-                            <MultiBinding StringFormat="{}{0}/{1}">
-                                <Binding Path="CharacterCount"/>
-                                <Binding Path="MaxLength"/>
-                            </MultiBinding>
-                        </TextBlock.Text>
-                    </TextBlock>
+                               FontFamily="Segoe UI"/>
                     <!-- Status text — left, colour driven by severity -->
                     <TextBlock DockPanel.Dock="Left"
                                Text="{Binding StatusText}"

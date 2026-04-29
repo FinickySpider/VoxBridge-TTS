@@ -239,8 +239,14 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     {
         s.Engine = _engine;
         s.EngineName = _engine.ToString();
-        s.SelectedVoiceId = SelectedVoiceId;
-        s.SelectedVoiceDisplayName = AvailableVoices.FirstOrDefault(v => v.Id == SelectedVoiceId)?.DisplayName ?? string.Empty;
+        // Always persist the Kokoro voice ID — when ElevenLabs is active the ComboBox
+        // binding clears SelectedVoiceId from the VM, so use the saved copy.
+        var kokoroId = _engine == VoiceEngine.ElevenLabs
+            ? (_savedKokoroVoiceId.Length > 0 ? _savedKokoroVoiceId : "af_heart")
+            : (SelectedVoiceId.Length > 0 ? SelectedVoiceId : "af_heart");
+        s.SelectedVoiceId = kokoroId;
+        s.SelectedVoiceDisplayName = _kokoro.GetAvailableVoices()
+            .FirstOrDefault(v => v.Id == kokoroId)?.DisplayName ?? string.Empty;
         ApplyToConfig();
     }
 

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Windows.Input;
 using Microsoft.Win32;
@@ -187,13 +188,15 @@ public sealed class PhraseListViewModel : ViewModelBase
         foreach (var cat in _phraseService.GetAll()
             .Select(p => p.Category)
             .Where(c => !string.IsNullOrEmpty(c))
-            .Distinct()
+            .GroupBy(c => c!.ToLowerInvariant())
+            .Select(g => g.First()!)
             .OrderBy(c => c))
         {
-            Categories.Add(cat!);
+            Categories.Add(cat);
         }
-        // Restore selection if still valid, else default to All
-        SelectedCategory = Categories.Contains(prev) ? prev : "All";
+        // Restore selection if still valid (case-insensitive), else default to All
+        var match = Categories.FirstOrDefault(c => string.Equals(c, prev, StringComparison.OrdinalIgnoreCase));
+        SelectedCategory = match ?? "All";
     }
 
     private void ApplyFilter()
@@ -231,7 +234,7 @@ public sealed class PhraseListViewModel : ViewModelBase
         {
             Name = EditName.Trim(),
             Text = EditText.Trim(),
-            Category = string.IsNullOrWhiteSpace(EditCategory) ? null : EditCategory.Trim(),
+            Category = NormalizeCategory(EditCategory),
             SortOrder = Phrases.Count
         };
 
@@ -266,7 +269,7 @@ public sealed class PhraseListViewModel : ViewModelBase
 
         SelectedPhrase.Name = EditName.Trim();
         SelectedPhrase.Text = EditText.Trim();
-        SelectedPhrase.Category = string.IsNullOrWhiteSpace(EditCategory) ? null : EditCategory.Trim();
+        SelectedPhrase.Category = NormalizeCategory(EditCategory);
         SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
 
         _phraseService.Update(SelectedPhrase);
@@ -315,6 +318,17 @@ public sealed class PhraseListViewModel : ViewModelBase
         SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
         _phraseService.Update(SelectedPhrase);
         Refresh();
+    }
+
+    /// <summary>
+    /// Normalizes a category string to Title Case and trims whitespace.
+    /// Returns null for empty/whitespace input so uncategorised phrases stay uncategorised.
+    /// </summary>
+    private static string? NormalizeCategory(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+        var trimmed = input.Trim();
+        return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(trimmed.ToLower());
     }
 
     private void TogglePinned()

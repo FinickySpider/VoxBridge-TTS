@@ -68,6 +68,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             if (SetField(ref _inputText, value))
             {
                 OnPropertyChanged(nameof(CharacterCount));
+                OnPropertyChanged(nameof(CharacterCountDisplay));
                 CommandManager.InvalidateRequerySuggested();
             }
         }
@@ -93,8 +94,19 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
 
     public bool CanSend => !IsSending && !string.IsNullOrWhiteSpace(InputText);
 
-    public int MaxLength => TextValidation.MaxInputLength;
+    /// <summary>0 = unlimited (WPF TextBox.MaxLength behaviour). Config-driven.</summary>
+    public int MaxLength =>
+        _config.CurrentConfig.GeneralSettings.EnableCharacterLimit
+            ? _config.CurrentConfig.GeneralSettings.MaxOverlayInputLength
+            : 0;
+
     public int CharacterCount => InputText.Length;
+
+    /// <summary>Shows "n/max" when limited, or just "n" when unlimited.</summary>
+    public string CharacterCountDisplay =>
+        _config.CurrentConfig.GeneralSettings.EnableCharacterLimit
+            ? $"{InputText.Length}/{_config.CurrentConfig.GeneralSettings.MaxOverlayInputLength}"
+            : InputText.Length.ToString();
 
     /// <summary>Last spoken text, or null if nothing has been sent this session.</summary>
     public string? LastMessage => _recentMessages.GetAll().FirstOrDefault();
@@ -116,7 +128,8 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         }
 
         var text = TextValidation.Sanitize(InputText);
-        var (valid, error) = TextValidation.Validate(text);
+        var gs = _config.CurrentConfig.GeneralSettings;
+        var (valid, error) = TextValidation.Validate(text, gs.MaxOverlayInputLength, gs.EnableCharacterLimit);
         if (!valid)
         {
             StatusText = error!;
@@ -192,8 +205,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         }
 
         var text = TextValidation.Sanitize(InputText);
-        var (valid, _) = TextValidation.Validate(text);
-        if (!valid) return;
+        var gs2 = _config.CurrentConfig.GeneralSettings;
+        var (valid2, _) = TextValidation.Validate(text, gs2.MaxOverlayInputLength, gs2.EnableCharacterLimit);
+        if (!valid2) return;
 
         text = _textReplacement.Apply(text);
 

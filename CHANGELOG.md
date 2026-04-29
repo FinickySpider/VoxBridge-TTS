@@ -4,6 +4,21 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [v0.9.1] — 2026-04-30
+
+### Bug Fixes
+
+- **Kokoro voice lost when switching to ElevenLabs** — Selecting ElevenLabs in the Voice settings tab no longer clears the saved Kokoro voice. The previously selected Kokoro voice is now correctly preserved and restored when saving settings regardless of which engine tab is active.
+- **Settings window size not persisting** — The settings window no longer slowly shrinks each session. The `SizeChanged` handler now reads `this.Width`/`this.Height` (which include the window chrome) instead of the client-area size, and a `Loaded` gate prevents spurious writes during initial layout.
+- **Favorites toggle unreadable when active** — The "⭐ Favorites" toggle button in the Phrases settings tab now uses a custom `ControlTemplate` that prevents the Windows system theme from painting a blue highlight over it. The checked state now correctly displays an amber (`#F9E2AF`) label on a muted overlay background.
+- **Case-insensitive phrase categories** — Category names are now normalised to Title Case on save (`"fun"` → `"Fun"`). The category dropdown deduplicates case-insensitively, so `"Fun"` and `"fun"` will never appear as separate entries in the same list.
+
+### New Features
+
+- **Configurable message-length limit** — A new "Message Length" section in the General settings tab lets you enable or disable the character limit on the overlay input field and set a custom maximum (default: 500). When the limit is disabled the counter shows only the current character count instead of `0/500`.
+
+---
+
 ## [v0.9.0] — 2026-04-29
 
 ### New Features

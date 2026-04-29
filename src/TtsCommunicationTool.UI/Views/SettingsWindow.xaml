@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:TtsCommunicationTool.UI.ViewModels"
         xmlns:conv="clr-namespace:TtsCommunicationTool.UI.Converters"
-        Title="Settings — TTS Communication Tool v0.9.0"
+        Title="Settings — TTS Communication Tool v0.9.1"
         Width="680" Height="540"
         WindowStartupLocation="CenterScreen"
         Background="#1E1E2E"
@@ -313,6 +313,26 @@
                                    Foreground="#6C7086" FontSize="12"
                                    TextWrapping="Wrap"
                                    Margin="0,0,0,8"/>
+
+                        <Separator Background="#45475A" Margin="0,12,0,12"/>
+                        <TextBlock Text="Message Length" Style="{StaticResource SectionHeader}" Margin="0,0,0,4"/>
+
+                        <CheckBox Content="Limit message length"
+                                  IsChecked="{Binding General.EnableCharacterLimit}"
+                                  Style="{StaticResource SettingsCheckBox}"/>
+                        <Grid Margin="0,4,0,0"
+                              IsEnabled="{Binding General.EnableCharacterLimit}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="80"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Maximum characters:" Style="{StaticResource FieldLabel}"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding General.MaxOverlayInputLength, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource SettingsTextBox}"/>
+                        </Grid>
+                        <TextBlock Text="Controls the character limit displayed on the overlay input field. When off, only character count is shown."
+                                   Foreground="#6C7086" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,8"/>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -710,16 +730,40 @@
                                     <Setter Property="BorderThickness" Value="1"/>
                                     <Setter Property="Padding" Value="10,5"/>
                                     <Setter Property="Cursor" Value="Hand"/>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsChecked" Value="True">
-                                            <Setter Property="Background" Value="#45475A"/>
-                                            <Setter Property="Foreground" Value="#F9E2AF"/>
-                                        </Trigger>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#3B3B55"/>
-                                            <Setter Property="Foreground" Value="#CDD6F4"/>
-                                        </Trigger>
-                                    </Style.Triggers>
+                                    <!-- ControlTemplate required so WPF system theme cannot override colours -->
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ToggleButton">
+                                                <Border x:Name="Bg"
+                                                        Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        CornerRadius="4"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"
+                                                                      TextElement.Foreground="{TemplateBinding Foreground}"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsChecked" Value="True">
+                                                        <Setter TargetName="Bg" Property="Background" Value="#45475A"/>
+                                                        <Setter Property="Foreground" Value="#F9E2AF"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bg" Property="Background" Value="#3B3B55"/>
+                                                    </Trigger>
+                                                    <MultiTrigger>
+                                                        <MultiTrigger.Conditions>
+                                                            <Condition Property="IsChecked" Value="True"/>
+                                                            <Condition Property="IsMouseOver" Value="True"/>
+                                                        </MultiTrigger.Conditions>
+                                                        <Setter TargetName="Bg" Property="Background" Value="#55577A"/>
+                                                        <Setter Property="Foreground" Value="#F9E2AF"/>
+                                                    </MultiTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
                                 </Style>
                             </ToggleButton.Style>
                             <TextBlock Text="&#x2605; Favorites" FontSize="12"/>

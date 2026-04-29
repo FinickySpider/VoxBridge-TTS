@@ -26,12 +26,15 @@ public partial class SettingsWindow : Window
         Height = vm.General.SettingsWindowHeight;
 
         // Persist window size changes immediately (before save)
-        SizeChanged += (_, e) =>
+        // Use this.Width/Height (includes chrome) rather than e.NewSize (client area only)
+        bool _windowSizeInitialized = false;
+        Loaded += (_, _) => _windowSizeInitialized = true;
+        SizeChanged += (_, _) =>
         {
-            if (DataContext is SettingsViewModel svm && WindowState == WindowState.Normal)
+            if (_windowSizeInitialized && DataContext is SettingsViewModel svm && WindowState == WindowState.Normal)
             {
-                svm.General.SettingsWindowWidth = e.NewSize.Width;
-                svm.General.SettingsWindowHeight = e.NewSize.Height;
+                svm.General.SettingsWindowWidth = this.Width;
+                svm.General.SettingsWindowHeight = this.Height;
             }
         };
         // Cancel any active hotkey capture when the user switches tabs

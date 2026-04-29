@@ -18,6 +18,8 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
     private bool _showSplashScreen;
     private bool _enableTranscriptLogging;
     private bool _keepOverlayText;
+    private bool _enableCharacterLimit = true;
+    private int _maxOverlayInputLength = 500;
 
     public bool StartWithWindows
     {
@@ -49,6 +51,18 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         set => SetField(ref _keepOverlayText, value);
     }
 
+    public bool EnableCharacterLimit
+    {
+        get => _enableCharacterLimit;
+        set => SetField(ref _enableCharacterLimit, value);
+    }
+
+    public int MaxOverlayInputLength
+    {
+        get => _maxOverlayInputLength;
+        set => SetField(ref _maxOverlayInputLength, value < 10 ? 10 : value);
+    }
+
     // Window dimensions are persisted independently — not tracked by IsDirty
     public double SettingsWindowWidth { get; set; } = 680;
     public double SettingsWindowHeight { get; set; } = 540;
@@ -69,6 +83,8 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         ShowSplashScreen = s.ShowSplashScreen;
         EnableTranscriptLogging = s.EnableTranscriptLogging;
         KeepOverlayText = s.KeepOverlayText;
+        EnableCharacterLimit = s.EnableCharacterLimit;
+        MaxOverlayInputLength = s.MaxOverlayInputLength > 0 ? s.MaxOverlayInputLength : 500;
         SettingsWindowWidth = s.SettingsWindowWidth > 400 ? s.SettingsWindowWidth : 680;
         SettingsWindowHeight = s.SettingsWindowHeight > 300 ? s.SettingsWindowHeight : 540;
     }
@@ -80,6 +96,8 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         s.ShowSplashScreen = ShowSplashScreen;
         s.EnableTranscriptLogging = EnableTranscriptLogging;
         s.KeepOverlayText = KeepOverlayText;
+        s.EnableCharacterLimit = EnableCharacterLimit;
+        s.MaxOverlayInputLength = MaxOverlayInputLength;
         s.SettingsWindowWidth = SettingsWindowWidth;
         s.SettingsWindowHeight = SettingsWindowHeight;
     }
