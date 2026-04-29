@@ -65,6 +65,8 @@ public sealed class SettingsViewModel : ViewModelBase
     public ICommand ResetOverlayPositionCommand { get; }
 
     public event EventHandler? Saved;
+    /// <summary>Raised after a successful cancel/rollback. The settings window should close.</summary>
+    public event EventHandler? Cancelled;
 
     public SettingsViewModel(
         IConfigService config,
@@ -100,6 +102,12 @@ public sealed class SettingsViewModel : ViewModelBase
         // Track dirty state across all child VMs
         foreach (var child in new System.ComponentModel.INotifyPropertyChanged[] { General, Hotkeys, Audio, Voice, Appearance, TextReplacements })
             child.PropertyChanged += (_, _) => IsDirty = true;
+        // Also track phrase session changes so Cancel shows the confirmation dialog
+        Phrases.PropertyChanged += (_, pe) =>
+        {
+            if (pe.PropertyName == nameof(PhraseListViewModel.HasSessionChanges))
+                IsDirty = Phrases.HasSessionChanges || IsDirty;
+        };
     }
 
     private void LoadFromConfig()
@@ -145,6 +153,7 @@ public sealed class SettingsViewModel : ViewModelBase
         await _config.SaveAsync(cfg);
         _log.Info("Settings saved.");
         IsDirty = false;
+        Phrases.Commit(); // finalize phrase session — takes new snapshot and re-registers hotkeys
 
         // Detect voice change — regenerate all phrase caches with visible progress
         var newVoiceId = cfg.VoiceSettings.SelectedVoiceId;
@@ -173,6 +182,18 @@ public sealed class SettingsViewModel : ViewModelBase
         }
 
         Saved?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Rolls back phrase changes made during this settings session and fires <see cref="Cancelled"/>.
+    /// Call from the Cancel button or when the window is closed without saving.
+    /// </summary>
+    public async Task CancelAsync()
+    {
+        await Phrases.RollbackAsync();
+        LoadFromConfig(); // reload other tabs to last-saved config state
+        IsDirty = false;
+        Cancelled?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>

@@ -23,6 +23,31 @@ public sealed class PhraseListViewModel : ViewModelBase
     private string _selectedCategory = "All";
     private bool _showFavoritesOnly;
 
+    // ── Session snapshot / rollback support ──────────────────────────────────
+    // A deep-copy taken when the settings window opens (TakeSnapshot).
+    // If the user cancels, RollbackAsync restores this state.
+    private List<PhraseItem> _snapshot = new();
+
+    // IDs of phrases added this session (need cache deletion on rollback).
+    private readonly HashSet<string> _sessionAddedIds = new();
+
+    // IDs of phrases whose cache was created or regenerated this session
+    // (snapshot versions need a cache rebuild on rollback if they still exist).
+    private readonly HashSet<string> _sessionCacheModifiedIds = new();
+
+    // True as soon as any phrase mutation occurs this session.
+    private bool _sessionDirty;
+
+    /// <summary>True when phrase changes have been made during the current settings session that have not yet been committed or rolled back.</summary>
+    public bool HasSessionChanges => _sessionDirty;
+
+    private void MarkDirty()
+    {
+        if (_sessionDirty) return;
+        _sessionDirty = true;
+        OnPropertyChanged(nameof(HasSessionChanges));
+    }
+
     public ObservableCollection<PhraseItem> Phrases { get; } = new();
     public ObservableCollection<PhraseItem> FilteredPhrases { get; } = new();
     public ObservableCollection<string> Categories { get; } = new();
@@ -169,6 +194,7 @@ public sealed class PhraseListViewModel : ViewModelBase
         TogglePinnedCommand = new RelayCommand(TogglePinned, () => SelectedPhrase is not null);
 
         Refresh();
+        TakeSnapshot(); // baseline for cancel/rollback
     }
 
     public void Refresh()
@@ -241,6 +267,10 @@ public sealed class PhraseListViewModel : ViewModelBase
         var result = _phraseService.Add(phrase);
         if (result.Success)
         {
+            // Track this ID so cancel can delete its cache and remove it from storage
+            _sessionAddedIds.Add(phrase.Id);
+            _sessionCacheModifiedIds.Add(phrase.Id);
+            MarkDirty();
             EditName = string.Empty;
             EditText = string.Empty;
             EditCategory = string.Empty;
@@ -251,7 +281,14 @@ public sealed class PhraseListViewModel : ViewModelBase
     private void DeleteSelected()
     {
         if (SelectedPhrase is null) return;
-        var result = _phraseService.Delete(SelectedPhrase.Id);
+        var id = SelectedPhrase.Id;
+        // If this phrase was in the snapshot, track it so rollback can regenerate its cache
+        if (_snapshot.Any(p => p.Id == id))
+            _sessionCacheModifiedIds.Add(id);
+        // If it was added this session and is now deleted, remove from both tracking sets
+        _sessionAddedIds.Remove(id);
+        MarkDirty();
+        var result = _phraseService.Delete(id);
         if (result.Success)
             Refresh();
     }
@@ -277,6 +314,8 @@ public sealed class PhraseListViewModel : ViewModelBase
         // If text changed, invalidate the cache so it's regenerated on next use
         if (textChanged)
         {
+            // Track so rollback can restore the original cache
+            _sessionCacheModifiedIds.Add(SelectedPhrase.Id);
             _phraseCache.DeleteCache(SelectedPhrase.Id);
             PhraseStatusMessage = "Phrase updated. Cache will regenerate on next use.";
             await _phraseCache.GenerateCacheAsync(SelectedPhrase);
@@ -285,6 +324,7 @@ public sealed class PhraseListViewModel : ViewModelBase
         {
             PhraseStatusMessage = "Phrase updated.";
         }
+        MarkDirty();
 
         Refresh();
     }
@@ -295,6 +335,7 @@ public sealed class PhraseListViewModel : ViewModelBase
         SelectedPhrase.Hotkey = binding;
         SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
         _phraseService.Update(SelectedPhrase);
+        MarkDirty();
         _hotkeyHost.RegisterPhraseHotkeys();
         OnPropertyChanged(nameof(SelectedPhraseHotkeyDisplay));
         Refresh();
@@ -306,6 +347,7 @@ public sealed class PhraseListViewModel : ViewModelBase
         SelectedPhrase.Hotkey = null;
         SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
         _phraseService.Update(SelectedPhrase);
+        MarkDirty();
         _hotkeyHost.RegisterPhraseHotkeys();
         OnPropertyChanged(nameof(SelectedPhraseHotkeyDisplay));
         Refresh();
@@ -317,6 +359,7 @@ public sealed class PhraseListViewModel : ViewModelBase
         SelectedPhrase.IsFavorite = !SelectedPhrase.IsFavorite;
         SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
         _phraseService.Update(SelectedPhrase);
+        MarkDirty();
         Refresh();
     }
 
@@ -337,8 +380,90 @@ public sealed class PhraseListViewModel : ViewModelBase
         SelectedPhrase.IsPinned = !SelectedPhrase.IsPinned;
         SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
         _phraseService.Update(SelectedPhrase);
+        MarkDirty();
         Refresh();
     }
+
+    // ── Snapshot / commit / rollback ─────────────────────────────────────────
+
+    /// <summary>
+    /// Captures the current phrase list as a deep-copy baseline.
+    /// Called when the settings window opens and again after each successful commit.
+    /// </summary>
+    public void TakeSnapshot()
+    {
+        _snapshot = _phraseService.GetAll().Select(DeepClone).ToList();
+        _sessionAddedIds.Clear();
+        _sessionCacheModifiedIds.Clear();
+        _sessionDirty = false;
+        OnPropertyChanged(nameof(HasSessionChanges));
+    }
+
+    /// <summary>
+    /// Called when the user clicks Save. Refreshes hotkey registrations and
+    /// takes a new snapshot so a subsequent cancel won't undo the saved state.
+    /// </summary>
+    public void Commit()
+    {
+        _hotkeyHost.RegisterPhraseHotkeys();
+        TakeSnapshot();
+        _log.Info("Phrase session committed.");
+    }
+
+    /// <summary>
+    /// Called when the user clicks Cancel or closes the settings window without saving.
+    /// Restores the phrase list to the snapshot taken when the window opened,
+    /// deletes cache files for phrases that were added this session,
+    /// and regenerates caches for phrases that existed but had their cache changed.
+    /// </summary>
+    public async Task RollbackAsync()
+    {
+        _log.Info($"Rolling back phrase session: {_sessionAddedIds.Count} added, {_sessionCacheModifiedIds.Count} cache-modified.");
+
+        // Restore the config's phrase list to the snapshot
+        _config.CurrentConfig.Phrases.Clear();
+        foreach (var p in _snapshot)
+            _config.CurrentConfig.Phrases.Add(DeepClone(p));
+        await _config.SaveAsync(_config.CurrentConfig);
+
+        // Delete cache files for phrases that were added this session (they no longer exist)
+        foreach (var id in _sessionAddedIds)
+            _phraseCache.DeleteCache(id);
+
+        // Regenerate caches for snapshot phrases whose cache was modified during the session
+        foreach (var id in _sessionCacheModifiedIds.Except(_sessionAddedIds))
+        {
+            var phrase = _config.CurrentConfig.Phrases.FirstOrDefault(p => p.Id == id);
+            if (phrase is not null)
+                await _phraseCache.GenerateCacheAsync(phrase);
+        }
+
+        _hotkeyHost.RegisterPhraseHotkeys();
+        TakeSnapshot();
+        Refresh();
+    }
+
+    /// <summary>Creates a deep copy of a <see cref="PhraseItem"/>, including its optional hotkey binding.</summary>
+    private static PhraseItem DeepClone(PhraseItem p) => new()
+    {
+        Id = p.Id,
+        Name = p.Name,
+        Text = p.Text,
+        Hotkey = p.Hotkey is null ? null : new HotkeyBinding
+        {
+            Ctrl = p.Hotkey.Ctrl,
+            Alt = p.Hotkey.Alt,
+            Shift = p.Hotkey.Shift,
+            Win = p.Hotkey.Win,
+            Key = p.Hotkey.Key
+        },
+        SortOrder = p.SortOrder,
+        CreatedUtc = p.CreatedUtc,
+        UpdatedUtc = p.UpdatedUtc,
+        Category = p.Category,
+        IsFavorite = p.IsFavorite,
+        IsPinned = p.IsPinned
+    };
 
     private async Task PlaySelectedAsync()
     {
@@ -438,6 +563,13 @@ public sealed class PhraseListViewModel : ViewModelBase
             }
 
             LastImportResult = result;
+            // Track all imported IDs so cancel can remove them and their caches
+            foreach (var id in result.AddedPhraseIds)
+            {
+                _sessionAddedIds.Add(id);
+                _sessionCacheModifiedIds.Add(id);
+            }
+            MarkDirty();
             Refresh();
             ImportCompleted?.Invoke(this, EventArgs.Empty);
             _log.Info($"Imported {result.AddedCount} phrases from '{dlg.FileName}'.");

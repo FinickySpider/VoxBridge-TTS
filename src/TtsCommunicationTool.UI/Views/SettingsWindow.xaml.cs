@@ -9,6 +9,8 @@ namespace TtsCommunicationTool.UI.Views;
 public partial class SettingsWindow : Window
 {
     private bool _importDialogOpen;
+    // Set to true after Save or an explicit Cancel so the Closing handler doesn't double-rollback.
+    private bool _committed;
 
     public SettingsWindow()
     {
@@ -18,7 +20,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(SettingsViewModel vm) : this()
     {
         DataContext = vm;
-        vm.Saved += (_, _) => Close();
+        vm.Saved += (_, _) => { _committed = true; Close(); };
         vm.Phrases.ImportCompleted += OnImportCompleted;
 
         // Restore persisted window size
@@ -51,6 +53,11 @@ public partial class SettingsWindow : Window
                 e.Cancel = true;
                 return;
             }
+            // If the window is being closed without an explicit Save or Cancel (e.g. Alt+F4 / X button),
+            // roll back any phrase changes made this session. Fire-and-forget is intentional here:
+            // the storage + cache cleanup finishes in the background after the window closes.
+            if (!_committed && vm.Phrases.HasSessionChanges)
+                _ = vm.Phrases.RollbackAsync();
             // Always persist the current window size (fire-and-forget, non-blocking)
             _ = vm.SaveWindowDimensionsAsync();
         };
@@ -75,9 +82,10 @@ public partial class SettingsWindow : Window
         dialog.ShowDialog();
     }
 
-    private void Cancel_Click(object sender, RoutedEventArgs e)
+    private async void Cancel_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is SettingsViewModel vm && vm.IsDirty)
+        if (DataContext is not SettingsViewModel vm) return;
+        if (vm.IsDirty || vm.Phrases.HasSessionChanges)
         {
             var result = System.Windows.MessageBox.Show(
                 "You have unsaved changes. Discard them and close?",
@@ -87,6 +95,8 @@ public partial class SettingsWindow : Window
             if (result != System.Windows.MessageBoxResult.Yes)
                 return;
         }
+        _committed = true; // prevent Closing from triggering a second rollback
+        await vm.CancelAsync();
         Close();
     }
 
