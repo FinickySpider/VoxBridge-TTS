@@ -9,6 +9,7 @@ public sealed class AppRuntimeState : INotifyPropertyChanged
     private bool _isPlaying;
     private bool _isOverlayVisible;
     private string _statusMessage = "Ready";
+    private string _draftText = string.Empty;
 
     public bool IsTtsReady
     {
@@ -32,6 +33,13 @@ public sealed class AppRuntimeState : INotifyPropertyChanged
     {
         get => _statusMessage;
         set => SetField(ref _statusMessage, value);
+    }
+
+    /// <summary>Draft text preserved when the overlay closes without sending (KeepOverlayText feature).</summary>
+    public string DraftText
+    {
+        get => _draftText;
+        set => SetField(ref _draftText, value);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

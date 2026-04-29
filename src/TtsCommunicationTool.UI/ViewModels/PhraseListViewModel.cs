@@ -32,7 +32,16 @@ public sealed class PhraseListViewModel : ViewModelBase
         set
         {
             if (SetField(ref _selectedPhrase, value))
+            {
                 OnPropertyChanged(nameof(SelectedPhraseHotkeyDisplay));
+                // Populate edit fields when a phrase is selected
+                if (value is not null)
+                {
+                    EditName = value.Name;
+                    EditText = value.Text;
+                    EditCategory = value.Category ?? string.Empty;
+                }
+            }
         }
     }
 
@@ -54,6 +63,7 @@ public sealed class PhraseListViewModel : ViewModelBase
     }
 
     public ICommand AddCommand { get; }
+    public ICommand UpdateCommand { get; }
     public ICommand DeleteCommand { get; }
     public ICommand PlayCommand { get; }
     public ICommand RefreshCommand { get; }
@@ -147,6 +157,7 @@ public sealed class PhraseListViewModel : ViewModelBase
         _hotkeyHost = hotkeyHost;
 
         AddCommand = new RelayCommand(AddPhrase);
+        UpdateCommand = new AsyncRelayCommand(UpdateSelectedPhraseAsync, () => SelectedPhrase is not null);
         DeleteCommand = new RelayCommand(DeleteSelected, () => SelectedPhrase is not null);
         PlayCommand = new AsyncRelayCommand(PlaySelectedAsync, () => SelectedPhrase is not null);
         RefreshCommand = new RelayCommand(Refresh);
@@ -240,6 +251,39 @@ public sealed class PhraseListViewModel : ViewModelBase
         var result = _phraseService.Delete(SelectedPhrase.Id);
         if (result.Success)
             Refresh();
+    }
+
+    private async Task UpdateSelectedPhraseAsync()
+    {
+        if (SelectedPhrase is null) return;
+        if (string.IsNullOrWhiteSpace(EditName) || string.IsNullOrWhiteSpace(EditText))
+        {
+            PhraseStatusMessage = "Name and text are required.";
+            return;
+        }
+
+        var textChanged = !string.Equals(SelectedPhrase.Text.Trim(), EditText.Trim(), StringComparison.Ordinal);
+
+        SelectedPhrase.Name = EditName.Trim();
+        SelectedPhrase.Text = EditText.Trim();
+        SelectedPhrase.Category = string.IsNullOrWhiteSpace(EditCategory) ? null : EditCategory.Trim();
+        SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
+
+        _phraseService.Update(SelectedPhrase);
+
+        // If text changed, invalidate the cache so it's regenerated on next use
+        if (textChanged)
+        {
+            _phraseCache.DeleteCache(SelectedPhrase.Id);
+            PhraseStatusMessage = "Phrase updated. Cache will regenerate on next use.";
+            await _phraseCache.GenerateCacheAsync(SelectedPhrase);
+        }
+        else
+        {
+            PhraseStatusMessage = "Phrase updated.";
+        }
+
+        Refresh();
     }
 
     public void SetSelectedPhraseHotkey(HotkeyBinding binding)

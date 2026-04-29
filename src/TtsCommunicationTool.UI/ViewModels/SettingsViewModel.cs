@@ -16,6 +16,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private bool _isRegenerating;
     private string _regenerationStatus = string.Empty;
     private string _saveError = string.Empty;
+    private bool _isDirty;
 
     public GeneralSettingsViewModel General { get; }
     public HotkeySettingsViewModel Hotkeys { get; }
@@ -48,6 +49,13 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         get => _saveError;
         private set => SetField(ref _saveError, value);
+    }
+
+    /// <summary>True when any child VM has unsaved changes since the last load or save.</summary>
+    public bool IsDirty
+    {
+        get => _isDirty;
+        private set => SetField(ref _isDirty, value);
     }
 
     public bool IsFirstRun { get; set; }
@@ -88,6 +96,10 @@ public sealed class SettingsViewModel : ViewModelBase
         ResetOverlayPositionCommand = new AsyncRelayCommand(ResetOverlayPositionAsync);
 
         LoadFromConfig();
+
+        // Track dirty state across all child VMs
+        foreach (var child in new System.ComponentModel.INotifyPropertyChanged[] { General, Hotkeys, Audio, Voice, Appearance, TextReplacements })
+            child.PropertyChanged += (_, _) => IsDirty = true;
     }
 
     private void LoadFromConfig()
@@ -99,6 +111,7 @@ public sealed class SettingsViewModel : ViewModelBase
         Voice.LoadFrom(cfg.VoiceSettings);
         Appearance.LoadFrom(cfg.OverlaySettings);
         TextReplacements.LoadFrom(cfg.TextReplacements);
+        IsDirty = false;
     }
 
     private async Task SaveAsync()
@@ -131,6 +144,7 @@ public sealed class SettingsViewModel : ViewModelBase
 
         await _config.SaveAsync(cfg);
         _log.Info("Settings saved.");
+        IsDirty = false;
 
         // Detect voice change — regenerate all phrase caches with visible progress
         var newVoiceId = cfg.VoiceSettings.SelectedVoiceId;

@@ -8,11 +8,13 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
     private string _overlayHotkeyDisplay = string.Empty;
     private string _stopHotkeyDisplay = string.Empty;
     private string _settingsHotkeyDisplay = string.Empty;
+    private string _resendHotkeyDisplay = string.Empty;
     private string _validationMessage = string.Empty;
 
     private HotkeyBinding _overlayHotkey = new();
     private HotkeyBinding _stopHotkey = new();
     private HotkeyBinding _settingsHotkey = new();
+    private HotkeyBinding _resendHotkey = new();
 
     public string OverlayHotkeyDisplay
     {
@@ -32,6 +34,12 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
         set => SetField(ref _settingsHotkeyDisplay, value);
     }
 
+    public string ResendHotkeyDisplay
+    {
+        get => _resendHotkeyDisplay;
+        set => SetField(ref _resendHotkeyDisplay, value);
+    }
+
     public string ValidationMessage
     {
         get => _validationMessage;
@@ -41,6 +49,7 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
     public HotkeyBinding OverlayHotkey => _overlayHotkey;
     public HotkeyBinding StopHotkey => _stopHotkey;
     public HotkeyBinding SettingsHotkey => _settingsHotkey;
+    public HotkeyBinding ResendHotkey => _resendHotkey;
 
     public void ClearOverlayHotkey()
     {
@@ -145,14 +154,42 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
         ValidationMessage = string.Empty;
     }
 
+    public void SetResendHotkey(HotkeyBinding binding)
+    {
+        if (!binding.IsEmpty)
+        {
+            var (valid, error) = HotkeyValidation.Validate(binding);
+            if (!valid) { ValidationMessage = error!; return; }
+            if (HotkeyValidation.AreConflicting(binding, _overlayHotkey))
+            { ValidationMessage = "Resend hotkey conflicts with Overlay hotkey."; return; }
+            if (HotkeyValidation.AreConflicting(binding, _stopHotkey))
+            { ValidationMessage = "Resend hotkey conflicts with Stop hotkey."; return; }
+            if (!_settingsHotkey.IsEmpty && HotkeyValidation.AreConflicting(binding, _settingsHotkey))
+            { ValidationMessage = "Resend hotkey conflicts with Settings hotkey."; return; }
+        }
+
+        _resendHotkey = binding;
+        ResendHotkeyDisplay = binding.IsEmpty ? "(none)" : binding.ToString();
+        ValidationMessage = string.Empty;
+    }
+
+    public void ClearResendHotkey()
+    {
+        _resendHotkey = new HotkeyBinding();
+        ResendHotkeyDisplay = "(none)";
+        ValidationMessage = string.Empty;
+    }
+
     public void LoadFrom(HotkeySettings s)
     {
         _overlayHotkey = s.OverlayHotkey;
         _stopHotkey = s.StopHotkey;
         _settingsHotkey = s.SettingsHotkey;
+        _resendHotkey = s.ResendHotkey;
         OverlayHotkeyDisplay = s.OverlayHotkey.ToString();
         StopHotkeyDisplay = s.StopHotkey.ToString();
         SettingsHotkeyDisplay = s.SettingsHotkey.IsEmpty ? "(none)" : s.SettingsHotkey.ToString();
+        ResendHotkeyDisplay = s.ResendHotkey.IsEmpty ? "(none)" : s.ResendHotkey.ToString();
         ValidationMessage = string.Empty;
     }
 
@@ -161,5 +198,6 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
         s.OverlayHotkey = _overlayHotkey;
         s.StopHotkey = _stopHotkey;
         s.SettingsHotkey = _settingsHotkey;
+        s.ResendHotkey = _resendHotkey;
     }
 }

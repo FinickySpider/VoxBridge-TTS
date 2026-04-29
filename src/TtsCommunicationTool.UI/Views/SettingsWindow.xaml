@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:TtsCommunicationTool.UI.ViewModels"
         xmlns:conv="clr-namespace:TtsCommunicationTool.UI.Converters"
-        Title="Settings — TTS Communication Tool"
+        Title="Settings — TTS Communication Tool v0.9.0"
         Width="680" Height="540"
         WindowStartupLocation="CenterScreen"
         Background="#1E1E2E"
@@ -302,6 +302,17 @@
                                 Style="{StaticResource SecondaryButton}"
                                 HorizontalAlignment="Left"
                                 Margin="0,0,0,4"/>
+
+                        <Separator Background="#45475A" Margin="0,12,0,12"/>
+                        <TextBlock Text="Overlay" Style="{StaticResource SectionHeader}" Margin="0,0,0,4"/>
+
+                        <CheckBox Content="Keep unsent text when overlay closes"
+                                  IsChecked="{Binding General.KeepOverlayText}"
+                                  Style="{StaticResource SettingsCheckBox}"/>
+                        <TextBlock Text="When enabled, any text typed but not sent will be restored the next time you open the overlay."
+                                   Foreground="#6C7086" FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,8"/>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -365,6 +376,24 @@
                                      Cursor="Hand"
                                      ToolTip="Click here then press any key combination to set the open-settings hotkey. Optional — leave as (none) to disable."
                                      PreviewKeyDown="SettingsHotkeyBox_PreviewKeyDown"
+                                     GotFocus="HotkeyBox_GotFocus"
+                                     LostFocus="HotkeyBox_LostFocus"/>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Resend Last:" Style="{StaticResource FieldLabel}"/>
+                            <TextBox Grid.Column="1"
+                                     x:Name="ResendHotkeyBox"
+                                     Text="{Binding Hotkeys.ResendHotkeyDisplay, Mode=OneWay}"
+                                     Style="{StaticResource SettingsTextBox}"
+                                     IsReadOnly="True"
+                                     Cursor="Hand"
+                                     ToolTip="Click here then press any key combination to set the resend-last-message hotkey. Optional — leave as (none) to disable."
+                                     PreviewKeyDown="ResendHotkeyBox_PreviewKeyDown"
                                      GotFocus="HotkeyBox_GotFocus"
                                      LostFocus="HotkeyBox_LostFocus"/>
                         </Grid>
@@ -661,22 +690,7 @@
                                   ItemsSource="{Binding Phrases.Categories}"
                                   SelectedItem="{Binding Phrases.SelectedCategory}"
                                   Margin="0,0,6,0"
-                                  Background="#2B2B3D"
-                                  Foreground="#CDD6F4"
-                                  BorderBrush="#45475A"
-                                  Padding="8,5">
-                            <ComboBox.Resources>
-                                <Style TargetType="ComboBoxItem">
-                                    <Setter Property="Background" Value="#2B2B3D"/>
-                                    <Setter Property="Foreground" Value="#CDD6F4"/>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsHighlighted" Value="True">
-                                            <Setter Property="Background" Value="#45475A"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ComboBox.Resources>
-                        </ComboBox>
+                                  Style="{StaticResource SettingsComboBox}"/>
 
                         <!-- Favorites toggle -->
                         <ToggleButton Grid.Column="2"
@@ -703,6 +717,7 @@
                                         </Trigger>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter Property="Background" Value="#3B3B55"/>
+                                            <Setter Property="Foreground" Value="#CDD6F4"/>
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
@@ -784,7 +799,7 @@
                                     <StackPanel Grid.Column="2">
                                         <DockPanel>
                                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" Foreground="#CDD6F4"/>
-                                            <TextBlock Text="{Binding Category}" FontSize="11" Foreground="#6C7086"
+                                            <TextBlock Text="{Binding Category}" FontSize="11" Foreground="#CBA6F7"
                                                        Margin="6,0,0,0" VerticalAlignment="Center"
                                                        Visibility="{Binding Category, Converter={StaticResource NonEmptyToVisibleConverter}}"/>
                                         </DockPanel>
@@ -844,6 +859,9 @@
                         <StackPanel Orientation="Horizontal">
                             <Button Content="Add" Command="{Binding Phrases.AddCommand}"
                                     Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
+                            <Button Content="Update" Command="{Binding Phrases.UpdateCommand}"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
+                                    ToolTip="Save changes to the selected phrase"/>
                             <Button Content="Delete" Command="{Binding Phrases.DeleteCommand}"
                                     Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
                             <Button Content="▶ Play" Command="{Binding Phrases.PlayCommand}"
@@ -900,6 +918,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
@@ -1019,8 +1038,16 @@
                         <Button Content="▲ Up" Command="{Binding TextReplacements.MoveUpCommand}"
                                 Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
                         <Button Content="▼ Down" Command="{Binding TextReplacements.MoveDownCommand}"
+                                Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                        <Button Content="Import..." Command="{Binding TextReplacements.ImportCommand}"
+                                Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                        <Button Content="Export..." Command="{Binding TextReplacements.ExportCommand}"
                                 Style="{StaticResource SecondaryButton}"/>
                     </StackPanel>
+                    <TextBlock Grid.Row="4" Text="{Binding TextReplacements.StatusMessage}"
+                               Foreground="#A6E3A1" FontSize="12"
+                               Visibility="{Binding TextReplacements.StatusMessage, Converter={StaticResource NonEmptyToVisibleConverter}}"
+                               Margin="8,2,8,4" TextWrapping="Wrap"/>
                 </Grid>
             </TabItem>
         </TabControl>

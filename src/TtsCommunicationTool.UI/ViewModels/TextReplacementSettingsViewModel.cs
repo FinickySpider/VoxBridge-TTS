@@ -1,5 +1,8 @@
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Text.Json;
 using System.Windows.Input;
+using Microsoft.Win32;
 using TtsCommunicationTool.Core.Models;
 using TtsCommunicationTool.UI.Commands;
 
@@ -101,6 +104,15 @@ public sealed class TextReplacementSettingsViewModel : ViewModelBase
     public ICommand DeleteCommand { get; }
     public ICommand MoveUpCommand { get; }
     public ICommand MoveDownCommand { get; }
+    public ICommand ExportCommand { get; }
+    public ICommand ImportCommand { get; }
+
+    private string _statusMessage = string.Empty;
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set => SetField(ref _statusMessage, value);
+    }
 
     public TextReplacementSettingsViewModel()
     {
@@ -108,6 +120,8 @@ public sealed class TextReplacementSettingsViewModel : ViewModelBase
         DeleteCommand = new RelayCommand(DeleteRule, () => SelectedRule is not null);
         MoveUpCommand = new RelayCommand(MoveUp, CanMoveUp);
         MoveDownCommand = new RelayCommand(MoveDown, CanMoveDown);
+        ExportCommand = new RelayCommand(ExportRules, () => Rules.Count > 0);
+        ImportCommand = new RelayCommand(ImportRules);
     }
 
     public void LoadFrom(TextReplacementSettings s)
@@ -163,5 +177,52 @@ public sealed class TextReplacementSettingsViewModel : ViewModelBase
         if (idx >= Rules.Count - 1) return;
         Rules.Move(idx, idx + 1);
         CommandManager.InvalidateRequerySuggested();
+    }
+
+    private void ExportRules()
+    {
+        var dlg = new SaveFileDialog
+        {
+            Title = "Export Text Replacements",
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            DefaultExt = "json",
+            FileName = "tts-replacements"
+        };
+        if (dlg.ShowDialog() != true) return;
+        try
+        {
+            var models = Rules.Select((r, i) => r.ToModel(i)).ToList();
+            var json = JsonSerializer.Serialize(models, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(dlg.FileName, json, System.Text.Encoding.UTF8);
+            StatusMessage = $"Exported {Rules.Count} rule(s).";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Export failed: {ex.Message}";
+        }
+    }
+
+    private void ImportRules()
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title = "Import Text Replacements",
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            DefaultExt = "json"
+        };
+        if (dlg.ShowDialog() != true) return;
+        try
+        {
+            var json = File.ReadAllText(dlg.FileName, System.Text.Encoding.UTF8);
+            var models = JsonSerializer.Deserialize<List<TextReplacement>>(json);
+            if (models is null) { StatusMessage = "Import failed: invalid file."; return; }
+            foreach (var r in models.OrderBy(r => r.SortOrder))
+                Rules.Add(TextReplacementRuleViewModel.FromModel(r));
+            StatusMessage = $"Imported {models.Count} rule(s).";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Import failed: {ex.Message}";
+        }
     }
 }

@@ -20,6 +20,9 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
     private readonly IPhraseService _phraseService;
     private readonly IPhraseCacheService _phraseCache;
     private readonly ILoggingService _log;
+    private readonly ITtsService _tts;
+    private readonly ITextReplacementService _textReplacement;
+    private readonly INotificationService _notifications;
     private readonly PlaybackState _playbackState;
     private readonly RecentMessagesState _recentMessages;
     private GlobalHotkeyService? _hotkeyService;
@@ -31,6 +34,9 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
         IPhraseService phraseService,
         IPhraseCacheService phraseCache,
         ILoggingService log,
+        ITtsService tts,
+        ITextReplacementService textReplacement,
+        INotificationService notifications,
         PlaybackState playbackState,
         RecentMessagesState recentMessages)
     {
@@ -40,6 +46,9 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
         _phraseService = phraseService;
         _phraseCache = phraseCache;
         _log = log;
+        _tts = tts;
+        _textReplacement = textReplacement;
+        _notifications = notifications;
         _playbackState = playbackState;
         _recentMessages = recentMessages;
 
@@ -91,6 +100,15 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
                 _log.Warn($"Failed to register settings hotkey: {settingsResult.ErrorMessage}");
             else
                 _log.Info($"Registered settings hotkey: {cfg.HotkeySettings.SettingsHotkey}");
+        }
+
+        if (!cfg.HotkeySettings.ResendHotkey.IsEmpty)
+        {
+            var resendResult = _hotkeyService.Register("resend", cfg.HotkeySettings.ResendHotkey);
+            if (!resendResult.Success)
+                _log.Warn($"Failed to register resend hotkey: {resendResult.ErrorMessage}");
+            else
+                _log.Info($"Registered resend hotkey: {cfg.HotkeySettings.ResendHotkey}");
         }
 
         // Register phrase hotkeys
@@ -155,6 +173,10 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
             case "settings":
                 Dispatcher.Invoke(() => SettingsRequested?.Invoke(this, EventArgs.Empty));
                 break;
+            case "resend":
+                Dispatcher.Invoke(() => _overlay.HideOverlay());
+                _ = ResendLastAsync();
+                break;
             default:
                 if (id.StartsWith("phrase:"))
                 {
@@ -162,6 +184,63 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
                     _ = PlayPhraseAsync(phraseId);
                 }
                 break;
+        }
+    }
+
+    private async Task ResendLastAsync()
+    {
+        var text = _recentMessages.GetAll().FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _log.Debug("Resend hotkey: no recent message to resend.");
+            return;
+        }
+
+        if (_playbackState.IsPlaying || _audioRouter.IsPlaying)
+        {
+            _log.Debug("Resend hotkey blocked — audio already playing.");
+            return;
+        }
+
+        try
+        {
+            _playbackState.IsPlaying = true;
+            _playbackState.CurrentText = text;
+            var processed = _textReplacement.Apply(text);
+
+            var result = await _tts.SynthesizeAsync(new TtsRequest
+            {
+                Text = processed,
+                VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId
+            });
+
+            if (!result.Success)
+            {
+                _log.Error($"Resend TTS failed: {result.ErrorMessage}");
+                _playbackState.Reset();
+                Dispatcher.Invoke(() => _notifications.ShowError($"Resend failed: {result.ErrorMessage}"));
+                return;
+            }
+
+            var cfg = _config.CurrentConfig;
+            var playback = new PlaybackRequest
+            {
+                AudioData = result.AudioData!,
+                SampleRate = result.SampleRate,
+                Channels = result.Channels,
+                BitsPerSample = result.BitsPerSample
+            };
+
+            await _audioRouter.PlayAsync(playback,
+                cfg.AudioSettings.MonitorOutputDeviceId,
+                cfg.AudioSettings.SecondaryOutputDeviceId,
+                cfg.AudioSettings.MonitorVolume,
+                cfg.AudioSettings.SecondaryVolume);
+        }
+        catch (Exception ex)
+        {
+            _log.Error("Resend failed", ex);
+            _playbackState.Reset();
         }
     }
 

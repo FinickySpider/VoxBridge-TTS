@@ -53,7 +53,20 @@ public partial class SettingsWindow : Window
         dialog.ShowDialog();
     }
 
-    private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
+    private void Cancel_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is SettingsViewModel vm && vm.IsDirty)
+        {
+            var result = System.Windows.MessageBox.Show(
+                "You have unsaved changes. Discard them and close?",
+                "Unsaved Changes",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+            if (result != System.Windows.MessageBoxResult.Yes)
+                return;
+        }
+        Close();
+    }
 
     // ----- Hotkey capture state -----
 
@@ -179,6 +192,35 @@ public partial class SettingsWindow : Window
         if (DataContext is SettingsViewModel svm)
         {
             svm.Hotkeys.SetSettingsHotkey(binding);
+            if (string.IsNullOrEmpty(svm.Hotkeys.ValidationMessage))
+            {
+                CancelCapture();
+                Keyboard.ClearFocus();
+            }
+        }
+    }
+
+    // ----- Resend hotkey -----
+
+    private void ResendHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        e.Handled = true;
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        if (key == Key.Escape)
+        {
+            if (DataContext is SettingsViewModel vm) vm.Hotkeys.ClearResendHotkey();
+            CancelCapture();
+            Keyboard.ClearFocus();
+            return;
+        }
+
+        var binding = CaptureHotkey(e);
+        if (binding is null) return;
+
+        if (DataContext is SettingsViewModel svm)
+        {
+            svm.Hotkeys.SetResendHotkey(binding);
             if (string.IsNullOrEmpty(svm.Hotkeys.ValidationMessage))
             {
                 CancelCapture();

@@ -17,6 +17,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     private readonly ILoggingService _log;
     private readonly ITextReplacementService _textReplacement;
     private readonly ITranscriptService _transcript;
+    private readonly INotificationService _notifications;
     private readonly PlaybackState _playbackState;
     private readonly RecentMessagesState _recentMessages;
     private string _inputText = string.Empty;
@@ -31,6 +32,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         ILoggingService log,
         ITextReplacementService textReplacement,
         ITranscriptService transcript,
+        INotificationService notifications,
         PlaybackState playbackState,
         RecentMessagesState recentMessages)
     {
@@ -40,6 +42,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         _log = log;
         _textReplacement = textReplacement;
         _transcript = transcript;
+        _notifications = notifications;
         _playbackState = playbackState;
         _recentMessages = recentMessages;
 
@@ -219,6 +222,8 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
                 {
                     _log.Error($"TTS failed: {result.ErrorMessage}");
                     _playbackState.Reset();
+                    System.Windows.Application.Current?.Dispatcher.Invoke(
+                        () => _notifications.ShowError($"TTS error: {result.ErrorMessage}"));
                     return;
                 }
 

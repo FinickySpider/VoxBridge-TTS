@@ -84,6 +84,13 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
                     cfg.OverlaySettings.Left = closedWindow.Left;
                     cfg.OverlaySettings.Top = closedWindow.Top;
                     _ = _config.SaveAsync(cfg);
+
+                    // Save draft text (will be empty if text was already sent via FireAndForget)
+                    if (cfg.GeneralSettings.KeepOverlayText &&
+                        closedWindow.DataContext is TtsCommunicationTool.UI.ViewModels.OverlayViewModel closedVm)
+                        _appState.DraftText = closedVm.InputText;
+                    else if (!cfg.GeneralSettings.KeepOverlayText)
+                        _appState.DraftText = string.Empty;
                 }
                 _overlayWindow = null;
                 _appState.IsOverlayVisible = false;
@@ -91,6 +98,12 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
             _overlayWindow.SettingsRequested += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
             _overlayWindow.Show();
             _overlayWindow.FocusInput();
+            // Restore draft text if feature is enabled and draft exists
+            if (_config.CurrentConfig.GeneralSettings.KeepOverlayText &&
+                !string.IsNullOrEmpty(_appState.DraftText))
+            {
+                vm.InputText = _appState.DraftText;
+            }
             _appState.IsOverlayVisible = true;
             _log.Debug("Overlay shown.");
         }

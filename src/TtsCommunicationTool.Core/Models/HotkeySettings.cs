@@ -18,4 +18,7 @@ public sealed class HotkeySettings
 
     /// <summary>Global hotkey to open the Settings window. Empty = unbound.</summary>
     public HotkeyBinding SettingsHotkey { get; set; } = new();
+
+    /// <summary>Global hotkey to resend the last spoken message. Empty = unbound.</summary>
+    public HotkeyBinding ResendHotkey { get; set; } = new();
 }

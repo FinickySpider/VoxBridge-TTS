@@ -17,6 +17,7 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
     private bool _showNotifications;
     private bool _showSplashScreen;
     private bool _enableTranscriptLogging;
+    private bool _keepOverlayText;
 
     public bool StartWithWindows
     {
@@ -42,6 +43,12 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         set => SetField(ref _enableTranscriptLogging, value);
     }
 
+    public bool KeepOverlayText
+    {
+        get => _keepOverlayText;
+        set => SetField(ref _keepOverlayText, value);
+    }
+
     /// <summary>True when the transcript file exists on disk.</summary>
     public bool HasTranscriptFile => File.Exists(TranscriptPath);
 
@@ -57,6 +64,7 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         ShowNotifications = s.ShowNotifications;
         ShowSplashScreen = s.ShowSplashScreen;
         EnableTranscriptLogging = s.EnableTranscriptLogging;
+        KeepOverlayText = s.KeepOverlayText;
     }
 
     public void ApplyTo(GeneralSettings s)
@@ -65,5 +73,6 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         s.ShowNotifications = ShowNotifications;
         s.ShowSplashScreen = ShowSplashScreen;
         s.EnableTranscriptLogging = EnableTranscriptLogging;
+        s.KeepOverlayText = KeepOverlayText;
     }
 }
