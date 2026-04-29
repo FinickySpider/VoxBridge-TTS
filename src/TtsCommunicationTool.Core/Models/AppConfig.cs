@@ -9,4 +9,5 @@ public sealed class AppConfig
     public VoiceSettings VoiceSettings { get; set; } = new();
     public OverlaySettings OverlaySettings { get; set; } = new();
     public List<PhraseItem> Phrases { get; set; } = new();
+    public TextReplacementSettings TextReplacements { get; set; } = new();
 }

@@ -15,6 +15,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     private readonly IAudioRouterService _audioRouter;
     private readonly IConfigService _config;
     private readonly ILoggingService _log;
+    private readonly ITextReplacementService _textReplacement;
     private readonly PlaybackState _playbackState;
     private readonly RecentMessagesState _recentMessages;
     private string _inputText = string.Empty;
@@ -26,6 +27,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         IAudioRouterService audioRouter,
         IConfigService config,
         ILoggingService log,
+        ITextReplacementService textReplacement,
         PlaybackState playbackState,
         RecentMessagesState recentMessages)
     {
@@ -33,6 +35,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         _audioRouter = audioRouter;
         _config = config;
         _log = log;
+        _textReplacement = textReplacement;
         _playbackState = playbackState;
         _recentMessages = recentMessages;
 
@@ -101,6 +104,8 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             return;
         }
 
+        text = _textReplacement.Apply(text);
+
         IsSending = true;
         StatusText = "Generating...";
         _log.Info($"Sending text: {text}");
@@ -166,6 +171,8 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         var text = TextValidation.Sanitize(InputText);
         var (valid, _) = TextValidation.Validate(text);
         if (!valid) return;
+
+        text = _textReplacement.Apply(text);
 
         InputText = string.Empty;
         _log.Info($"Fire-and-forget sending text: {text}");

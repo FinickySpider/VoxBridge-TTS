@@ -23,6 +23,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public VoiceSettingsViewModel Voice { get; }
     public AppearanceSettingsViewModel Appearance { get; }
     public PhraseListViewModel Phrases { get; }
+    public TextReplacementSettingsViewModel TextReplacements { get; }
 
     public int SelectedTabIndex
     {
@@ -67,7 +68,8 @@ public sealed class SettingsViewModel : ViewModelBase
         AudioSettingsViewModel audio,
         VoiceSettingsViewModel voice,
         AppearanceSettingsViewModel appearance,
-        PhraseListViewModel phrases)
+        PhraseListViewModel phrases,
+        TextReplacementSettingsViewModel textReplacements)
     {
         _config = config;
         _log = log;
@@ -79,6 +81,7 @@ public sealed class SettingsViewModel : ViewModelBase
         Voice = voice;
         Appearance = appearance;
         Phrases = phrases;
+        TextReplacements = textReplacements;
 
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         ResetDefaultsCommand = new RelayCommand(ResetDefaults);
@@ -95,6 +98,7 @@ public sealed class SettingsViewModel : ViewModelBase
         Audio.LoadFrom(cfg.AudioSettings);
         Voice.LoadFrom(cfg.VoiceSettings);
         Appearance.LoadFrom(cfg.OverlaySettings);
+        TextReplacements.LoadFrom(cfg.TextReplacements);
     }
 
     private async Task SaveAsync()
@@ -123,6 +127,7 @@ public sealed class SettingsViewModel : ViewModelBase
         Audio.ApplyTo(cfg.AudioSettings);
         Voice.ApplyTo(cfg.VoiceSettings);
         Appearance.ApplyTo(cfg.OverlaySettings);
+        TextReplacements.ApplyTo(cfg.TextReplacements);
 
         await _config.SaveAsync(cfg);
         _log.Info("Settings saved.");
@@ -180,6 +185,7 @@ public sealed class SettingsViewModel : ViewModelBase
         Audio.LoadFrom(defaults.AudioSettings);
         Voice.LoadFrom(defaults.VoiceSettings);
         Appearance.LoadFrom(defaults.OverlaySettings);
+        TextReplacements.LoadFrom(defaults.TextReplacements);
         _log.Info("Settings reset to defaults.");
     }
 

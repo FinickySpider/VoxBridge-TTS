@@ -680,6 +680,137 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
+
+            <!-- Replacements Tab -->
+            <TabItem Header="Replacements">
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Text Replacements" Style="{StaticResource SectionHeader}" Margin="8,0"/>
+
+                    <!-- Global enable toggle -->
+                    <CheckBox Grid.Row="1"
+                              Content="Enable text replacements"
+                              IsChecked="{Binding TextReplacements.IsEnabled}"
+                              Foreground="#CDD6F4"
+                              Margin="8,8,8,8"/>
+
+                    <!-- Rules DataGrid -->
+                    <DataGrid Grid.Row="2"
+                              ItemsSource="{Binding TextReplacements.Rules}"
+                              SelectedItem="{Binding TextReplacements.SelectedRule}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserReorderColumns="False"
+                              CanUserSortColumns="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="None"
+                              SelectionMode="Single"
+                              Background="#2B2B3D"
+                              Foreground="#CDD6F4"
+                              BorderBrush="#45475A"
+                              BorderThickness="1"
+                              RowBackground="#2B2B3D"
+                              AlternatingRowBackground="#313145"
+                              HorizontalGridLinesBrush="#45475A"
+                              VerticalGridLinesBrush="#45475A"
+                              Margin="8,0">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#1E1E2E"/>
+                                <Setter Property="Foreground" Value="#89B4FA"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="Padding" Value="6,4"/>
+                                <Setter Property="BorderBrush" Value="#45475A"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="#CDD6F4"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="4,2"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#45475A"/>
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#3B3B55"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="On" Binding="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}" Width="36"/>
+                            <DataGridTextColumn Header="Trigger" Binding="{Binding TriggerText, UpdateSourceTrigger=PropertyChanged}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="4,2"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="#313145"/>
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                        <Setter Property="BorderBrush" Value="#89B4FA"/>
+                                        <Setter Property="CaretBrush" Value="#CDD6F4"/>
+                                        <Setter Property="Padding" Value="4,2"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Replacement" Binding="{Binding ReplacementText, UpdateSourceTrigger=PropertyChanged}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="4,2"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="#313145"/>
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                        <Setter Property="BorderBrush" Value="#89B4FA"/>
+                                        <Setter Property="CaretBrush" Value="#CDD6F4"/>
+                                        <Setter Property="Padding" Value="4,2"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridCheckBoxColumn Header="Case" Binding="{Binding IsCaseSensitive, UpdateSourceTrigger=PropertyChanged}" Width="46"/>
+                            <DataGridCheckBoxColumn Header="Word" Binding="{Binding WholeWordOnly, UpdateSourceTrigger=PropertyChanged}" Width="46"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Action buttons -->
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="8,8,8,4">
+                        <Button Content="Add" Command="{Binding TextReplacements.AddCommand}"
+                                Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
+                        <Button Content="Delete" Command="{Binding TextReplacements.DeleteCommand}"
+                                Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
+                        <Button Content="▲ Up" Command="{Binding TextReplacements.MoveUpCommand}"
+                                Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                        <Button Content="▼ Down" Command="{Binding TextReplacements.MoveDownCommand}"
+                                Style="{StaticResource SecondaryButton}"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
         </TabControl>
 
         <!-- Bottom action bar -->

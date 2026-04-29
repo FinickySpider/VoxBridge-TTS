@@ -5,6 +5,7 @@ using TtsCommunicationTool.Infrastructure.Audio;
 using TtsCommunicationTool.Infrastructure.Config;
 using TtsCommunicationTool.Infrastructure.Logging;
 using TtsCommunicationTool.Infrastructure.Phrases;
+using TtsCommunicationTool.Infrastructure.TextReplacement;
 using TtsCommunicationTool.Infrastructure.Tts;
 using TtsCommunicationTool.UI.Services;
 using TtsCommunicationTool.UI.ViewModels;
@@ -30,6 +31,7 @@ public static class ServiceRegistration
         services.AddSingleton<IPhraseService, PhraseService>();
         services.AddSingleton<IPhraseCacheService, PhraseCacheService>();
         services.AddSingleton<INotificationService, WpfNotificationService>();
+        services.AddSingleton<ITextReplacementService, TextReplacementService>();
 
         // App-level services
         services.AddSingleton<TrayIconManager>();
@@ -46,6 +48,7 @@ public static class ServiceRegistration
         services.AddTransient<VoiceSettingsViewModel>();
         services.AddTransient<AppearanceSettingsViewModel>();
         services.AddTransient<PhraseListViewModel>();
+        services.AddTransient<TextReplacementSettingsViewModel>();
         services.AddTransient<SettingsViewModel>();
     }
 }
