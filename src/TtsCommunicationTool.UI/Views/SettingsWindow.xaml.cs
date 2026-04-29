@@ -53,11 +53,26 @@ public partial class SettingsWindow : Window
                 e.Cancel = true;
                 return;
             }
-            // If the window is being closed without an explicit Save or Cancel (e.g. Alt+F4 / X button),
-            // roll back any phrase changes made this session. Fire-and-forget is intentional here:
-            // the storage + cache cleanup finishes in the background after the window closes.
-            if (!_committed && vm.Phrases.HasSessionChanges)
+
+            // If closed without an explicit Save or Cancel (X button, Alt+F4, etc.)
+            // and there are unsaved changes, prompt the user first.
+            if (!_committed && (vm.IsDirty || vm.Phrases.HasSessionChanges))
+            {
+                var result = System.Windows.MessageBox.Show(
+                    "You have unsaved changes. Discard them and close?",
+                    "Unsaved Changes",
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Warning);
+                if (result != System.Windows.MessageBoxResult.Yes)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+                // User confirmed discard — roll back phrase changes then close
+                _committed = true;
                 _ = vm.Phrases.RollbackAsync();
+            }
+
             // Always persist the current window size (fire-and-forget, non-blocking)
             _ = vm.SaveWindowDimensionsAsync();
         };
