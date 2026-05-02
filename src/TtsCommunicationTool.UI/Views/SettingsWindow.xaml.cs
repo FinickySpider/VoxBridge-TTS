@@ -20,7 +20,9 @@ public partial class SettingsWindow : Window
     public SettingsWindow(SettingsViewModel vm) : this()
     {
         DataContext = vm;
-        vm.Saved += (_, _) => { _committed = true; Close(); };
+        // Save applies settings and re-takes the snapshot but does NOT close the window.
+        // _committed prevents the Closing handler from triggering a rollback after a save.
+        vm.Saved += (_, _) => _committed = true;
         vm.Phrases.ImportCompleted += OnImportCompleted;
 
         // Restore persisted window size
@@ -318,11 +320,11 @@ public partial class SettingsWindow : Window
         var mods = Keyboard.Modifiers;
         return new HotkeyBinding
         {
-            Ctrl = mods.HasFlag(ModifierKeys.Control),
-            Alt = mods.HasFlag(ModifierKeys.Alt),
+            Ctrl  = mods.HasFlag(ModifierKeys.Control),
+            Alt   = mods.HasFlag(ModifierKeys.Alt),
             Shift = mods.HasFlag(ModifierKeys.Shift),
-            Win = mods.HasFlag(ModifierKeys.Windows),
-            Key = key.ToString()
+            Win   = false, // Win key not supported — unreliable with RegisterHotKey
+            Key   = key.ToString()
         };
     }
 }

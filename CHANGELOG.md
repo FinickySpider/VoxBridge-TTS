@@ -4,6 +4,20 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [v0.9.2] — 2026-05-02
+
+### Renamed
+- **App renamed to "The Traveling Star Swirlotl" (TTS Swirlotl)** — System tray tooltip, settings window title, and already-running dialog all updated to the new name.
+
+### Changes
+- **Save no longer closes the settings window** — Clicking Save applies all settings (including phrase commit and voice-change regeneration) but leaves the window open. Use the **Cancel** button or the **X** button to close. Both paths still prompt if there are unsaved changes.
+
+### Bug Fixes
+- **Win key blocked as hotkey modifier** — The Windows key is no longer accepted as a hotkey modifier. Validation rejects any binding that includes Win, and the capture logic never stores it.
+- **OEM / Shift key naming fixed** — Hotkey capture now runs a scan-code round-trip (`VK → scan → VK`) to normalize the stored key name. This ensures that pressing Shift+`` ` `` and `` ` `` alone both produce the same binding key (`OemTilde`) rather than different OEM names depending on what character the OS emitted.
+
+---
+
 ## [v0.9.1] — 2026-04-30
 
 ### Bug Fixes

@@ -22,7 +22,10 @@ public static class HotkeyValidation
             return (false, $"'{binding.Key}' cannot be used as a hotkey by itself.");
 
         if (!binding.Ctrl && !binding.Alt && !binding.Shift && !binding.Win)
-            return (false, "Hotkey must include at least one modifier (Ctrl, Alt, Shift, or Win).");
+            return (false, "Hotkey must include at least one modifier (Ctrl, Alt, or Shift).");
+
+        if (binding.Win)
+            return (false, "Win key is not supported as a hotkey modifier.");
 
         return (true, null);
     }

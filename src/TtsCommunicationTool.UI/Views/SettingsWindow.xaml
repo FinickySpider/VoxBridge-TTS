@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:TtsCommunicationTool.UI.ViewModels"
         xmlns:conv="clr-namespace:TtsCommunicationTool.UI.Converters"
-        Title="Settings — TTS Communication Tool v0.9.1"
+        Title="Settings — The Traveling Star Swirlotl v0.9.2"
         Width="680" Height="540"
         WindowStartupLocation="CenterScreen"
         Background="#1E1E2E"

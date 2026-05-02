@@ -28,7 +28,7 @@ public sealed class TrayIconManager : IDisposable
     {
         _notifyIcon = new NotifyIcon
         {
-            Text = "TTS Communication Tool",
+            Text = "TTS Swirlotl",
             Icon = LoadAppIcon(),
             Visible = true,
             ContextMenuStrip = CreateContextMenu()

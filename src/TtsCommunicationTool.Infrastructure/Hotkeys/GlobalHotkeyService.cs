@@ -116,16 +116,16 @@ public sealed class GlobalHotkeyService : IHotkeyService
             "NUMPAD9" => 0x69,
             "MULTIPLY" => 0x6A, "ADD" => 0x6B, "SUBTRACT" => 0x6D,
             "DECIMAL" => 0x6E, "DIVIDE" => 0x6F,
-            // OEM keys (WPF Key.OemX ToString values)
-            "OEM_3" or "OEMTILDE" or "`" => 0xC0,
+            // OEM keys (WPF Key.OemX ToString values AND numbered aliases Key.Oem1/3/5/6/7)
+            "OEM_3" or "OEMTILDE" or "OEM3" or "`" => 0xC0,
             "OEMMINUS" or "OEM_MINUS" => 0xBD,
             "OEMPLUS" or "OEM_PLUS" => 0xBB,
-            "OEMOPENBRACKETS" => 0xDB,
+            "OEMOPENBRACKETS" or "OEM4" => 0xDB,
             "OEM6" or "OEMCLOSEBRACKETS" => 0xDD,
             "OEM5" or "OEMPIPE" => 0xDC,
             "OEM1" or "OEMSEMICOLON" => 0xBA,
             "OEMQUOTES" or "OEM7" => 0xDE,
-            "OEMCOMMA" => 0xBC,
+            "OEMCOMMA" or "OEM8" => 0xBC,
             "OEMPERIOD" => 0xBE,
             "OEMQUESTION" or "OEM2" => 0xBF,
             // Caps/Num/Scroll lock

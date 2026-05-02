@@ -26,7 +26,7 @@ public partial class App : System.Windows.Application
         if (!createdNew)
         {
             System.Windows.MessageBox.Show(
-                "TTS Communication Tool is already running.",
+                "TTS Swirlotl is already running.",
                 "Already Running",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);

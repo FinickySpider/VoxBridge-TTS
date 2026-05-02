@@ -17,9 +17,36 @@ public sealed class HotkeyBinding
         if (Alt) parts.Add("Alt");
         if (Shift) parts.Add("Shift");
         if (Win) parts.Add("Win");
-        if (!string.IsNullOrEmpty(Key)) parts.Add(Key);
+        if (!string.IsNullOrEmpty(Key)) parts.Add(FriendlyKeyName(Key));
         return parts.Count > 0 ? string.Join(" + ", parts) : "(none)";
     }
+
+    /// <summary>Maps stored WPF Key enum names (including numbered OEM aliases) to human-readable labels.</summary>
+    private static string FriendlyKeyName(string key) => key.ToUpperInvariant() switch
+    {
+        "OEMTILDE"       or "OEM3"  or "OEM_3"  => "`/~",
+        "OEMMINUS"       or "OEM_MINUS"          => "-/_",
+        "OEMPLUS"        or "OEM_PLUS"           => "=/+",
+        "OEMOPENBRACKETS" or "OEM4"              => "[/{",
+        "OEMCLOSEBRACKETS" or "OEM6"             => "]/}",
+        "OEMPIPE"        or "OEM5"               => "\\/|",
+        "OEMSEMICOLON"   or "OEM1"               => ";/:",
+        "OEMQUOTES"      or "OEM7"               => "'/\"",
+        "OEMCOMMA"       or "OEM8"               => ",/<",
+        "OEMPERIOD"                              => "./>",
+        "OEMQUESTION"    or "OEM2"               => "/?",
+        "RETURN"                                 => "Enter",
+        "BACK"                                   => "Backspace",
+        "ESCAPE"                                 => "Esc",
+        "PRIOR"                                  => "PgUp",
+        "NEXT"                                   => "PgDn",
+        "CAPITAL"                                => "CapsLock",
+        "NUMLOCK"                                => "NumLock",
+        "SCROLL"                                 => "ScrollLock",
+        // D0-D9 → bare number
+        var k when k.Length == 2 && k[0] == 'D' && char.IsDigit(k[1]) => k[1..],
+        _ => key
+    };
 
     public override bool Equals(object? obj)
     {
