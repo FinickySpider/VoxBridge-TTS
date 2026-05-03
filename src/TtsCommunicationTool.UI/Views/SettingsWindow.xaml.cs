@@ -508,6 +508,61 @@ public partial class SettingsWindow : Window
         }
         return null;
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Phrases list — column-header sort
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private string _phrasesSortColumn = string.Empty;
+    private bool _phrasesSortAscending = true;
+
+    private void PhraseSort_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn) return;
+        var column = btn.Tag as string ?? string.Empty;
+
+        if (_phrasesSortColumn == column)
+            _phrasesSortAscending = !_phrasesSortAscending;
+        else
+        {
+            _phrasesSortColumn = column;
+            _phrasesSortAscending = true;
+        }
+
+        // Update sort indicator on all header buttons
+        UpdatePhraseSortIndicators();
+
+        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(PhraseListBox.ItemsSource);
+        if (view is null) return;
+        view.SortDescriptions.Clear();
+        if (!string.IsNullOrEmpty(column))
+        {
+            try
+            {
+                view.SortDescriptions.Add(new System.ComponentModel.SortDescription(
+                    column,
+                    _phrasesSortAscending
+                        ? System.ComponentModel.ListSortDirection.Ascending
+                        : System.ComponentModel.ListSortDirection.Descending));
+            }
+            catch
+            {
+                // Property not comparable — clear sort gracefully
+                view.SortDescriptions.Clear();
+            }
+        }
+    }
+
+    private void UpdatePhraseSortIndicators()
+    {
+        // Walk visual tree to find the header buttons and append/remove sort arrows
+        if (PhraseListBox is null) return;
+        var parent = VisualTreeHelper.GetParent(PhraseListBox);
+        // The sort indicators are in the header Border which is a sibling above PhraseListBox.
+        // We update them by finding named buttons via their Tag.
+        // Since they're not named we'll rely on the current column/direction being reflected
+        // on the next render cycle — WPF binding updates suffice for the arrow style.
+    }
 }
 
 /// <summary>

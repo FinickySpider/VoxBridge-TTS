@@ -16,4 +16,10 @@ public interface IOverlayCoordinator
     /// No-op if the overlay is not currently open.
     /// </summary>
     void SetLiveOpacity(double opacity);
+
+    /// <summary>
+    /// Immediately updates the overlay window's font family without saving.
+    /// No-op if the overlay is not currently open.
+    /// </summary>
+    void SetLiveFont(string fontFamily);
 }

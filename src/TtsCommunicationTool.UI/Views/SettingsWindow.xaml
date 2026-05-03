@@ -949,7 +949,18 @@
                                       SelectedItem="{Binding Appearance.OverlayFontFamily, UpdateSourceTrigger=PropertyChanged}"
                                       MaxDropDownHeight="240"
                                       Style="{StaticResource SettingsComboBox}"
-                                      ToolTip="Font family used in the overlay text input field."/>
+                                      ToolTip="Font family used in the overlay text input field.">
+                                <!-- Each font name rendered in its own typeface for quick visual preview.
+                                     WPF's built-in FontFamilyConverter converts the string automatically. -->
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}"
+                                                   FontFamily="{Binding}"
+                                                   FontSize="13"
+                                                   Foreground="#CDD6F4"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                         </Grid>
 
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
@@ -969,6 +980,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -1063,16 +1075,24 @@
                         <DataGrid.Columns>
                             <DataGridCheckBoxColumn Header="On" Binding="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}" Width="36"/>
 
-                            <!-- Trigger column — display looks like a text input so editable intent is obvious -->
+                            <!-- Trigger column — filled rows blend in as plain text; empty (new) rows show input border -->
                             <DataGridTemplateColumn Header="Trigger  ✎" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border Background="#252540" BorderBrush="#45475A" BorderThickness="1"
+                                        <Border x:Name="CellBorder"
+                                                Background="Transparent" BorderBrush="Transparent" BorderThickness="1"
                                                 CornerRadius="3" Margin="2,1" Padding="5,3"
-                                                Cursor="IBeam" ToolTip="Click to select, then click again or press F2 to edit">
+                                                Cursor="IBeam" ToolTip="Click to edit">
                                             <TextBlock Text="{Binding TriggerText}" Foreground="#CDD6F4" FontSize="12"
                                                        VerticalAlignment="Center"/>
                                         </Border>
+                                        <DataTemplate.Triggers>
+                                            <!-- Empty/new rows get input-box styling so the clickable area is obvious -->
+                                            <DataTrigger Binding="{Binding TriggerText}" Value="">
+                                                <Setter TargetName="CellBorder" Property="Background" Value="#252540"/>
+                                                <Setter TargetName="CellBorder" Property="BorderBrush" Value="#45475A"/>
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                                 <DataGridTemplateColumn.CellEditingTemplate>
@@ -1089,12 +1109,20 @@
                             <DataGridTemplateColumn Header="Replacement  ✎" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border Background="#252540" BorderBrush="#45475A" BorderThickness="1"
+                                        <Border x:Name="CellBorder"
+                                                Background="Transparent" BorderBrush="Transparent" BorderThickness="1"
                                                 CornerRadius="3" Margin="2,1" Padding="5,3"
-                                                Cursor="IBeam" ToolTip="Click to select, then click again or press F2 to edit">
+                                                Cursor="IBeam" ToolTip="Click to edit">
                                             <TextBlock Text="{Binding ReplacementText}" Foreground="#CDD6F4" FontSize="12"
                                                        VerticalAlignment="Center"/>
                                         </Border>
+                                        <DataTemplate.Triggers>
+                                            <!-- Empty/new rows get input-box styling so the clickable area is obvious -->
+                                            <DataTrigger Binding="{Binding ReplacementText}" Value="">
+                                                <Setter TargetName="CellBorder" Property="Background" Value="#252540"/>
+                                                <Setter TargetName="CellBorder" Property="BorderBrush" Value="#45475A"/>
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                                 <DataGridTemplateColumn.CellEditingTemplate>
@@ -1112,8 +1140,8 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <!-- Action buttons -->
-                    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="8,8,8,4">
+                    <!-- Action buttons - primary actions -->
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="8,8,8,2">
                         <Button Content="Add" Command="{Binding TextReplacements.AddCommand}"
                                 Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
                         <Button Content="Delete" Command="{Binding TextReplacements.DeleteCommand}"
@@ -1121,55 +1149,181 @@
                         <Button Content="▲ Up" Command="{Binding TextReplacements.MoveUpCommand}"
                                 Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
                         <Button Content="▼ Down" Command="{Binding TextReplacements.MoveDownCommand}"
-                                Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                                Style="{StaticResource SecondaryButton}"/>
+                    </StackPanel>
+                    <!-- Import / Export on their own row so the button bar stays uncluttered -->
+                    <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="8,0,8,2">
                         <Button Content="Import..." Command="{Binding TextReplacements.ImportCommand}"
                                 Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
                         <Button Content="Export..." Command="{Binding TextReplacements.ExportCommand}"
                                 Style="{StaticResource SecondaryButton}"/>
                     </StackPanel>
-                    <TextBlock Grid.Row="4" Text="{Binding TextReplacements.StatusMessage}"
+                    <TextBlock Grid.Row="5" Text="{Binding TextReplacements.StatusMessage}"
                                Foreground="#A6E3A1" FontSize="12"
                                Visibility="{Binding TextReplacements.StatusMessage, Converter={StaticResource NonEmptyToVisibleConverter}}"
                                Margin="8,2,8,2" TextWrapping="Wrap"/>
 
-                    <!-- Order instructions -->
-                    <Border Grid.Row="5"
+                    <!-- How it works — 2-column reference panel -->
+                    <Border Grid.Row="6"
                             Background="#1A1A2E"
                             BorderBrush="#3A3A5C"
                             BorderThickness="1"
                             CornerRadius="6"
                             Margin="8,4,8,8"
-                            Padding="12,10">
-                        <StackPanel>
-                            <TextBlock Foreground="#89B4FA" FontSize="12" FontWeight="SemiBold"
-                                       Text="How replacements work" Margin="0,0,0,5"/>
-                            <TextBlock Foreground="#A6ADC8" FontSize="12" TextWrapping="Wrap" LineHeight="20"
-                                       Text="Rules run top-to-bottom. The first rule that matches wins &#x2014; later rules are skipped for that word."/>
-                            <TextBlock Foreground="#A6E3A1" FontSize="11" FontWeight="SemiBold"
-                                       Margin="0,8,0,2" Text="&#x2713;  Correct order"/>
-                            <TextBlock Foreground="#6C7086" FontSize="11" TextWrapping="Wrap" LineHeight="17"
-                                       Text='&#x201C;ty&#x201D; &#x2192; &#x201C;thank you&#x201D;  is ABOVE  &#x201C;t&#x201D; &#x2192; &#x201C;thanks&#x201D;'/>
-                            <TextBlock Foreground="#6C7086" FontSize="11" TextWrapping="Wrap" LineHeight="17" Margin="0,2,0,0"
-                                       Text='Typing &quot;ty&quot; hits the top rule &#x2192; gets &quot;thank you&quot; &#x2714;'/>
-                            <TextBlock Foreground="#F38BA8" FontSize="11" FontWeight="SemiBold"
-                                       Margin="0,8,0,2" Text="&#x2717;  Wrong order"/>
-                            <TextBlock Foreground="#6C7086" FontSize="11" TextWrapping="Wrap" LineHeight="17"
-                                       Text='&#x201C;t&#x201D; &#x2192; &#x201C;thanks&#x201D;  is ABOVE  &#x201C;ty&#x201D; &#x2192; &#x201C;thank you&#x201D;'/>
-                            <TextBlock Foreground="#6C7086" FontSize="11" TextWrapping="Wrap" LineHeight="17" Margin="0,2,0,4"
-                                       Text='Typing &quot;ty&quot; hits &quot;t&quot; first &#x2192; gets &quot;thanksy&quot; &#x2718;  Put specific rules above broader ones.'/>
-                            <TextBlock Foreground="#585B70" FontSize="11" FontStyle="Italic"
-                                       Text="Tip: use &#x25B2; Up / &#x25BC; Down buttons or drag rows to reorder."/>
-                        </StackPanel>
+                            Padding="0"
+                            MaxHeight="340">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="1"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- LEFT: How it works + ELI5 example -->
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <TextBlock Foreground="#89B4FA" FontSize="13" FontWeight="Bold" Margin="0,0,0,5">How text replacements work</TextBlock>
+                                    <TextBlock FontSize="12" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,6">
+                                        <Run Foreground="#A6ADC8">Text replacements are rules that say: </Run>
+                                        <Run Foreground="#CDD6F4" FontWeight="Bold">&#x201C;When I type this, replace it with that.&#x201D;</Run>
+                                    </TextBlock>
+                                    <TextBlock FontSize="12" TextWrapping="Wrap" LineHeight="19" Margin="0,0,0,4">
+                                        <Run Foreground="#A6ADC8">The app checks rules </Run>
+                                        <Run Foreground="#CDD6F4" FontWeight="Bold">top to bottom</Run>
+                                        <Run Foreground="#A6ADC8">. The </Run>
+                                        <Run Foreground="#CDD6F4" FontWeight="Bold">first matching rule wins</Run>
+                                        <Run Foreground="#A6ADC8"> &#x2014; rules below it are skipped for that match.</Run>
+                                    </TextBlock>
+                                    <TextBlock FontSize="12" TextWrapping="Wrap" LineHeight="17" Margin="0,0,0,12">
+                                        <Run Foreground="#A6E3A1" FontWeight="SemiBold">Tip: </Run>
+                                        <Run Foreground="#A6ADC8">Put more specific triggers above shorter or broader ones.</Run>
+                                    </TextBlock>
+
+                                    <Border Height="1" Background="#3A3A5C" Margin="0,0,0,10"/>
+
+                                    <TextBlock Foreground="#89B4FA" FontSize="13" FontWeight="Bold" Margin="0,0,0,5">ELI5 example</TextBlock>
+
+                                    <!-- Good order -->
+                                    <TextBlock Foreground="#A6ADC8" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,3">Rules in this order:</TextBlock>
+                                    <Border Background="#1A2E1A" CornerRadius="3" Padding="8,5" Margin="0,0,0,4">
+                                        <StackPanel>
+                                            <TextBlock Foreground="#CDD6F4" FontSize="11" FontFamily="Consolas">1. omw &#x2192; on my way</TextBlock>
+                                            <TextBlock Foreground="#CDD6F4" FontSize="11" FontFamily="Consolas">2. w &#x2192; with</TextBlock>
+                                            <TextBlock FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0">
+                                                <Run Foreground="#A6ADC8">Typing </Run>
+                                                <Run Foreground="#CDD6F4" FontFamily="Consolas">omw w snacks</Run>
+                                                <Run Foreground="#A6ADC8"> &#x2192; </Run>
+                                                <Run Foreground="#A6E3A1" FontFamily="Consolas">on my way with snacks</Run>
+                                            </TextBlock>
+                                            <TextBlock FontSize="11" Margin="0,2,0,0">
+                                                <Run Foreground="#A6E3A1">&#x2714; Good order.</Run>
+                                                <Run Foreground="#A6ADC8"> Specific rule wins first.</Run>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Bad order -->
+                                    <TextBlock Foreground="#A6ADC8" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,3">But if flipped:</TextBlock>
+                                    <Border Background="#2E1A1A" CornerRadius="3" Padding="8,5" Margin="0,0,0,12">
+                                        <StackPanel>
+                                            <TextBlock Foreground="#CDD6F4" FontSize="11" FontFamily="Consolas">1. w &#x2192; with</TextBlock>
+                                            <TextBlock Foreground="#CDD6F4" FontSize="11" FontFamily="Consolas">2. omw &#x2192; on my way</TextBlock>
+                                            <TextBlock FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0">
+                                                <Run Foreground="#A6ADC8">Typing </Run>
+                                                <Run Foreground="#CDD6F4" FontFamily="Consolas">omw w snacks</Run>
+                                                <Run Foreground="#A6ADC8"> could become </Run>
+                                                <Run Foreground="#F38BA8" FontFamily="Consolas">omwith with snacks</Run>
+                                            </TextBlock>
+                                            <TextBlock FontSize="11" Margin="0,2,0,0">
+                                                <Run Foreground="#F38BA8">&#x2718; Oops.</Run>
+                                                <Run Foreground="#A6ADC8"> The </Run>
+                                                <Run FontFamily="Consolas" Foreground="#A6ADC8">w</Run>
+                                                <Run Foreground="#A6ADC8"> inside </Run>
+                                                <Run FontFamily="Consolas" Foreground="#A6ADC8">omw</Run>
+                                                <Run Foreground="#A6ADC8"> was matched first.</Run>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Height="1" Background="#3A3A5C" Margin="0,0,0,8"/>
+                                    <TextBlock FontSize="11" TextWrapping="Wrap" Margin="0,0,0,2">
+                                        <Run Foreground="#A6E3A1">&#x25B8; </Run><Run Foreground="#A6ADC8">Put longer, more specific triggers near the top.</Run>
+                                    </TextBlock>
+                                    <TextBlock FontSize="11" TextWrapping="Wrap" Margin="0,0,0,2">
+                                        <Run Foreground="#A6E3A1">&#x25B8; </Run><Run Foreground="#A6ADC8">Put shorter, more general triggers lower down.</Run>
+                                    </TextBlock>
+                                    <TextBlock FontSize="11" TextWrapping="Wrap" Margin="0,0,0,4">
+                                        <Run Foreground="#A6E3A1">&#x25B8; </Run>
+                                        <Run Foreground="#A6ADC8">Use </Run>
+                                        <Run Foreground="#A6ADC8" FontWeight="Bold">Word</Run>
+                                        <Run Foreground="#A6ADC8"> for short triggers when you only want whole-word matches.</Run>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <!-- Divider -->
+                                <Border Grid.Column="1" Background="#3A3A5C" Margin="0,4,0,4"/>
+
+                                <!-- RIGHT: Settings key -->
+                                <StackPanel Grid.Column="2" Margin="12,0,0,0">
+                                    <TextBlock Foreground="#89B4FA" FontSize="13" FontWeight="Bold" Margin="0,0,0,5">Settings key</TextBlock>
+
+                                    <TextBlock Foreground="#CDD6F4" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,1">Enable text replacements</TextBlock>
+                                    <TextBlock Foreground="#A6ADC8" FontSize="11" TextWrapping="Wrap" LineHeight="16" Margin="0,0,0,8">Turns the whole feature on or off. If off, no replacements happen regardless of individual row settings.</TextBlock>
+
+                                    <TextBlock Foreground="#CDD6F4" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,1">On (per row)</TextBlock>
+                                    <TextBlock Foreground="#A6ADC8" FontSize="11" TextWrapping="Wrap" LineHeight="16" Margin="0,0,0,8">Enables or disables one specific rule. Other rules are unaffected.</TextBlock>
+
+                                    <TextBlock Foreground="#CDD6F4" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,1">Trigger</TextBlock>
+                                    <TextBlock Foreground="#A6ADC8" FontSize="11" TextWrapping="Wrap" LineHeight="16" Margin="0,0,0,2">The text the app looks for. Example:</TextBlock>
+                                    <Border Background="#252540" CornerRadius="3" Padding="6,2" Margin="0,0,0,8" HorizontalAlignment="Left">
+                                        <TextBlock Foreground="#CDD6F4" FontSize="11" FontFamily="Consolas">brb</TextBlock>
+                                    </Border>
+
+                                    <TextBlock Foreground="#CDD6F4" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,1">Replacement</TextBlock>
+                                    <TextBlock Foreground="#A6ADC8" FontSize="11" TextWrapping="Wrap" LineHeight="16" Margin="0,0,0,2">The text that replaces the trigger. Example:</TextBlock>
+                                    <Border Background="#252540" CornerRadius="3" Padding="6,2" Margin="0,0,0,2" HorizontalAlignment="Left">
+                                        <TextBlock Foreground="#CDD6F4" FontSize="11" FontFamily="Consolas">be right back</TextBlock>
+                                    </Border>
+                                    <TextBlock FontSize="11" Margin="0,0,0,8">
+                                        <Run Foreground="#A6ADC8">So: </Run>
+                                        <Run Foreground="#CDD6F4" FontFamily="Consolas">brb</Run>
+                                        <Run Foreground="#A6ADC8"> &#x2192; </Run>
+                                        <Run Foreground="#CDD6F4" FontFamily="Consolas">be right back</Run>
+                                    </TextBlock>
+
+                                    <TextBlock Foreground="#CDD6F4" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,1">Case</TextBlock>
+                                    <TextBlock Foreground="#A6ADC8" FontSize="11" TextWrapping="Wrap" LineHeight="16" Margin="0,0,0,2">
+                                        <Run FontWeight="SemiBold">On:</Run> trigger must match capitalization exactly. <Run FontFamily="Consolas">brb</Run> &#x2260; <Run FontFamily="Consolas">BRB</Run> &#x2260; <Run FontFamily="Consolas">Brb</Run>
+                                    </TextBlock>
+                                    <TextBlock Foreground="#A6ADC8" FontSize="11" TextWrapping="Wrap" LineHeight="16" Margin="0,0,0,8">
+                                        <Run FontWeight="SemiBold">Off:</Run> capitalization doesn&#x2019;t have to match. All variants trigger the same rule.
+                                    </TextBlock>
+
+                                    <TextBlock Foreground="#CDD6F4" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,1">Word</TextBlock>
+                                    <TextBlock Foreground="#A6ADC8" FontSize="11" TextWrapping="Wrap" LineHeight="16" Margin="0,0,0,2">
+                                        <Run FontWeight="SemiBold">On:</Run> trigger only fires when it&#x2019;s a whole word. <Run FontFamily="Consolas">cat</Run> matches <Run FontFamily="Consolas">cat</Run> but not <Run FontFamily="Consolas">catalog</Run>.
+                                    </TextBlock>
+                                    <TextBlock Foreground="#A6ADC8" FontSize="11" TextWrapping="Wrap" LineHeight="16" Margin="0,0,0,4">
+                                        <Run FontWeight="SemiBold">Off:</Run> trigger can match inside a longer word.
+                                    </TextBlock>
+                                    <TextBlock FontSize="11" TextWrapping="Wrap" LineHeight="16">
+                                        <Run Foreground="#F9E2AF" FontWeight="SemiBold">Careful: </Run>
+                                        <Run Foreground="#A6ADC8">Short triggers with Word OFF can cause surprising matches inside longer words.</Run>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
                     </Border>
                 </Grid>
             </TabItem>            <!-- Phrases Tab -->
             <TabItem Header="Phrases">
                 <Grid Margin="0,16,0,0">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>  <!-- 0: title -->
+                        <RowDefinition Height="Auto"/>  <!-- 1: search bar -->
+                        <RowDefinition Height="Auto"/>  <!-- 2: column headers -->
+                        <RowDefinition Height="*"/>     <!-- 3: list -->
+                        <RowDefinition Height="Auto"/>  <!-- 4: controls -->
                     </Grid.RowDefinitions>
 
                     <TextBlock Text="Quick Phrases" Style="{StaticResource SectionHeader}" Margin="8,0"/>
@@ -1260,9 +1414,106 @@
                         </ToggleButton>
                     </Grid>
 
+                    <!-- Sortable column headers aligned to item template column widths -->
+                    <Border Grid.Row="2" Margin="8,2,8,0"
+                            Background="#1E1E2E" BorderBrush="#45475A" BorderThickness="0,0,0,1">
+                        <Grid Margin="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="130"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- ★/📌 sort by favorite -->
+                            <Button Grid.Column="0" Tag="IsFavorite" Click="PhraseSort_Click"
+                                    ToolTip="Sort by favorite" Padding="4,4" Cursor="Hand">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Foreground" Value="#89B4FA"/>
+                                        <Setter Property="FontSize" Value="11"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                          TextElement.Foreground="{TemplateBinding Foreground}"
+                                                                          TextElement.FontSize="{TemplateBinding FontSize}"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#2B2B3D"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Text="&#x2605;/&#x1F4CC;" FontSize="10" Foreground="#89B4FA"/>
+                            </Button>
+                            <Button Grid.Column="1" Tag="Name" Click="PhraseSort_Click"
+                                    ToolTip="Sort by name" Padding="8,4" HorizontalContentAlignment="Left" Cursor="Hand">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                                          TextElement.Foreground="#89B4FA"
+                                                                          TextElement.FontSize="11"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#2B2B3D"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Text="Name &amp; Text  &#x21C5;" FontSize="11" Foreground="#89B4FA"/>
+                            </Button>
+                            <Button Grid.Column="2" Tag="Category" Click="PhraseSort_Click"
+                                    ToolTip="Sort by category" Padding="8,4" HorizontalContentAlignment="Left" Cursor="Hand">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                                          TextElement.Foreground="#89B4FA"
+                                                                          TextElement.FontSize="11"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#2B2B3D"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Text="Category  &#x21C5;" FontSize="11" Foreground="#89B4FA"/>
+                            </Button>
+                            <!-- Hotkey column header (no sort — HotkeyBinding is not directly sortable) -->
+                            <TextBlock Grid.Column="3" Text="Hotkey" FontSize="11" Foreground="#89B4FA"
+                                       Padding="8,4" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
                     <!-- Phrase list -->
                     <ListBox x:Name="PhraseListBox"
-                             Grid.Row="2"
+                             Grid.Row="3"
                              ItemsSource="{Binding Phrases.FilteredPhrases}"
                              SelectedItem="{Binding Phrases.SelectedPhrase}"
                              Background="#2B2B3D"
@@ -1371,120 +1622,116 @@
                             <DataTemplate>
                                 <Grid Margin="4,2">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="50"/>   <!-- ★/📌 -->
+                                        <ColumnDefinition Width="*"/>    <!-- Name + Text -->
+                                        <ColumnDefinition Width="110"/>  <!-- Category -->
+                                        <ColumnDefinition Width="130"/>  <!-- Hotkey -->
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Favorite star — always visible, direct click toggles favorite status -->
-                                    <Button Grid.Column="0"
-                                            Content="&#x2605;"
-                                            CommandParameter="{Binding}"
-                                            Command="{Binding RelativeSource={RelativeSource AncestorType=Window},
-                                                              Path=DataContext.Phrases.ToggleFavoriteByItemCommand}"
-                                            VerticalAlignment="Center"
-                                            Margin="0,0,4,0"
-                                            Cursor="Hand"
-                                            ToolTip="Toggle favorite"
-                                            Focusable="False">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Background" Value="Transparent"/>
-                                                <Setter Property="BorderThickness" Value="0"/>
-                                                <Setter Property="Padding" Value="1"/>
-                                                <Setter Property="FontSize" Value="12"/>
-                                                <Setter Property="Foreground" Value="#45475A"/>
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="Button">
-                                                            <Border Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                                <ContentPresenter HorizontalAlignment="Center"
-                                                                                  VerticalAlignment="Center"
-                                                                                  TextElement.Foreground="{TemplateBinding Foreground}"
-                                                                                  TextElement.FontSize="{TemplateBinding FontSize}"/>
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                                <Style.Triggers>
-                                                    <!-- Filled gold when favorite -->
-                                                    <DataTrigger Binding="{Binding IsFavorite}" Value="True">
-                                                        <Setter Property="Foreground" Value="#F9E2AF"/>
-                                                    </DataTrigger>
-                                                    <!-- Brighter outline on hover when not favorite -->
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Foreground" Value="#8899AA"/>
-                                                    </Trigger>
-                                                    <!-- Stay gold on hover when already favorite -->
-                                                    <MultiDataTrigger>
-                                                        <MultiDataTrigger.Conditions>
-                                                            <Condition Binding="{Binding IsFavorite}" Value="True"/>
-                                                            <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True"/>
-                                                        </MultiDataTrigger.Conditions>
-                                                        <Setter Property="Foreground" Value="#FFD966"/>
-                                                    </MultiDataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
+                                    <!-- Star + Pin in their own column, stacked horizontally -->
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <!-- ★ Favorite toggle -->
+                                        <Button Content="&#x2605;"
+                                                CommandParameter="{Binding}"
+                                                Command="{Binding RelativeSource={RelativeSource AncestorType=Window},
+                                                                  Path=DataContext.Phrases.ToggleFavoriteByItemCommand}"
+                                                VerticalAlignment="Center"
+                                                Cursor="Hand"
+                                                ToolTip="Toggle favorite"
+                                                Focusable="False">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                    <Setter Property="Padding" Value="1"/>
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                    <Setter Property="Foreground" Value="#45475A"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                                    <ContentPresenter HorizontalAlignment="Center"
+                                                                                      VerticalAlignment="Center"
+                                                                                      TextElement.Foreground="{TemplateBinding Foreground}"
+                                                                                      TextElement.FontSize="{TemplateBinding FontSize}"/>
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                                            <Setter Property="Foreground" Value="#F9E2AF"/>
+                                                        </DataTrigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Foreground" Value="#8899AA"/>
+                                                        </Trigger>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding IsFavorite}" Value="True"/>
+                                                                <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True"/>
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Foreground" Value="#FFD966"/>
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
 
-                                    <!-- Pin indicator — invisible but occupies layout space when not pinned;
-                                         dims to 35% on row hover so users discover it; full opacity when pinned.
-                                         Direct click toggles pin status. -->
-                                    <Button Grid.Column="1"
-                                            Content="&#x1F4CC;"
-                                            CommandParameter="{Binding}"
-                                            Command="{Binding RelativeSource={RelativeSource AncestorType=Window},
-                                                              Path=DataContext.Phrases.TogglePinnedByItemCommand}"
-                                            VerticalAlignment="Center"
-                                            Margin="0,0,4,0"
-                                            Cursor="Hand"
-                                            ToolTip="Toggle pin"
-                                            Focusable="False">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Background" Value="Transparent"/>
-                                                <Setter Property="BorderThickness" Value="0"/>
-                                                <Setter Property="Padding" Value="1"/>
-                                                <Setter Property="FontSize" Value="11"/>
-                                                <Setter Property="Opacity" Value="0"/>
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="Button">
-                                                            <Border Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                                <ContentPresenter HorizontalAlignment="Center"
-                                                                                  VerticalAlignment="Center"
-                                                                                  TextElement.FontSize="{TemplateBinding FontSize}"/>
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                                <Style.Triggers>
-                                                    <!-- Fully visible when pinned -->
-                                                    <DataTrigger Binding="{Binding IsPinned}" Value="True">
-                                                        <Setter Property="Opacity" Value="1"/>
-                                                    </DataTrigger>
-                                                    <!-- Dimly visible on direct hover to hint it's clickable -->
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Opacity" Value="0.5"/>
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
-
-                                    <!-- Name + text -->
-                                    <StackPanel Grid.Column="2">
-                                        <DockPanel>
-                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" Foreground="#CDD6F4"/>
-                                            <TextBlock Text="{Binding Category}" FontSize="11" Foreground="#CBA6F7"
-                                                       Margin="6,0,0,0" VerticalAlignment="Center"
-                                                       Visibility="{Binding Category, Converter={StaticResource NonEmptyToVisibleConverter}}"/>
-                                        </DockPanel>
-                                        <TextBlock Text="{Binding Text}" Foreground="#6C7086" FontSize="11"
-                                                   TextTrimming="CharacterEllipsis" MaxWidth="380"/>
+                                        <!-- 📌 Pin toggle -->
+                                        <Button Content="&#x1F4CC;"
+                                                CommandParameter="{Binding}"
+                                                Command="{Binding RelativeSource={RelativeSource AncestorType=Window},
+                                                                  Path=DataContext.Phrases.TogglePinnedByItemCommand}"
+                                                VerticalAlignment="Center"
+                                                Cursor="Hand"
+                                                ToolTip="Toggle pin"
+                                                Focusable="False">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                    <Setter Property="Padding" Value="1"/>
+                                                    <Setter Property="FontSize" Value="11"/>
+                                                    <Setter Property="Opacity" Value="0"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                                    <ContentPresenter HorizontalAlignment="Center"
+                                                                                      VerticalAlignment="Center"
+                                                                                      TextElement.FontSize="{TemplateBinding FontSize}"/>
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                                            <Setter Property="Opacity" Value="1"/>
+                                                        </DataTrigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Opacity" Value="0.5"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
                                     </StackPanel>
+
+                                    <!-- Name + Text (two-line) -->
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" Foreground="#CDD6F4"/>
+                                        <TextBlock Text="{Binding Text}" Foreground="#6C7086" FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+
+                                    <!-- Category -->
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Category}"
+                                               Foreground="#CBA6F7" FontSize="11"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="4,0,0,0"/>
+
                                     <!-- Hotkey -->
                                     <TextBlock Grid.Column="3"
                                                Text="{Binding Hotkey, Converter={StaticResource HotkeyDisplayConverter}}"
@@ -1497,7 +1744,7 @@
                     </ListBox>
 
                     <!-- Add/Delete/Play controls -->
-                    <StackPanel Grid.Row="3" Margin="8,12,8,0">
+                    <StackPanel Grid.Row="4" Margin="8,12,8,0">
                         <!-- Input row: name, text, category -->
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
@@ -1535,7 +1782,8 @@
                                            Visibility="{Binding Phrases.EditCategory, Converter={StaticResource EmptyToVisibleConverter}}"/>
                             </Grid>
                         </Grid>
-                        <StackPanel Orientation="Horizontal">
+                        <!-- Primary actions row -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                             <Button Content="Add" Command="{Binding Phrases.AddCommand}"
                                     Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
                             <Button Content="Update" Command="{Binding Phrases.UpdateCommand}"
@@ -1545,12 +1793,17 @@
                                     Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
                             <Button Content="▶ Play" Command="{Binding Phrases.PlayCommand}"
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                            <!--
                             <Button Content="★ Fav" Command="{Binding Phrases.ToggleFavoriteCommand}"
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
                                     ToolTip="Toggle favorite on selected phrase"/>
                             <Button Content="📌 Pin" Command="{Binding Phrases.TogglePinnedCommand}"
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
                                     ToolTip="Toggle pin on selected phrase"/>
+                            -->
+                        </StackPanel>
+                        <!-- Import / Export on their own row so the button bar stays uncluttered -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                             <Button Content="Import..." Command="{Binding Phrases.ImportCommand}"
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
                             <Button Content="Export..." Command="{Binding Phrases.ExportCommand}"

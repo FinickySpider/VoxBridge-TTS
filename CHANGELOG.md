@@ -7,6 +7,27 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.11.0] -- 2026-05-03
+
+### Features
+
+- **Live font preview**: Changing the font in Appearance settings now immediately updates the open overlay without requiring Save. Cancelling reverts the overlay to the saved font, consistent with how opacity preview already worked.
+- **Font dropdown self-preview**: Each font name in the Appearance → Font Type dropdown is now rendered in its own typeface so you can visually browse fonts at a glance.
+- **Phrases list column headers with sort**: The Phrases list now shows proper aligned column headers for ★/📌, Name & Text, Category, and Hotkey. Clicking Name or Category sorts ascending/descending. Clicking ★/📌 sorts by favorite status.
+- **Phrases list dedicated Category column**: Category is now its own fixed-width column in the list instead of being shown inline after the phrase name.
+- **Replacements "How it works" reference panel**: Completely rewritten as a two-column scrollable panel. Left column covers ordering rules with color-coded ELI5 examples. Right column is a quick-reference settings key (Enable, On/Off per row, Trigger, Replacement, Case, Word — all with plain-language descriptions and inline code examples).
+
+### Improvements
+
+- **DataGrid filled-row styling**: Rows that already have Trigger/Replacement text now display as plain blending text (no visible box). Only empty/new rows show the input-styled border, making it visually clear which rows are empty vs. configured. The full edit styling still appears when a row is in edit mode.
+- **Phrases tab button layout**: Fav and Pin action buttons commented out (code preserved, not deleted) to unclutter the button row. Import and Export moved to their own second row on both the Phrases tab and the Replacements tab.
+
+### Improvements
+
+- (add improvements here)
+
+---
 ## [v0.10.2] -- 2026-05-03
 
 ### Bug Fixes

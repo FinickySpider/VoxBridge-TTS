@@ -163,11 +163,13 @@ public partial class App : System.Windows.Application
         // The overlay coordinator checks if the overlay window exists before applying.
         var coordinator = _serviceProvider.GetRequiredService<IOverlayCoordinator>();
         vm.Appearance.LiveOpacityPreview = coordinator.SetLiveOpacity;
+        vm.Appearance.LiveFontPreview = coordinator.SetLiveFont;
 
         _settingsWindow = new SettingsWindow(vm);
         _settingsWindow.Closed += (_, _) =>
         {
             vm.Appearance.LiveOpacityPreview = null;
+            vm.Appearance.LiveFontPreview = null;
             _settingsWindow = null;
         };
         _settingsWindow.Show();

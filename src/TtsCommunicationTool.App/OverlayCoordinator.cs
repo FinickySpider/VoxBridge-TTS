@@ -159,6 +159,11 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
         _overlayWindow?.SetOverlayOpacity(opacity);
     }
 
+    public void SetLiveFont(string fontFamily)
+    {
+        _overlayWindow?.SetFontFamily(fontFamily);
+    }
+
     public void ToggleOverlay()
     {
         if (IsOverlayVisible)

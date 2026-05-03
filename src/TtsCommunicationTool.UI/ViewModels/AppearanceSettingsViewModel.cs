@@ -36,6 +36,13 @@ public sealed class AppearanceSettingsViewModel : ViewModelBase
     /// </summary>
     public Action<double>? LiveOpacityPreview { get; set; }
 
+    /// <summary>
+    /// Optional callback invoked every time <see cref="OverlayFontFamily"/> changes so the
+    /// overlay window can preview the new font live without waiting for a Save.
+    /// Wire this up in <c>App.xaml.cs</c> before showing the settings window.
+    /// </summary>
+    public Action<string>? LiveFontPreview { get; set; }
+
     /// <summary>Background opacity of the overlay (clamped 0.2 – 0.95).</summary>
     public double OverlayOpacity
     {
@@ -51,7 +58,11 @@ public sealed class AppearanceSettingsViewModel : ViewModelBase
     public string OverlayFontFamily
     {
         get => _overlayFontFamily;
-        set => SetField(ref _overlayFontFamily, value);
+        set
+        {
+            if (SetField(ref _overlayFontFamily, value))
+                LiveFontPreview?.Invoke(_overlayFontFamily);
+        }
     }
 
     /// <summary>All installed font families sorted alphabetically (for the settings dropdown).</summary>
