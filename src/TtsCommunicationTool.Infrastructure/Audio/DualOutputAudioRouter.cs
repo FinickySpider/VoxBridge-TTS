@@ -9,6 +9,8 @@ public sealed class DualOutputAudioRouter : IAudioRouterService
 {
     private readonly List<WasapiOut> _activePlayers = new();
     private readonly object _lock = new();
+    private CancellationTokenSource? _playbackCts;
+    private readonly object _ctsLock = new();
     private bool _disposed;
 
     public bool IsPlaying
@@ -26,33 +28,69 @@ public sealed class DualOutputAudioRouter : IAudioRouterService
         float monitorVolume = 1.0f, float secondaryVolume = 1.0f,
         CancellationToken ct = default)
     {
+        // Cancel any in-flight playback BEFORE creating a new CTS, so the old
+        // PlayAsync (if still running) throws OperationCanceledException and does
+        // NOT fire PlaybackFinished. Then stop/dispose the NAudio players.
         StopAll();
 
+        // Create a fresh CTS for this playback session so StopAll() can cancel it
+        // without touching the caller-supplied 'ct'.
+        using var cts = ct.CanBeCanceled
+            ? CancellationTokenSource.CreateLinkedTokenSource(ct)
+            : new CancellationTokenSource();
+
+        lock (_ctsLock) { _playbackCts = cts; }
+
+        var token = cts.Token;
         var waveFormat = new WaveFormat(request.SampleRate, request.BitsPerSample, request.Channels);
         var tasks = new List<Task>();
 
         if (!string.IsNullOrEmpty(monitorDeviceId))
-        {
-            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, monitorDeviceId, Math.Clamp(monitorVolume, 0f, 1f), ct));
-        }
+            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, monitorDeviceId, Math.Clamp(monitorVolume, 0f, 1f), token));
 
         if (!string.IsNullOrEmpty(secondaryDeviceId))
-        {
-            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, secondaryDeviceId, Math.Clamp(secondaryVolume, 0f, 1f), ct));
-        }
+            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, secondaryDeviceId, Math.Clamp(secondaryVolume, 0f, 1f), token));
 
         if (tasks.Count == 0)
-        {
-            // Play on default device using monitor volume
-            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, null, Math.Clamp(monitorVolume, 0f, 1f), ct));
-        }
+            tasks.Add(PlayOnDeviceAsync(request.AudioData, waveFormat, null, Math.Clamp(monitorVolume, 0f, 1f), token));
 
-        await Task.WhenAll(tasks);
-        PlaybackFinished?.Invoke(this, EventArgs.Empty);
+        try
+        {
+            await Task.WhenAll(tasks);
+
+            // Only fire if playback completed naturally — not when StopAll() cancelled it.
+            if (!cts.IsCancellationRequested)
+                PlaybackFinished?.Invoke(this, EventArgs.Empty);
+        }
+        catch (OperationCanceledException)
+        {
+            // Stopped by StopAll() — suppress PlaybackFinished so callers don't
+            // misinterpret a forced stop as natural completion.
+        }
+        finally
+        {
+            lock (_ctsLock)
+            {
+                if (_playbackCts == cts)
+                    _playbackCts = null;
+            }
+        }
     }
 
     public void StopAll()
     {
+        // Cancel the current playback CTS first so the in-flight PlayAsync throws
+        // OperationCanceledException and skips PlaybackFinished.Invoke.
+        CancellationTokenSource? cts;
+        lock (_ctsLock)
+        {
+            cts = _playbackCts;
+            _playbackCts = null;
+        }
+        cts?.Cancel();
+
+        // Force-stop the NAudio players directly (handles the case where PlayAsync
+        // hasn't called PlayOnDeviceAsync yet, or where the CTS cancel arrives late).
         lock (_lock)
         {
             foreach (var player in _activePlayers)
@@ -69,6 +107,8 @@ public sealed class DualOutputAudioRouter : IAudioRouterService
             }
             _activePlayers.Clear();
         }
+
+        cts?.Dispose();
     }
 
     private async Task PlayOnDeviceAsync(byte[] audioData, WaveFormat format, string? deviceId, float volume, CancellationToken ct)
@@ -120,7 +160,9 @@ public sealed class DualOutputAudioRouter : IAudioRouterService
             {
                 lock (_lock)
                     _activePlayers.Remove(player);
-                player.Dispose();
+                // Guard against double-dispose: StopAll() may have already
+                // disposed the player while we were awaiting tcs.Task.
+                try { player.Dispose(); } catch { }
             }
         }
     }

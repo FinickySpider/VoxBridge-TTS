@@ -345,6 +345,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             }
             catch (Exception ex)
             {
+                _playbackState.Reset(); // Ensure CanSubmit recovers if PlayAsync throws
                 _log.Error("Fire-and-forget send failed", ex);
             }
         });
@@ -367,16 +368,82 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             return false;
         }
 
-        // Stop whatever is currently playing
-        if (_playbackState.IsPlaying || _audioRouter.IsPlaying)
-        {
-            _audioRouter.StopAll();
-            _playbackState.Reset();
-            _log.Info("Override hotkey: stopped current audio before sending.");
-        }
+        text = _textReplacement.Apply(text);
+        var pitch = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalPitch, 0.5f, 2.0f);
 
-        // Now submit normally — playback state should be clear
-        return FireAndForgetSend();
+        // Clear input and log transcript on the UI thread before going async
+        InputText = string.Empty;
+        _recentMessages.Add(text);
+        OnPropertyChanged(nameof(LastMessage));
+        OnPropertyChanged(nameof(HasRecentMessage));
+        _ = _transcript.LogAsync(text);
+
+        // Mark playing immediately so CanSubmit blocks new sends during stop+synthesis.
+        // We do this BEFORE Task.Run so no second send can slip through the gap.
+        _playbackState.IsPlaying = true;
+        _playbackState.CurrentText = text;
+        NotifyCanSubmitChanged();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // StopAll cancels the in-flight playback CTS so PlaybackFinished does
+                // NOT fire for the old audio — eliminating the race that would reset
+                // _playbackState.IsPlaying back to false mid-synthesis.
+                // Running on the thread pool also prevents blocking the UI thread
+                // (WasapiOut.Stop() internally calls playThread.Join()).
+                _audioRouter.StopAll();
+
+                _log.Info("Override hotkey: stopped current audio, beginning new synthesis.");
+
+                System.Windows.Application.Current?.Dispatcher.InvokeAsync(
+                    () => SetStatus("Generating...", StatusSeverity.Info));
+
+                var result = await _tts.SynthesizeAsync(new TtsRequest
+                {
+                    Text    = text,
+                    VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId,
+                    Pitch   = pitch
+                });
+
+                if (!result.Success)
+                {
+                    _playbackState.Reset();
+                    System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
+                    {
+                        SetStatus("Error — see log.", StatusSeverity.Error);
+                        _notifications.ShowError($"TTS error: {result.ErrorMessage}");
+                    });
+                    _log.Error($"ForceStopAndSend TTS failed: {result.ErrorMessage}");
+                    return;
+                }
+
+                System.Windows.Application.Current?.Dispatcher.InvokeAsync(
+                    () => SetStatus("Speaking...", StatusSeverity.Info));
+
+                var cfg = _config.CurrentConfig;
+                await _audioRouter.PlayAsync(
+                    new PlaybackRequest
+                    {
+                        AudioData     = result.AudioData!,
+                        SampleRate    = result.SampleRate,
+                        Channels      = result.Channels,
+                        BitsPerSample = result.BitsPerSample
+                    },
+                    cfg.AudioSettings.MonitorOutputDeviceId,
+                    cfg.AudioSettings.SecondaryOutputDeviceId,
+                    cfg.AudioSettings.MonitorVolume,
+                    cfg.AudioSettings.SecondaryVolume);
+            }
+            catch (Exception ex)
+            {
+                _playbackState.Reset(); // Always recover CanSubmit on any error
+                _log.Error("ForceStopAndSend failed", ex);
+            }
+        });
+
+        return true;
     }
 
     private void Stop()
