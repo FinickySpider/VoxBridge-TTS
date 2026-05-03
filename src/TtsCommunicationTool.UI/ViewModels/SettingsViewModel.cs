@@ -114,12 +114,15 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         var cfg = _config.CurrentConfig;
         General.LoadFrom(cfg.GeneralSettings);
+        General.LoadDiagnosticSettings(cfg.DiagnosticLogging);
         Hotkeys.LoadFrom(cfg.HotkeySettings);
         Audio.LoadFrom(cfg.AudioSettings);
         Voice.LoadFrom(cfg.VoiceSettings);
         Appearance.LoadFrom(cfg.OverlaySettings);
         TextReplacements.LoadFrom(cfg.TextReplacements);
         IsDirty = false;
+        _log.LogEvent(DiagnosticLogLevel.Info, "settings", "settings_loaded",
+            "Settings loaded from config");
     }
 
     private async Task SaveAsync()
@@ -144,6 +147,7 @@ public sealed class SettingsViewModel : ViewModelBase
         var previousVoiceId = cfg.VoiceSettings.SelectedVoiceId;
 
         General.ApplyTo(cfg.GeneralSettings);
+        General.ApplyDiagnosticSettings(cfg.DiagnosticLogging);
         Hotkeys.ApplyTo(cfg.HotkeySettings);
         Audio.ApplyTo(cfg.AudioSettings);
         Voice.ApplyTo(cfg.VoiceSettings);
@@ -152,6 +156,9 @@ public sealed class SettingsViewModel : ViewModelBase
 
         await _config.SaveAsync(cfg);
         _log.Info("Settings saved.");
+        _log.UpdateSettings(cfg.DiagnosticLogging);
+        _log.LogEvent(DiagnosticLogLevel.Info, "settings", "settings_saved",
+            "Settings saved successfully");
         IsDirty = false;
         Phrases.Commit(); // finalize phrase session — takes new snapshot and re-registers hotkeys
 

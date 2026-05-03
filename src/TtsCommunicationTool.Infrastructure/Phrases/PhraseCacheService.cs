@@ -1,5 +1,6 @@
 using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Core.Models;
+using TtsCommunicationTool.Infrastructure.Logging;
 
 namespace TtsCommunicationTool.Infrastructure.Phrases;
 
@@ -32,7 +33,12 @@ public sealed class PhraseCacheService : IPhraseCacheService
     {
         var path = GetCachePath(phraseId);
         if (!File.Exists(path))
+        {
+            _log.LogEvent(DiagnosticLogLevel.Debug, "cache", "cache_miss",
+                "Phrase audio cache miss",
+                new { cache_key = phraseId });
             return null;
+        }
 
         try
         {
@@ -49,6 +55,10 @@ public sealed class PhraseCacheService : IPhraseCacheService
             // Extract raw PCM data (skip 44-byte header)
             var audioData = new byte[dataSize];
             Array.Copy(wavBytes, WavHeaderSize, audioData, 0, Math.Min(dataSize, wavBytes.Length - WavHeaderSize));
+
+            _log.LogEvent(DiagnosticLogLevel.Debug, "cache", "cache_hit",
+                "Phrase audio cache hit",
+                new { cache_key = phraseId });
 
             return new PlaybackRequest
             {
@@ -94,6 +104,9 @@ public sealed class PhraseCacheService : IPhraseCacheService
             var path = GetCachePath(phrase.Id);
             await File.WriteAllBytesAsync(path, wavBytes);
             _log.Info($"Cached audio for phrase '{phrase.Name}' ({result.AudioData.Length} bytes).");
+            _log.LogEvent(DiagnosticLogLevel.Debug, "cache", "cache_write",
+                "Phrase audio cache written",
+                new { cache_key = phrase.Id, voice_id = voiceId });
         }
         catch (Exception ex)
         {

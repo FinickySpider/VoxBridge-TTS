@@ -1,8 +1,10 @@
 using KokoroSharp;
 using KokoroSharp.Core;
 using KokoroSharp.Processing;
+using System.Diagnostics;
 using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Core.Models;
+using TtsCommunicationTool.Infrastructure.Logging;
 
 namespace TtsCommunicationTool.Infrastructure.Tts;
 
@@ -60,6 +62,19 @@ public sealed class KokoroTtsService : ITtsService, IDisposable
             return TtsResult.Fail("Text cannot be empty.");
 
         var voiceId = string.IsNullOrEmpty(request.VoiceId) ? DefaultVoiceId : request.VoiceId;
+        var sw = Stopwatch.StartNew();
+
+        _log.LogEvent(DiagnosticLogLevel.Info, "tts", "synthesis_started",
+            "Kokoro TTS synthesis started",
+            new
+            {
+                voice_id   = voiceId,
+                engine     = "kokoro",
+                text_length = request.Text.Length,
+                text_hash   = FileLoggingService.ComputeTextHash(request.Text),
+                text        = _log.LogRawText ? request.Text : (string?)null,
+                request_id  = _log.IncludeRequestIds ? request.RequestId : null
+            });
 
         try
         {
@@ -82,15 +97,34 @@ public sealed class KokoroTtsService : ITtsService, IDisposable
             var audioBytes = ConvertToPcm16(allSamples);
             _log.Info($"Generated {audioBytes.Length} bytes of audio ({allSamples.Length} samples at {SampleRate}Hz).");
 
+            sw.Stop();
+            _log.LogEvent(DiagnosticLogLevel.Info, "tts", "synthesis_completed",
+                "Kokoro TTS synthesis completed",
+                new
+                {
+                    voice_id    = voiceId,
+                    engine      = "kokoro",
+                    duration_ms = (long)sw.Elapsed.TotalMilliseconds,
+                    text_length = request.Text.Length,
+                    request_id  = _log.IncludeRequestIds ? request.RequestId : null
+                });
+
             return TtsResult.Ok(audioBytes, SampleRate, channels: 1, bitsPerSample: 16);
         }
         catch (OperationCanceledException)
         {
+            _log.LogEvent(DiagnosticLogLevel.Info, "tts", "synthesis_failed",
+                "TTS synthesis cancelled",
+                new { voice_id = voiceId, engine = "kokoro", request_id = _log.IncludeRequestIds ? request.RequestId : null });
             return TtsResult.Fail("Speech generation was cancelled.");
         }
         catch (Exception ex)
         {
+            sw.Stop();
             _log.Error("Kokoro TTS synthesis failed.", ex);
+            _log.LogEvent(DiagnosticLogLevel.Error, "tts", "synthesis_failed",
+                "Kokoro TTS synthesis failed",
+                new { voice_id = voiceId, engine = "kokoro", error = ex.Message, request_id = _log.IncludeRequestIds ? request.RequestId : null });
             return TtsResult.Fail($"Speech generation failed: {ex.Message}");
         }
     }

@@ -3,9 +3,11 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Diagnostics;
 using NAudio.Wave;
 using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Core.Models;
+using TtsCommunicationTool.Infrastructure.Logging;
 
 namespace TtsCommunicationTool.Infrastructure.Tts;
 
@@ -50,7 +52,21 @@ public sealed class ElevenLabsTtsService : ITtsService
 
         try
         {
+            var sw = Stopwatch.StartNew();
             var url = $"{BaseUrl}/text-to-speech/{voiceId}";
+
+            _log.LogEvent(DiagnosticLogLevel.Info, "api", "api_request_started",
+                "ElevenLabs TTS API request started",
+                new
+                {
+                    provider    = "elevenlabs",
+                    voice_id    = voiceId,
+                    text_length = request.Text.Length,
+                    text_hash   = FileLoggingService.ComputeTextHash(request.Text),
+                    text        = _log.LogRawText ? request.Text : (string?)null,
+                    request_id  = _log.IncludeRequestIds ? request.RequestId : null
+                });
+
             using var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Headers.Add("xi-api-key", settings.ApiKey);
             req.Headers.Add("Accept", "audio/mpeg");
@@ -63,16 +79,30 @@ public sealed class ElevenLabsTtsService : ITtsService
             {
                 var err = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
                 _log.Error($"ElevenLabs API error {resp.StatusCode}: {err}");
-                return TtsResult.Fail($"ElevenLabs API returned {(int)resp.StatusCode}: {resp.ReasonPhrase}");
+                var statusCode = (int)resp.StatusCode;
+                _log.LogEvent(statusCode == 429 ? DiagnosticLogLevel.Warn : DiagnosticLogLevel.Error,
+                    "api",
+                    statusCode == 429 ? "api_rate_limited" : "api_request_failed",
+                    $"ElevenLabs API returned {statusCode}",
+                    new { provider = "elevenlabs", status = statusCode, error = err, request_id = _log.IncludeRequestIds ? request.RequestId : null });
+                return TtsResult.Fail($"ElevenLabs API returned {statusCode}: {resp.ReasonPhrase}");
             }
 
             var mp3Bytes = await resp.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false);
+            sw.Stop();
+            _log.LogEvent(DiagnosticLogLevel.Info, "api", "api_request_completed",
+                "ElevenLabs TTS API request completed",
+                new { provider = "elevenlabs", status = 200, duration_ms = (long)sw.Elapsed.TotalMilliseconds, request_id = _log.IncludeRequestIds ? request.RequestId : null });
+
             var (pcm, sampleRate, channels, bps) = DecodeMp3ToPcm(mp3Bytes);
             return TtsResult.Ok(pcm, sampleRate, channels, bps);
         }
         catch (Exception ex)
         {
             _log.Error("ElevenLabs synthesis failed", ex);
+            _log.LogEvent(DiagnosticLogLevel.Error, "api", "api_request_failed",
+                "ElevenLabs synthesis failed",
+                new { provider = "elevenlabs", error = ex.Message, request_id = _log.IncludeRequestIds ? request.RequestId : null });
             return TtsResult.Fail($"ElevenLabs error: {ex.Message}");
         }
     }

@@ -333,6 +333,117 @@
                         </Grid>
                         <TextBlock Text="Controls the character limit displayed on the overlay input field. When off, only character count is shown."
                                    Foreground="#6C7086" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,8"/>
+
+                        <!-- ═══════════════════════════════════════════════════════════════ -->
+                        <!-- Diagnostics / Debug Logging                                    -->
+                        <!-- ═══════════════════════════════════════════════════════════════ -->
+                        <Separator Background="#45475A" Margin="0,12,0,12"/>
+
+                        <Border Background="#1C0F0F"
+                                BorderBrush="#F38BA8"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="14,12"
+                                Margin="0,0,0,8">
+                            <StackPanel>
+
+                                <!-- Header -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="⚠" Foreground="#F38BA8" FontSize="16"
+                                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Diagnostics / Debug Logging"
+                                               Foreground="#F38BA8" FontSize="15" FontWeight="SemiBold"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Warning text -->
+                                <TextBlock TextWrapping="Wrap" FontSize="12"
+                                           Foreground="#F38BA8" Opacity="0.80"
+                                           Margin="0,0,0,10">
+                                    These options are for bug hunting and developer diagnostics only.
+                                    Leave them all off unless you know exactly what they do.
+                                    Some settings may produce large log files or store sensitive content on disk.
+                                </TextBlock>
+
+                                <!-- Enable diagnostic logging -->
+                                <CheckBox Content="Enable diagnostic logging"
+                                          IsChecked="{Binding General.EnableDiagnosticLogging}"
+                                          Foreground="#CDD6F4" FontSize="13" Margin="0,4"/>
+
+                                <!-- Verbose logging -->
+                                <CheckBox Content="Verbose logging (includes DEBUG events)"
+                                          IsChecked="{Binding General.VerboseLogging}"
+                                          IsEnabled="{Binding General.EnableDiagnosticLogging}"
+                                          Foreground="#CDD6F4" FontSize="13" Margin="0,2"/>
+
+                                <!-- Trace logging -->
+                                <CheckBox Content="Trace logging (TRACE and above — very chatty)"
+                                          IsChecked="{Binding General.TraceLogging}"
+                                          IsEnabled="{Binding General.EnableDiagnosticLogging}"
+                                          Foreground="#CDD6F4" FontSize="13" Margin="0,2"/>
+
+                                <!-- Request IDs -->
+                                <CheckBox Content="Include request correlation IDs"
+                                          IsChecked="{Binding General.IncludeRequestIds}"
+                                          IsEnabled="{Binding General.EnableDiagnosticLogging}"
+                                          Foreground="#CDD6F4" FontSize="13" Margin="0,2"/>
+
+                                <!-- Raw text — extra warning -->
+                                <CheckBox Content="⚠  Log raw spoken text  (UNSAFE)"
+                                          IsChecked="{Binding General.LogRawText}"
+                                          IsEnabled="{Binding General.EnableDiagnosticLogging}"
+                                          Foreground="#F38BA8" FontWeight="SemiBold"
+                                          FontSize="13" Margin="0,6,0,2"/>
+
+                                <TextBlock TextWrapping="Wrap" FontSize="12"
+                                           Foreground="#F38BA8" Opacity="0.70"
+                                           Margin="22,0,0,8">
+                                    PRIVACY WARNING: When enabled, the full text of everything you
+                                    speak may be written to log files on disk. Only enable this if
+                                    you fully understand the privacy implications.
+                                </TextBlock>
+
+                                <!-- Action buttons -->
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <Button Content="Open Logs Folder"
+                                            Command="{Binding General.OpenLogsFolderCommand}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Margin="0,0,8,0"/>
+
+                                    <Button Content="Delete Old Logs"
+                                            Command="{Binding General.DeleteOldLogsCommand}"
+                                            Padding="16,8" Cursor="Hand" FontSize="13"
+                                            BorderThickness="1" BorderBrush="#F38BA8">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="Bg"
+                                                        Background="#2E1010"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        CornerRadius="6"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <TextBlock Text="Delete Old Logs"
+                                                               Foreground="#F38BA8"
+                                                               FontSize="{TemplateBinding FontSize}"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bg" Property="Background" Value="#4A1A1A"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter TargetName="Bg" Property="Opacity" Value="0.4"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </StackPanel>
+
+                            </StackPanel>
+                        </Border>
+
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

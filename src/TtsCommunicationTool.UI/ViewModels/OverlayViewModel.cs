@@ -5,6 +5,7 @@ using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Core.Models;
 using TtsCommunicationTool.Core.State;
 using TtsCommunicationTool.Core.Validation;
+using TtsCommunicationTool.Infrastructure.Logging;
 using TtsCommunicationTool.UI.Commands;
 
 namespace TtsCommunicationTool.UI.ViewModels;
@@ -124,6 +125,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         if (_playbackState.IsPlaying || _audioRouter.IsPlaying)
         {
             StatusText = "Audio is still playing...";
+            _log.LogEvent(DiagnosticLogLevel.Info, "ui", "overlay_submit_blocked",
+                "Overlay submit blocked — audio already playing",
+                new { reason = "audio_playing" });
             return;
         }
 
@@ -133,26 +137,51 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         if (!valid)
         {
             StatusText = error!;
+            _log.LogEvent(DiagnosticLogLevel.Info, "ui", "overlay_submit_blocked",
+                "Overlay submit blocked — validation failed",
+                new { reason = "validation", error });
             return;
         }
 
         text = _textReplacement.Apply(text);
 
+        // Generate a request ID for this TTS pipeline run
+        var requestId = _log.IncludeRequestIds
+            ? System.Security.Cryptography.RandomNumberGenerator.GetBytes(5)
+                  .Aggregate(new System.Text.StringBuilder(), (sb, b) => sb.Append(b.ToString("x2")), sb => sb.ToString())
+            : null;
+
         IsSending = true;
         SetStatus("Generating...", StatusSeverity.Info);
         _log.Info($"Sending text: {text}");
+
+        _log.LogEvent(DiagnosticLogLevel.Info, "tts", "synthesis_requested",
+            "TTS synthesis requested from overlay",
+            new
+            {
+                voice_id    = _config.CurrentConfig.VoiceSettings.SelectedVoiceId,
+                text_length = text.Length,
+                text_hash   = Infrastructure.Logging.FileLoggingService.ComputeTextHash(text),
+                text        = _log.LogRawText ? text : (string?)null,
+                source      = "overlay",
+                request_id  = requestId
+            });
 
         try
         {
             var result = await _tts.SynthesizeAsync(new TtsRequest
             {
-                Text = text,
-                VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId
+                Text    = text,
+                VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId,
+                RequestId = requestId
             });
             if (!result.Success)
             {
                 SetStatus($"TTS error: {result.ErrorMessage}", StatusSeverity.Error);
                 _log.Error($"TTS failed: {result.ErrorMessage}");
+                _log.LogEvent(DiagnosticLogLevel.Error, "tts", "synthesis_failed",
+                    "TTS synthesis failed",
+                    new { error = result.ErrorMessage, request_id = requestId });
                 return;
             }
 
@@ -163,6 +192,10 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(LastMessage));
             OnPropertyChanged(nameof(HasRecentMessage));
             _ = _transcript.LogAsync(text);
+
+            _log.LogEvent(DiagnosticLogLevel.Info, "audio", "playback_started",
+                "Audio playback started",
+                new { source = "overlay", request_id = requestId });
 
             var cfg = _config.CurrentConfig;
             var playback = new PlaybackRequest
@@ -269,6 +302,8 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         _playbackState.Reset();
         SetStatus(string.Empty, StatusSeverity.None);
         _log.Info("Playback stopped by user.");
+        _log.LogEvent(DiagnosticLogLevel.Info, "audio", "playback_stopped",
+            "Playback stopped by user");
     }
 
     private void Clear()

@@ -528,15 +528,24 @@ public sealed class PhraseListViewModel : ViewModelBase
 
         try
         {
+            _log.LogEvent(DiagnosticLogLevel.Info, "export", "export_started",
+                "Phrase export started",
+                new { path = Path.GetFileName(dlg.FileName), count = Phrases.Count });
             var json = _phraseService.ExportToJson();
             File.WriteAllText(dlg.FileName, json, System.Text.Encoding.UTF8);
             PhraseStatusMessage = $"Exported {Phrases.Count} phrase(s) to {Path.GetFileName(dlg.FileName)}.";
             _log.Info($"Phrases exported to '{dlg.FileName}'.");
+            _log.LogEvent(DiagnosticLogLevel.Info, "export", "export_completed",
+                "Phrase export completed",
+                new { path = Path.GetFileName(dlg.FileName), count = Phrases.Count });
         }
         catch (Exception ex)
         {
             PhraseStatusMessage = "Export failed — see log.";
             _log.Error("Phrase export failed", ex);
+            _log.LogEvent(DiagnosticLogLevel.Error, "export", "export_failed",
+                "Phrase export failed",
+                new { path = Path.GetFileName(dlg.FileName), error = ex.Message });
         }
     }
 
@@ -553,12 +562,18 @@ public sealed class PhraseListViewModel : ViewModelBase
 
         try
         {
+            _log.LogEvent(DiagnosticLogLevel.Info, "import", "import_started",
+                "Phrase import started",
+                new { path = Path.GetFileName(dlg.FileName) });
             var json = File.ReadAllText(dlg.FileName, System.Text.Encoding.UTF8);
             var result = _phraseService.ImportFromJson(json);
             if (!result.Success)
             {
                 PhraseStatusMessage = $"Import failed: {result.ErrorMessage}";
                 _log.Warn($"Phrase import failed: {result.ErrorMessage}");
+                _log.LogEvent(DiagnosticLogLevel.Warn, "import", "import_failed",
+                    "Phrase import failed",
+                    new { path = Path.GetFileName(dlg.FileName), error = result.ErrorMessage });
                 return;
             }
 
@@ -573,11 +588,17 @@ public sealed class PhraseListViewModel : ViewModelBase
             Refresh();
             ImportCompleted?.Invoke(this, EventArgs.Empty);
             _log.Info($"Imported {result.AddedCount} phrases from '{dlg.FileName}'.");
+            _log.LogEvent(DiagnosticLogLevel.Info, "import", "import_completed",
+                "Phrase import completed",
+                new { path = Path.GetFileName(dlg.FileName), count = result.AddedCount });
         }
         catch (Exception ex)
         {
             PhraseStatusMessage = "Import failed — see log.";
             _log.Error("Phrase import failed", ex);
+            _log.LogEvent(DiagnosticLogLevel.Error, "import", "import_failed",
+                "Phrase import failed with exception",
+                new { path = Path.GetFileName(dlg.FileName), error = ex.Message });
         }
     }
 

@@ -51,6 +51,12 @@ public partial class App : System.Windows.Application
         await config.LoadAsync();
         log.Info("Configuration loaded.");
 
+        // Apply persisted diagnostic logging settings now that config is loaded
+        log.UpdateSettings(config.CurrentConfig.DiagnosticLogging);
+        log.LogEvent(DiagnosticLogLevel.Info, "app", "app_startup",
+            "Application starting",
+            new { version = "0.9.2" });
+
         // Show splash screen if enabled
         SplashWindow? splash = null;
         if (config.CurrentConfig.GeneralSettings.ShowSplashScreen)
@@ -182,12 +188,18 @@ public partial class App : System.Windows.Application
     private void LogFatalError(string source, Exception? ex)
     {
         var log = _serviceProvider?.GetService<ILoggingService>();
-        log?.Error($"[{source}] {ex?.Message}", ex);
+        if (log is null) return;
+        log.Error($"[{source}] {ex?.Message}", ex);
+        log.LogEvent(DiagnosticLogLevel.Fatal, "app", "app_unhandled_exception",
+            $"Unhandled exception from {source}",
+            new { source, error = ex?.Message, stack = ex?.StackTrace });
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
         var log = _serviceProvider?.GetService<ILoggingService>();
+        log?.LogEvent(DiagnosticLogLevel.Info, "app", "app_shutdown",
+            "Application shutting down");
         log?.Info("Application shutting down...");
 
         _trayManager?.Dispose();
