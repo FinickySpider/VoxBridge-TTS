@@ -271,9 +271,20 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         ElevenLabsStatus = "Fetching voices…";
 
         var voices = await _elevenLabs.FetchVoicesAsync();
+
+        // Snapshot before clearing: the ElevenLabs ComboBox has a TwoWay SelectedValue binding.
+        // When the collection is cleared the ComboBox can't match the current ID against an empty
+        // list and writes null/empty back through the binding — destroying the selection before
+        // new items are added. Capture the ID now and restore it after repopulation.
+        var savedVoiceId = ElevenLabsSelectedVoiceId;
+
         ElevenLabsVoices.Clear();
         foreach (var v in voices)
             ElevenLabsVoices.Add(v);
+
+        // Restore — TwoWay binding may have cleared it during the Clear() call above.
+        if (!string.IsNullOrEmpty(savedVoiceId))
+            ElevenLabsSelectedVoiceId = savedVoiceId;
 
         if (voices.Count > 0)
         {

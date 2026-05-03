@@ -5,6 +5,16 @@ All notable changes to TTS Communication Tool are documented here.
 ---
 
 
+
+## [v0.13.2] -- 2026-05-03
+
+### Bug Fixes
+
+- **ElevenLabs voice selection reset to first voice when switching engines in settings**: When switching from ElevenLabs → Kokoro → ElevenLabs (without saving), the selected ElevenLabs voice was silently replaced with the first voice in the list (e.g. "Roger" instead of the saved "Lily"). Root cause: `FetchElevenLabsVoicesAsync` called `ElevenLabsVoices.Clear()` before repopulating. The ElevenLabs voice ComboBox has a `TwoWay` `SelectedValue` binding — when the collection is cleared, WPF cannot match the current voice ID against the empty list and writes `null`/empty string back through the binding, destroying `ElevenLabsSelectedVoiceId` before the new items arrive. The `All(v => v.Id != ...)` fallback check then found no match and replaced the selection with `voices[0]`. Fixed by snapshotting `ElevenLabsSelectedVoiceId` before `Clear()` and restoring it after repopulation, so the fallback only fires if the voice is genuinely absent from the account.
+
+---
+
+---
 ## [v0.13.1] -- 2026-05-03
 
 ### Bug Fixes
