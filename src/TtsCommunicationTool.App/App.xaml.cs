@@ -159,8 +159,17 @@ public partial class App : System.Windows.Application
             host.RefreshAllHotkeys();
         };
 
+        // Wire live opacity preview: slider changes update the open overlay immediately.
+        // The overlay coordinator checks if the overlay window exists before applying.
+        var coordinator = _serviceProvider.GetRequiredService<IOverlayCoordinator>();
+        vm.Appearance.LiveOpacityPreview = coordinator.SetLiveOpacity;
+
         _settingsWindow = new SettingsWindow(vm);
-        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow.Closed += (_, _) =>
+        {
+            vm.Appearance.LiveOpacityPreview = null;
+            _settingsWindow = null;
+        };
         _settingsWindow.Show();
     }
 

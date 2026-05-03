@@ -154,6 +154,11 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
         _log.Debug("Overlay hidden.");
     }
 
+    public void SetLiveOpacity(double opacity)
+    {
+        _overlayWindow?.SetOverlayOpacity(opacity);
+    }
+
     public void ToggleOverlay()
     {
         if (IsOverlayVisible)

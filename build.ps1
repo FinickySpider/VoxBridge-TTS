@@ -18,7 +18,7 @@ The type of version bump to apply.
 - 'major': Bump MAJOR (0.9.2 to 1.0.0, MINOR/PATCH reset to 0)
 
 .PARAMETER Configuration
-Build configuration: 'Debug' (default) or 'Release'
+Build configuration: 'Debug' (default, builds into the Debug output folder) or 'Release'
 
 .EXAMPLE
 .\build.ps1 -VersionBump patch -Configuration Release
@@ -26,11 +26,17 @@ Bumps patch version and builds Release configuration
 
 .EXAMPLE
 .\build.ps1
-Builds Debug configuration with no version change
+Builds Debug configuration with no version change and writes the EXE to
+src\TtsCommunicationTool.App\bin\Debug\net10.0-windows\
 
 .EXAMPLE
 .\build.ps1 -VersionBump minor
 Bumps minor version and builds Debug configuration
+
+.EXAMPLE
+.\build.ps1 -Configuration Release
+Builds Release configuration and writes the EXE to
+src\TtsCommunicationTool.App\bin\Release\net10.0-windows\
 #>
 
 param(
@@ -194,6 +200,12 @@ else {
 }
 
 Write-Host "Configuration: $Configuration" -ForegroundColor Cyan
-Write-Host "Executable: src\TtsCommunicationTool.App\bin\$Configuration\net10.0-windows\TtsCommunicationTool.App.exe" -ForegroundColor Cyan
+if ($Configuration -eq 'Debug') {
+    Write-Host "Executable: src\TtsCommunicationTool.App\bin\Debug\net10.0-windows\TtsCommunicationTool.App.exe" -ForegroundColor Cyan
+    Write-Host "Note: running .\build.ps1 with no -Configuration argument builds to the Debug folder." -ForegroundColor Gray
+}
+else {
+    Write-Host "Executable: src\TtsCommunicationTool.App\bin\Release\net10.0-windows\TtsCommunicationTool.App.exe" -ForegroundColor Cyan
+}
 Write-Host "==================================================================" -ForegroundColor Green
 Write-Host ""

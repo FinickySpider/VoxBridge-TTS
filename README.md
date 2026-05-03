@@ -42,6 +42,26 @@ The app works like a communication prosthetic: press a global hotkey, type a mes
 
 ---
 
+## Building
+
+Use the root build script:
+
+- `./build.ps1` — builds the app in **Debug** by default
+- `./build.ps1 -Configuration Release` — builds the app in **Release**
+- `./build.ps1 -VersionBump patch` — bumps the patch version, updates the changelog header, and builds Debug by default
+
+Output EXE paths:
+
+- Release: [src/TtsCommunicationTool.App/bin/Release/net10.0-windows/TtsCommunicationTool.App.exe](src/TtsCommunicationTool.App/bin/Release/net10.0-windows/TtsCommunicationTool.App.exe)
+- Debug: [src/TtsCommunicationTool.App/bin/Debug/net10.0-windows/TtsCommunicationTool.App.exe](src/TtsCommunicationTool.App/bin/Debug/net10.0-windows/TtsCommunicationTool.App.exe)
+
+Build types:
+
+- **Release** — optimized, intended for normal use
+- **Debug** — easier to debug during development
+
+---
+
 ## Default Hotkeys
 
 | Action | Default |

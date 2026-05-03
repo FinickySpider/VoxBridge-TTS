@@ -5,6 +5,35 @@ All notable changes to TTS Communication Tool are documented here.
 ---
 
 
+
+
+## [v0.10.2] -- 2026-05-03
+
+### Bug Fixes
+
+- **Context menu white background finally gone** — Added a full `ControlTemplate` override on the `ContextMenu` element itself (inside `ContextMenu.Resources`). WPF's default popup chrome renders its own white `SystemDropShadowChrome` background regardless of the `Background` property setter; this replaces the entire visual tree with a dark `#2B2B3D` border box with no chrome.
+- **Replacement rows now obviously editable** — Replaced both `DataGridTextColumn` text columns (Trigger, Replacement) with `DataGridTemplateColumn`. Display mode now shows text inside a visible input-styled `Border` (`#252540` background, `#45475A` 1px border, rounded corners, IBeam cursor, tooltip). Users can now see these are text fields before clicking.
+- **Single-click to begin editing** — `CurrentCellChanged` handler now calls `BeginEdit()` immediately when a template column cell is selected, removing the confusing double-click requirement. Checkbox columns (On, Case, Word) are unaffected.
+- **Edit TextBox auto-focus and select-all** — `PreparingCellForEdit` handler focuses the editing `TextBox` and selects all text so the user can type a replacement immediately without having to click inside the field first.
+
+---
+## [v0.10.1] -- 2026-05-03
+
+### Bug Fixes
+
+- **ComboBox popup now dark** — Font Type dropdown in Appearance settings now correctly uses the full dark ControlTemplate (`SettingsComboBox` style). The popup background was previously white due to missing template.
+- **Context menu separator now dark** — Separator between "Toggle Pin" and "Delete" in the phrase list context menu now renders as a `#45475A` line via a proper `ControlTemplate` override. The previous property-setter approach was ignored by WPF.
+
+### Improvements
+
+- **Live transparency preview** — The transparency slider in Appearance settings now instantly updates the overlay's opacity while dragging. Cancelled changes revert the overlay automatically. Works only while the overlay is open.
+- **Favorites toggle more visible when active** — The "★ Favorites" filter button now turns solid blue (`#89B4FA` background, dark text) when checked, replacing the subtle grey that was easy to miss.
+- **Replacement rules drag drop indicator** — A bright blue horizontal line with a pointer triangle now shows exactly where a dragged row will land. Uses WPF `AdornerLayer` so there is no layout disruption.
+- **Empty replacement rows more distinct** — Rows with no trigger text now use a darker blue-tinted background (`#1A2540`, 80% opacity) that is clearly different from regular rows.
+- **DataGrid cell focus highlighted** — Selected cells now show a bottom border accent (`#89B4FA`); actively editing cells get a full blue border, making it obvious which cell is active.
+- **Instructions rewritten for clarity** — The "How replacements work" panel was rewritten in plain language with explicit ✓ Correct / ✗ Wrong examples styled in green/red, removing the ambiguous inline-Run formatting that caused words to run together.
+
+---
 ## [v0.10.0] -- 2026-05-03
 
 ### Features

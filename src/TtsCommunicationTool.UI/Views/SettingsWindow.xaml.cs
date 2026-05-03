@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 using TtsCommunicationTool.Core.Models;
 using TtsCommunicationTool.UI.ViewModels;
 
@@ -364,6 +366,7 @@ public partial class SettingsWindow : Window
 
     private TextReplacementRuleViewModel? _draggedRule;
     private Point _dragStartPoint;
+    private DropLineAdorner? _dropAdorner;
 
     private void ReplacementsGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -388,8 +391,74 @@ public partial class SettingsWindow : Window
         DragDrop.DoDragDrop((DataGrid)sender, data, DragDropEffects.Move);
     }
 
+    private void ReplacementsGrid_CurrentCellChanged(object sender, EventArgs e)
+    {
+        // Single-click to begin editing on template columns (text fields).
+        // Checkbox columns are excluded so ticking them stays a single click.
+        if (ReplacementsGrid.CurrentCell.Column is DataGridTemplateColumn)
+            ReplacementsGrid.BeginEdit();
+    }
+
+    private void ReplacementsGrid_PreparingCellForEdit(object sender, DataGridPreparingCellForEditEventArgs e)
+    {
+        // Auto-focus and select-all in the editing TextBox so typing replaces rather than appends.
+        Dispatcher.BeginInvoke(() =>
+        {
+            var tb = FindVisualChild<TextBox>(e.EditingElement);
+            if (tb is null) return;
+            tb.Focus();
+            tb.SelectAll();
+        }, System.Windows.Threading.DispatcherPriority.Input);
+    }
+
+    private void ReplacementsGrid_DragOver(object sender, DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(typeof(TextReplacementRuleViewModel)))
+        {
+            e.Effects = DragDropEffects.None;
+            return;
+        }
+        e.Effects = DragDropEffects.Move;
+        e.Handled = true;
+
+        var grid = (DataGrid)sender;
+        var layer = AdornerLayer.GetAdornerLayer(grid);
+        if (layer is null) return;
+
+        // Find target row to position the line
+        var targetRow = FindVisualParent<DataGridRow>(e.OriginalSource as DependencyObject);
+        double yPos;
+        if (targetRow is not null)
+        {
+            var pos = targetRow.TranslatePoint(new Point(0, targetRow.ActualHeight / 2), grid);
+            var dropPos = e.GetPosition(grid);
+            // Line above or below target row depending on which half the cursor is in
+            yPos = dropPos.Y < pos.Y + targetRow.ActualHeight / 2
+                ? targetRow.TranslatePoint(new Point(0, 0), grid).Y
+                : targetRow.TranslatePoint(new Point(0, targetRow.ActualHeight), grid).Y;
+        }
+        else
+        {
+            yPos = e.GetPosition(grid).Y;
+        }
+
+        if (_dropAdorner is null)
+        {
+            _dropAdorner = new DropLineAdorner(grid);
+            layer.Add(_dropAdorner);
+        }
+        _dropAdorner.UpdatePosition(yPos);
+    }
+
+    private void ReplacementsGrid_DragLeave(object sender, DragEventArgs e)
+    {
+        RemoveDropAdorner((UIElement)sender);
+    }
+
     private void ReplacementsGrid_Drop(object sender, DragEventArgs e)
     {
+        RemoveDropAdorner((UIElement)sender);
+
         if (!e.Data.GetDataPresent(typeof(TextReplacementRuleViewModel))) return;
 
         var dragged = (TextReplacementRuleViewModel)e.Data.GetData(typeof(TextReplacementRuleViewModel));
@@ -409,13 +478,70 @@ public partial class SettingsWindow : Window
         _draggedRule = null;
     }
 
+    private void RemoveDropAdorner(UIElement element)
+    {
+        if (_dropAdorner is null) return;
+        var layer = AdornerLayer.GetAdornerLayer(element);
+        layer?.Remove(_dropAdorner);
+        _dropAdorner = null;
+    }
+
     private static T? FindVisualParent<T>(DependencyObject? child) where T : DependencyObject
     {
         while (child is not null)
         {
             if (child is T match) return match;
-            child = System.Windows.Media.VisualTreeHelper.GetParent(child);
+            child = VisualTreeHelper.GetParent(child);
         }
         return null;
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject? parent) where T : DependencyObject
+    {
+        if (parent is null) return null;
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is T match) return match;
+            var result = FindVisualChild<T>(child);
+            if (result is not null) return result;
+        }
+        return null;
+    }
+}
+
+/// <summary>
+/// Draws a bright horizontal line at a given Y position over a DataGrid to indicate
+/// where a dragged row will be dropped.
+/// </summary>
+internal sealed class DropLineAdorner : Adorner
+{
+    private double _yPosition;
+    private static readonly Pen _pen = new(new SolidColorBrush(Color.FromRgb(0x89, 0xB4, 0xFA)), 2)
+    {
+        DashStyle = DashStyles.Solid
+    };
+
+    public DropLineAdorner(UIElement adornedElement) : base(adornedElement) { }
+
+    public void UpdatePosition(double y)
+    {
+        _yPosition = y;
+        InvalidateVisual();
+    }
+
+    protected override void OnRender(DrawingContext dc)
+    {
+        var width = AdornedElement is FrameworkElement fe ? fe.ActualWidth : 200;
+        dc.DrawLine(_pen, new Point(0, _yPosition), new Point(width, _yPosition));
+        // Draw small triangle at the start for visual clarity
+        var geo = new StreamGeometry();
+        using (var ctx = geo.Open())
+        {
+            ctx.BeginFigure(new Point(0, _yPosition - 5), true, true);
+            ctx.LineTo(new Point(8, _yPosition), true, false);
+            ctx.LineTo(new Point(0, _yPosition + 5), true, false);
+        }
+        dc.DrawGeometry(_pen.Brush, null, geo);
     }
 }
