@@ -101,14 +101,17 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         set => SetField(ref _engineName, value);
     }
 
-    // ── ElevenLabs model options (static, shown as dropdown) ────────────────
-    public static readonly IReadOnlyList<ElevenLabsModelOption> ElevenLabsModelOptions = new[]
+    // ── ElevenLabs model options (instance property so WPF binding works) ───
+    private static readonly IReadOnlyList<ElevenLabsModelOption> _elevenLabsModelOptions = new[]
     {
         new ElevenLabsModelOption("eleven_flash_v2_5",      "Flash v2.5 — Fast · $0.05/1K chars"),
         new ElevenLabsModelOption("eleven_turbo_v2_5",      "Turbo v2.5 — Fast · $0.05/1K chars"),
         new ElevenLabsModelOption("eleven_v3",              "v3 Multilingual — Quality · $0.10/1K chars"),
         new ElevenLabsModelOption("eleven_multilingual_v2", "Multilingual v2 — Quality · $0.10/1K chars"),
     };
+
+    /// <summary>Hard-coded ElevenLabs model list bound to the Model dropdown.</summary>
+    public IReadOnlyList<ElevenLabsModelOption> ElevenLabsModelOptions => _elevenLabsModelOptions;
 
     // ── ElevenLabs subscription display ──────────────────────────────────────
     private int _subCharUsed;
