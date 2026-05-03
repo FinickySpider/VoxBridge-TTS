@@ -10,6 +10,9 @@ namespace TtsCommunicationTool.UI.ViewModels;
 /// <summary>A model option shown in the ElevenLabs Model dropdown.</summary>
 public sealed record ElevenLabsModelOption(string Id, string DisplayName);
 
+/// <summary>Tracks which sub-panel is shown for the ElevenLabs API key entry area.</summary>
+public enum ApiKeyEntryState { Empty, Editing, Saved, Clearing }
+
 public sealed class VoiceSettingsViewModel : ViewModelBase
 {
     private readonly ITtsService _tts;
@@ -18,6 +21,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     private readonly IAudioRouterService _audioRouter;
     private readonly IConfigService _config;
     private readonly ILoggingService _log;
+    private readonly INotificationService _notifications;
 
     // ── Kokoro ───────────────────────────────────────────────────────────────
     private string _selectedVoiceId = string.Empty;
@@ -67,7 +71,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
             LoadVoices();
 
             // Auto-fetch voices + subscription when switching to ElevenLabs
-            if (_engine == VoiceEngine.ElevenLabs && !string.IsNullOrWhiteSpace(_elevenLabsApiKey))
+            if (_engine == VoiceEngine.ElevenLabs && _elevenLabs.HasApiKey())
                 _ = FetchElevenLabsVoicesAsync();
 
             // Restore Kokoro voice when switching back
@@ -138,35 +142,60 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         }
     }
 
-    // Debounce token for the API key auto-fetch
-    private CancellationTokenSource? _apiKeyDebounceCts;
+    // ── ElevenLabs API key state machine ─────────────────────────────────────
+    private ApiKeyEntryState _apiKeyState = ApiKeyEntryState.Empty;
+    private string _pendingApiKey     = string.Empty;  // typed in PasswordBox, not yet saved
+    private bool   _apiKeyPriorSaved  = false;         // used by Cancel to restore correct prior state
 
-    // ── ElevenLabs props ─────────────────────────────────────────────────────
-    private string _elevenLabsApiKey = string.Empty;
+    public ApiKeyEntryState ApiKeyState
+    {
+        get => _apiKeyState;
+        private set
+        {
+            if (SetField(ref _apiKeyState, value))
+            {
+                OnPropertyChanged(nameof(IsApiKeySaved));
+                OnPropertyChanged(nameof(IsApiKeyEditing));
+                OnPropertyChanged(nameof(IsApiKeyClearing));
+                OnPropertyChanged(nameof(IsApiKeyEmpty));
+                OnPropertyChanged(nameof(IsApiKeyInputShown));
+                OnPropertyChanged(nameof(CanSaveApiKey));
+                OnPropertyChanged(nameof(IsTestingKeyUnsaved));
+                OnPropertyChanged(nameof(ApiKeyMaskedDisplay));
+                RefreshApiKeyCommands();
+            }
+        }
+    }
+
+    public bool IsApiKeySaved      => _apiKeyState == ApiKeyEntryState.Saved;
+    public bool IsApiKeyEditing    => _apiKeyState == ApiKeyEntryState.Editing;
+    public bool IsApiKeyClearing   => _apiKeyState == ApiKeyEntryState.Clearing;
+    public bool IsApiKeyEmpty      => _apiKeyState == ApiKeyEntryState.Empty;
+    /// <summary>True when the PasswordBox input panel should be visible (Empty or Editing states).</summary>
+    public bool IsApiKeyInputShown => _apiKeyState == ApiKeyEntryState.Empty || _apiKeyState == ApiKeyEntryState.Editing;
+
+    /// <summary>True when a pending key has been typed and can be saved.</summary>
+    public bool CanSaveApiKey => IsApiKeyInputShown && !string.IsNullOrWhiteSpace(_pendingApiKey);
+    /// <summary>True when the key being tested is not the stored encrypted one (button label changes).</summary>
+    public bool IsTestingKeyUnsaved => _apiKeyState != ApiKeyEntryState.Saved;
+    /// <summary>"sk_...a1b2   Updated 2026-05-03" when a key is saved; empty otherwise.</summary>
+    public string ApiKeyMaskedDisplay => _elevenLabs.GetApiKeyMaskedDisplay();
+
+    /// <summary>Called from PasswordBox.PasswordChanged in code-behind (PasswordBox cannot data-bind).</summary>
+    public void SetPendingApiKey(string key)
+    {
+        _pendingApiKey = key;
+        OnPropertyChanged(nameof(CanSaveApiKey));
+    }
+
+    /// <summary>Raised when the PasswordBox should be cleared (Cancel / after Save).</summary>
+    public event EventHandler? RequestPasswordBoxClear;
+
+    // ── ElevenLabs other props ────────────────────────────────────────────────
     private string _elevenLabsModelId = "eleven_multilingual_v2";
     private string _elevenLabsSelectedVoiceId = string.Empty;
     private string _elevenLabsSelectedVoiceName = string.Empty;
     private string _elevenLabsStatus = string.Empty;
-
-    public string ElevenLabsApiKey
-    {
-        get => _elevenLabsApiKey;
-        set
-        {
-            if (!SetField(ref _elevenLabsApiKey, value)) return;
-
-            // Debounce: auto-fetch voices + subscription 800 ms after the user stops typing.
-            _apiKeyDebounceCts?.Cancel();
-            _apiKeyDebounceCts = new CancellationTokenSource();
-            var cts = _apiKeyDebounceCts;
-            _ = Task.Delay(800, cts.Token).ContinueWith(t =>
-            {
-                if (t.IsCanceled || string.IsNullOrWhiteSpace(value)) return;
-                System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
-                    _ = FetchElevenLabsVoicesAsync());
-            }, TaskScheduler.Default);
-        }
-    }
     public string ElevenLabsModelId
     {
         get => _elevenLabsModelId;
@@ -190,8 +219,14 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     public ObservableCollection<VoiceInfo> ElevenLabsVoices { get; } = new();
 
     // ── Commands ─────────────────────────────────────────────────────────────
-    public ICommand TestVoiceCommand { get; }
-    public ICommand FetchElevenLabsVoicesCommand { get; }
+    public ICommand TestVoiceCommand              { get; }
+    public ICommand FetchElevenLabsVoicesCommand  { get; }
+    public ICommand SaveApiKeyCommand             { get; }
+    public ICommand TestApiKeyCommand             { get; }
+    public ICommand StartEditApiKeyCommand        { get; }
+    public ICommand ClearApiKeyCommand            { get; }
+    public ICommand ConfirmClearApiKeyCommand     { get; }
+    public ICommand CancelApiKeyCommand           { get; }
 
     public VoiceSettingsViewModel(
         ITtsService tts,
@@ -199,17 +234,26 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         ElevenLabsTtsService elevenLabs,
         IAudioRouterService audioRouter,
         IConfigService config,
+        INotificationService notifications,
         ILoggingService log)
     {
-        _tts = tts;
-        _kokoro = kokoro;
-        _elevenLabs = elevenLabs;
-        _audioRouter = audioRouter;
-        _config = config;
-        _log = log;
+        _tts           = tts;
+        _kokoro        = kokoro;
+        _elevenLabs    = elevenLabs;
+        _audioRouter   = audioRouter;
+        _config        = config;
+        _notifications = notifications;
+        _log           = log;
 
-        TestVoiceCommand = new AsyncRelayCommand(TestVoiceAsync);
+        TestVoiceCommand             = new AsyncRelayCommand(TestVoiceAsync);
         FetchElevenLabsVoicesCommand = new AsyncRelayCommand(FetchElevenLabsVoicesAsync);
+        SaveApiKeyCommand            = new AsyncRelayCommand(SaveApiKeyAsync);
+        TestApiKeyCommand            = new AsyncRelayCommand(TestApiKeyExecuteAsync);
+        StartEditApiKeyCommand       = new RelayCommand(StartEditApiKey);
+        ClearApiKeyCommand           = new RelayCommand(BeginClearApiKey);
+        ConfirmClearApiKeyCommand    = new RelayCommand(ConfirmClearApiKey);
+        CancelApiKeyCommand          = new RelayCommand(CancelApiKey);
+
         LoadVoices();
     }
 
@@ -233,8 +277,6 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     private async Task FetchElevenLabsVoicesAsync()
     {
         ElevenLabsStatus = "Fetching voices…";
-        // Temporarily persist the API key so the service can use it
-        _config.CurrentConfig.ElevenLabs.ApiKey = ElevenLabsApiKey;
 
         var voices = await _elevenLabs.FetchVoicesAsync();
         ElevenLabsVoices.Clear();
@@ -325,8 +367,15 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(GlobalPitchPercent));
 
         var el = _config.CurrentConfig.ElevenLabs;
-        _elevenLabsApiKey = el.ApiKey;   // set backing field to avoid triggering debounce on load
-        OnPropertyChanged(nameof(ElevenLabsApiKey));
+
+        // One-time migration: if a plain-text key was saved before v0.13, encrypt it now.
+        if (_elevenLabs.MigrateLegacyApiKey())
+            _notifications.ShowInfo("API key re-encrypted for secure storage.");
+
+        // Initialise API key display state
+        _apiKeyPriorSaved = _elevenLabs.HasApiKey();
+        ApiKeyState = _apiKeyPriorSaved ? ApiKeyEntryState.Saved : ApiKeyEntryState.Empty;
+
         ElevenLabsModelId = el.ModelId;
         ElevenLabsSelectedVoiceId = el.SelectedVoiceId;
         ElevenLabsSelectedVoiceName = el.SelectedVoiceName;
@@ -368,10 +417,92 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         _config.CurrentConfig.VoiceSettings.Engine = _engine;
 
         var el = _config.CurrentConfig.ElevenLabs;
-        el.ApiKey = ElevenLabsApiKey;
         el.ModelId = ElevenLabsModelId;
         el.SelectedVoiceId = ElevenLabsSelectedVoiceId;
         el.SelectedVoiceName = ElevenLabsSelectedVoiceName;
+    }
+
+    // ── API key command handlers ──────────────────────────────────────────────
+
+    private async Task SaveApiKeyAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_pendingApiKey)) return;
+
+        _elevenLabs.SaveApiKey(_pendingApiKey);
+        _pendingApiKey = string.Empty;
+        RequestPasswordBoxClear?.Invoke(this, EventArgs.Empty);
+
+        _apiKeyPriorSaved = true;
+        ApiKeyState = ApiKeyEntryState.Saved;
+        _notifications.ShowSuccess("API key stored securely.");
+
+        // Auto-fetch voices now that the key is saved.
+        await FetchElevenLabsVoicesAsync();
+    }
+
+    private async Task TestApiKeyExecuteAsync()
+    {
+        if (_apiKeyState == ApiKeyEntryState.Saved)
+        {
+            ElevenLabsStatus = "Testing saved key\u2026";
+            var (ok, message) = await _elevenLabs.TestSavedApiKeyAsync();
+            ElevenLabsStatus = message;
+            if (ok) _notifications.ShowSuccess(message);
+            else    _notifications.ShowError(message);
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(_pendingApiKey))
+            {
+                ElevenLabsStatus = "Enter an API key first.";
+                return;
+            }
+            ElevenLabsStatus = "Testing unsaved key\u2026";
+            var (ok, message) = await _elevenLabs.TestApiKeyAsync(_pendingApiKey);
+            ElevenLabsStatus = message;
+            if (ok) _notifications.ShowSuccess(message);
+            else    _notifications.ShowError(message);
+        }
+    }
+
+    private void StartEditApiKey()
+    {
+        _apiKeyPriorSaved = _apiKeyState == ApiKeyEntryState.Saved;
+        _pendingApiKey = string.Empty;
+        RequestPasswordBoxClear?.Invoke(this, EventArgs.Empty);
+        ApiKeyState = ApiKeyEntryState.Editing;
+    }
+
+    private void BeginClearApiKey()
+    {
+        ApiKeyState = ApiKeyEntryState.Clearing;
+    }
+
+    private void ConfirmClearApiKey()
+    {
+        _elevenLabs.ClearApiKey();
+        _apiKeyPriorSaved = false;
+        _pendingApiKey    = string.Empty;
+        ApiKeyState = ApiKeyEntryState.Empty;
+        ElevenLabsVoices.Clear();
+        ElevenLabsStatus  = string.Empty;
+        _subCharUsed  = 0;
+        _subCharLimit = 0;
+        OnPropertyChanged(nameof(ElevenLabsCreditsDisplay));
+        _notifications.ShowInfo("API key removed.");
+    }
+
+    private void CancelApiKey()
+    {
+        _pendingApiKey = string.Empty;
+        RequestPasswordBoxClear?.Invoke(this, EventArgs.Empty);
+        ApiKeyState = _apiKeyPriorSaved ? ApiKeyEntryState.Saved : ApiKeyEntryState.Empty;
+    }
+
+    /// <summary>Forces all API key command CanExecute re-evaluations.</summary>
+    private void RefreshApiKeyCommands()
+    {
+        System.Windows.Input.CommandManager.InvalidateRequerySuggested();
     }
 }
 

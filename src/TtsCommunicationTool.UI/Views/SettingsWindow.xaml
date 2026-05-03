@@ -48,6 +48,16 @@
             <Setter Property="CaretBrush" Value="#89B4FA"/>
         </Style>
 
+        <Style x:Key="SettingsPasswordBox" TargetType="PasswordBox">
+            <Setter Property="Background" Value="#2B2B3D"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="CaretBrush" Value="#89B4FA"/>
+        </Style>
+
         <Style x:Key="SettingsComboBox" TargetType="ComboBox">
             <Setter Property="Background" Value="#2B2B3D"/>
             <Setter Property="Foreground" Value="#CDD6F4"/>
@@ -778,18 +788,96 @@
 
                         <!-- ── ElevenLabs section ───────────── -->
                         <StackPanel Visibility="{Binding Voice.IsElevenLabs, Converter={StaticResource BoolToVisConverter}}">
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="140"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="API Key:" Style="{StaticResource FieldLabel}"
-                                           ToolTip="Your ElevenLabs API key. Found in your ElevenLabs account settings at elevenlabs.io."/>
-                                <TextBox Grid.Column="1"
-                                         Text="{Binding Voice.ElevenLabsApiKey, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource SettingsTextBox}"
-                                         ToolTip="Your ElevenLabs API key. Required for online voice generation."/>
-                            </Grid>
+
+                            <!-- API Key label row -->
+                            <TextBlock Text="API Key" Style="{StaticResource SectionHeader}" Margin="0,0,0,8"/>
+
+                            <!-- ░░ SAVED state — show masked tail + action buttons ░░ -->
+                            <StackPanel Margin="0,0,0,8"
+                                        Visibility="{Binding Voice.IsApiKeySaved, Converter={StaticResource BoolToVisConverter}}">
+                                <TextBlock Text="{Binding Voice.ApiKeyMaskedDisplay}"
+                                           Foreground="#A6E3A1" FontSize="13" FontFamily="Consolas"
+                                           Margin="0,0,0,6"
+                                           ToolTip="Masked tail of your stored API key. The full key is encrypted and never shown."/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Test API"
+                                            Command="{Binding Voice.TestApiKeyCommand}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Margin="0,0,6,0"
+                                            ToolTip="Test the currently stored API key against ElevenLabs."/>
+                                    <Button Content="Update Key"
+                                            Command="{Binding Voice.StartEditApiKeyCommand}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Margin="0,0,6,0"
+                                            ToolTip="Enter a new API key to replace the stored one."/>
+                                    <Button Content="Clear API"
+                                            Command="{Binding Voice.ClearApiKeyCommand}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            ToolTip="Remove the stored API key permanently."/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- ░░ INPUT state — PasswordBox for entry (Empty or Editing) ░░ -->
+                            <StackPanel Margin="0,0,0,8"
+                                        Visibility="{Binding Voice.IsApiKeyInputShown, Converter={StaticResource BoolToVisConverter}}">
+                                <TextBlock Foreground="#6C7086" FontSize="11" Margin="0,0,0,4"
+                                           Text="No API key stored — paste your key below."
+                                           Visibility="{Binding Voice.IsApiKeyEmpty, Converter={StaticResource BoolToVisConverter}}"/>
+                                <TextBlock Foreground="#F9E2AF" FontSize="11" Margin="0,0,0,4"
+                                           Text="⚠ Unsaved — click Save to encrypt and store."
+                                           Visibility="{Binding Voice.IsApiKeyEditing, Converter={StaticResource BoolToVisConverter}}"/>
+                                <PasswordBox x:Name="ApiKeyPasswordBox"
+                                             PasswordChanged="ApiKeyPasswordBox_PasswordChanged"
+                                             Style="{StaticResource SettingsPasswordBox}"
+                                             MaxLength="512"
+                                             Margin="0,0,0,6"
+                                             ToolTip="Paste your ElevenLabs API key. It will be encrypted with Windows DPAPI before saving — never shown in plain text again."/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Save"
+                                            Command="{Binding Voice.SaveApiKeyCommand}"
+                                            IsEnabled="{Binding Voice.CanSaveApiKey}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Margin="0,0,6,0"
+                                            ToolTip="Encrypt and save the key. It will be stored with Windows DPAPI and usable only by your Windows account."/>
+                                    <Button Command="{Binding Voice.TestApiKeyCommand}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Margin="0,0,6,0"
+                                            ToolTip="Test this key against ElevenLabs without saving it first.">
+                                        <Button.Content>Test (unsaved)</Button.Content>
+                                    </Button>
+                                    <Button Content="Cancel"
+                                            Command="{Binding Voice.CancelApiKeyCommand}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Visibility="{Binding Voice.IsApiKeyEditing, Converter={StaticResource BoolToVisConverter}}"
+                                            ToolTip="Discard this entry and revert to the previously saved key."/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- ░░ CLEARING state — confirmation prompt ░░ -->
+                            <StackPanel Margin="0,0,0,8"
+                                        Visibility="{Binding Voice.IsApiKeyClearing, Converter={StaticResource BoolToVisConverter}}">
+                                <Border Background="#302030" CornerRadius="4" BorderBrush="#F38BA8"
+                                        BorderThickness="1" Padding="12,10" Margin="0,0,0,8">
+                                    <TextBlock Foreground="#F38BA8" FontSize="12" TextWrapping="Wrap"
+                                               Text="⚠ This will permanently remove the stored API key. ElevenLabs voices will be unavailable until a new key is entered. Confirm?"/>
+                                </Border>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Confirm Clear"
+                                            Command="{Binding Voice.ConfirmClearApiKeyCommand}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Margin="0,0,6,0"
+                                            ToolTip="Permanently delete the stored API key."/>
+                                    <Button Content="Cancel"
+                                            Command="{Binding Voice.CancelApiKeyCommand}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            ToolTip="Keep the existing API key."/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Status line (shared across all key states) -->
+                            <TextBlock Text="{Binding Voice.ElevenLabsStatus}"
+                                       Foreground="#89B4FA" FontSize="12" Margin="0,0,0,8"
+                                       Visibility="{Binding Voice.ElevenLabsStatus, Converter={StaticResource NonEmptyToVisibleConverter}}"/>
 
                             <!-- Model dropdown -->
                             <Grid Margin="0,0,0,4">
@@ -820,16 +908,13 @@
                                        Visibility="{Binding Voice.ElevenLabsLifetimeCharacters,
                                            Converter={StaticResource NonEmptyToVisibleConverter}}"/>
 
-                            <!-- Fetch Voices + status -->
+                            <!-- Fetch Voices button -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                 <Button Content="Fetch Voices"
                                         Command="{Binding Voice.FetchElevenLabsVoicesCommand}"
                                         Style="{StaticResource SecondaryButton}"
                                         Margin="0,0,8,0"
-                                        ToolTip="Download the list of voices available to your ElevenLabs account. Voices are also fetched automatically when you type your API key or select the ElevenLabs engine."/>
-                                <TextBlock Text="{Binding Voice.ElevenLabsStatus}"
-                                           Foreground="#89B4FA" FontSize="12"
-                                           VerticalAlignment="Center"/>
+                                        ToolTip="Download the list of voices available to your ElevenLabs account. Voices are also fetched automatically when you save a new API key or select the ElevenLabs engine."/>
                             </StackPanel>
 
                             <!-- Voice selector with custom voice highlighting -->

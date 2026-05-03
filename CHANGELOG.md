@@ -4,14 +4,27 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [v0.13.0] -- 2026-05-03
 
+### Features
 
+- **DPAPI-encrypted API key storage**: ElevenLabs API key is now encrypted with Windows DPAPI (`ProtectedData`, `CurrentUser` scope) before being written to config. The plain-text `ApiKey` field is replaced by `EncryptedApiKey` (Base64 blob), `ApiKeyTail` (last 4 chars), and `ApiKeyUpdatedDate`. The key is only decrypted in-memory immediately before each API call and never logged.
+- **Write-only API key UX**: The Voice tab now has a three-state API key panel:
+  - **Saved state** — shows masked tail (`sk_...a1b2 Updated 2026-05-03`) with `Test API`, `Update Key`, and `Clear API` buttons.
+  - **Entry/editing state** — shows a `PasswordBox` (masked input), an "⚠ Unsaved" notice, and `Save`, `Test (unsaved)`, and `Cancel` buttons.
+  - **Clearing state** — confirmation prompt before deletion, with `Confirm Clear` and `Cancel`.
+- **Test API button**: Tests a key (saved or unsaved) against `/v1/user/subscription` and shows a toast with plan tier and characters remaining, or a specific error. The decrypted/pending key is discarded immediately after the call.
+- **Automatic migration**: On first load, if a plain-text `ApiKey` value is found in the existing config it is automatically encrypted in-place and a toast confirms "API key re-encrypted for secure storage."
+- **`ApiKeyVault` helper** (`Infrastructure/Security/ApiKeyVault.cs`): Internal DPAPI encrypt/decrypt/tail helper. Never exposes decrypted bytes outside `ElevenLabsTtsService`.
+- **`ElevenLabsTtsService` key management**: Added `SaveApiKey`, `ClearApiKey`, `HasApiKey`, `GetApiKeyMaskedDisplay`, `MigrateLegacyApiKey`, `TestApiKeyAsync`, and `TestSavedApiKeyAsync` public methods so the ViewModel never handles raw key bytes.
 
+### Improvements
 
+- Auto-fetch voices now triggers on API key **save** rather than on keystroke (debounce removed).
+- `ElevenLabsStatus` display unified to a single shared TextBlock; removed duplicate inline status from the Fetch Voices row.
+- `SettingsPasswordBox` WPF style added (matching `SettingsTextBox` colours) for consistent look.
 
-
-
-
+---
 
 ## [v0.12.1] -- 2026-05-03
 

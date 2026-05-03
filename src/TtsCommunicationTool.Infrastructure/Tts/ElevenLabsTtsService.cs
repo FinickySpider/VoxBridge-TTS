@@ -8,6 +8,7 @@ using NAudio.Wave;
 using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Core.Models;
 using TtsCommunicationTool.Infrastructure.Logging;
+using TtsCommunicationTool.Infrastructure.Security;
 
 namespace TtsCommunicationTool.Infrastructure.Tts;
 
@@ -34,7 +35,7 @@ public sealed class ElevenLabsTtsService : ITtsService
 
     // ── ITtsService ──────────────────────────────────────────────────────────
 
-    public bool IsInitialized => !string.IsNullOrWhiteSpace(_config.CurrentConfig.ElevenLabs.ApiKey);
+    public bool IsInitialized => !string.IsNullOrEmpty(_config.CurrentConfig.ElevenLabs.EncryptedApiKey);
 
     public Task InitializeAsync(CancellationToken ct = default) => Task.CompletedTask;
 
@@ -45,7 +46,8 @@ public sealed class ElevenLabsTtsService : ITtsService
         var settings = _config.CurrentConfig.ElevenLabs;
         var voiceId = string.IsNullOrWhiteSpace(request.VoiceId) ? settings.SelectedVoiceId : request.VoiceId;
 
-        if (string.IsNullOrWhiteSpace(settings.ApiKey))
+        var apiKey = ApiKeyVault.Decrypt(settings.EncryptedApiKey);
+        if (string.IsNullOrWhiteSpace(apiKey))
             return TtsResult.Fail("ElevenLabs API key is not configured.");
         if (string.IsNullOrWhiteSpace(voiceId))
             return TtsResult.Fail("No ElevenLabs voice selected.");
@@ -68,7 +70,7 @@ public sealed class ElevenLabsTtsService : ITtsService
                 });
 
             using var req = new HttpRequestMessage(HttpMethod.Post, url);
-            req.Headers.Add("xi-api-key", settings.ApiKey);
+            req.Headers.Add("xi-api-key", apiKey);
             req.Headers.Add("Accept", "audio/mpeg");
 
             var body = new { text = request.Text, model_id = settings.ModelId };
@@ -119,19 +121,127 @@ public sealed class ElevenLabsTtsService : ITtsService
         }
     }
 
+    // ── API key vault helpers (called from ViewModel) ────────────────────────
+
+    /// <summary>Returns true if an encrypted API key is present in config.</summary>
+    public bool HasApiKey() => !string.IsNullOrEmpty(_config.CurrentConfig.ElevenLabs.EncryptedApiKey);
+
+    /// <summary>
+    /// Encrypts <paramref name="plaintext"/> with DPAPI and persists it to config.
+    /// Also stores the 4-char tail and the current date for masked display.
+    /// The legacy plain-text <c>ApiKey</c> field is cleared.
+    /// </summary>
+    public void SaveApiKey(string plaintext)
+    {
+        var settings = _config.CurrentConfig.ElevenLabs;
+        settings.EncryptedApiKey    = ApiKeyVault.Encrypt(plaintext);
+        settings.ApiKeyTail         = ApiKeyVault.ComputeTail(plaintext);
+        settings.ApiKeyUpdatedDate  = DateTime.Today.ToString("yyyy-MM-dd");
+        settings.ApiKey             = string.Empty;  // clear legacy field
+        _ = _config.SaveAsync(_config.CurrentConfig);
+    }
+
+    /// <summary>Clears all stored API key data from config and persists immediately.</summary>
+    public void ClearApiKey()
+    {
+        var settings = _config.CurrentConfig.ElevenLabs;
+        settings.EncryptedApiKey   = null;
+        settings.ApiKeyTail        = null;
+        settings.ApiKeyUpdatedDate = null;
+        settings.ApiKey            = string.Empty;
+        _ = _config.SaveAsync(_config.CurrentConfig);
+    }
+
+    /// <summary>
+    /// Returns a masked display string for the UI, e.g. "sk_...a1b2   Updated 2026-05-03".
+    /// Returns an empty string if no key is stored.
+    /// </summary>
+    public string GetApiKeyMaskedDisplay()
+    {
+        var s = _config.CurrentConfig.ElevenLabs;
+        if (string.IsNullOrEmpty(s.EncryptedApiKey)) return string.Empty;
+        var tail = s.ApiKeyTail ?? "????";
+        var date = s.ApiKeyUpdatedDate ?? "unknown";
+        return $"sk_...{tail}   Updated {date}";
+    }
+
+    /// <summary>
+    /// If the legacy plain <c>ApiKey</c> field is populated and <c>EncryptedApiKey</c> is null,
+    /// encrypts and migrates it in-place, then returns <c>true</c>.
+    /// </summary>
+    public bool MigrateLegacyApiKey()
+    {
+        var settings = _config.CurrentConfig.ElevenLabs;
+        if (!string.IsNullOrEmpty(settings.ApiKey) && string.IsNullOrEmpty(settings.EncryptedApiKey))
+        {
+            SaveApiKey(settings.ApiKey);
+            return true;
+        }
+        return false;
+    }
+
     // ── Public helpers ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Tests a specific API key (which may be an unsaved in-memory value) by hitting
+    /// <c>/v1/user/subscription</c>.  Returns <c>(true, success-message)</c> or <c>(false, error-message)</c>.
+    /// The key is never stored or logged.
+    /// </summary>
+    public async Task<(bool ok, string message)> TestApiKeyAsync(string plaintext, CancellationToken ct = default)    {
+        if (string.IsNullOrWhiteSpace(plaintext))
+            return (false, "No API key provided.");
+        try
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/user/subscription");
+            req.Headers.Add("xi-api-key", plaintext);
+            using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
+            if (resp.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
+                return (false, "Invalid or unauthorized key.");
+            resp.EnsureSuccessStatusCode();
+            var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(json);
+            var limit = doc.RootElement.GetProperty("character_limit").GetInt32();
+            var used  = doc.RootElement.GetProperty("character_count").GetInt32();
+            var tier  = doc.RootElement.TryGetProperty("tier", out var t) ? (t.GetString() ?? "unknown") : "unknown";
+            var remaining = Math.Max(0, limit - used);
+            return (true, $"API key is valid. Plan: {tier}, {remaining:N0} chars remaining.");
+        }
+        catch (Exception ex)
+        {
+            _log.Error("ElevenLabs API key test failed", ex);
+            return (false, "Could not reach ElevenLabs. Check your connection.");
+        }
+        finally
+        {
+            // Ensure the caller's local variable holding plaintext goes out of scope ASAP.
+            // We don't own the caller's stack frame, but we can at least null our own reference.
+        }
+    }
+
+    /// <summary>
+    /// Decrypts the currently-stored API key and tests it against <c>/v1/user/subscription</c>.
+    /// Keeps the decrypted bytes inside this layer so they never reach the ViewModel.
+    /// </summary>
+    public async Task<(bool ok, string message)> TestSavedApiKeyAsync(CancellationToken ct = default)
+    {
+        var plaintext = ApiKeyVault.Decrypt(_config.CurrentConfig.ElevenLabs.EncryptedApiKey);
+        if (string.IsNullOrWhiteSpace(plaintext))
+            return (false, "No stored API key found.");
+        return await TestApiKeyAsync(plaintext, ct).ConfigureAwait(false);
+    }
 
     /// <summary>Fetches available voices from ElevenLabs and updates the cache.</summary>
     public async Task<List<VoiceInfo>> FetchVoicesAsync(CancellationToken ct = default)
     {
         var settings = _config.CurrentConfig.ElevenLabs;
-        if (string.IsNullOrWhiteSpace(settings.ApiKey))
+        var apiKey = ApiKeyVault.Decrypt(settings.EncryptedApiKey);
+        if (string.IsNullOrWhiteSpace(apiKey))
             return new List<VoiceInfo>();
 
         try
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/voices");
-            req.Headers.Add("xi-api-key", settings.ApiKey);
+            req.Headers.Add("xi-api-key", apiKey);
 
             using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
             resp.EnsureSuccessStatusCode();
@@ -172,13 +282,14 @@ public sealed class ElevenLabsTtsService : ITtsService
     public async Task<(int used, int limit)> FetchUserSubscriptionAsync(CancellationToken ct = default)
     {
         var settings = _config.CurrentConfig.ElevenLabs;
-        if (string.IsNullOrWhiteSpace(settings.ApiKey))
+        var apiKey = ApiKeyVault.Decrypt(settings.EncryptedApiKey);
+        if (string.IsNullOrWhiteSpace(apiKey))
             return (0, 0);
 
         try
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/user/subscription");
-            req.Headers.Add("xi-api-key", settings.ApiKey);
+            req.Headers.Add("xi-api-key", apiKey);
 
             using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
             resp.EnsureSuccessStatusCode();

@@ -34,6 +34,14 @@ public partial class SettingsWindow : Window
         vm.Saved += (_, _) => _committed = true;
         vm.Phrases.ImportCompleted += OnImportCompleted;
 
+        // PasswordBox bridge: PasswordBox cannot bind to a VM property, so code-behind
+        // pushes the value in and also listens for the VM's request to clear the box.
+        vm.Voice.RequestPasswordBoxClear += (_, _) =>
+        {
+            if (ApiKeyPasswordBox is not null)
+                ApiKeyPasswordBox.Clear();
+        };
+
         // Restore persisted window size
         Width = vm.General.SettingsWindowWidth;
         Height = vm.General.SettingsWindowHeight;
@@ -87,6 +95,19 @@ public partial class SettingsWindow : Window
             // Always persist the current window size (fire-and-forget, non-blocking)
             _ = vm.SaveWindowDimensionsAsync();
         };
+    }
+
+    // ── ElevenLabs API key PasswordBox bridge ────────────────────────────────
+
+    /// <summary>
+    /// PasswordBox cannot data-bind its Password property, so we push the value
+    /// into the ViewModel here instead.  The VM raises <see cref="VoiceSettingsViewModel.RequestPasswordBoxClear"/>
+    /// when it needs the box cleared (Cancel / Save), handled in the constructor.
+    /// </summary>
+    private void ApiKeyPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is SettingsViewModel vm)
+            vm.Voice.SetPendingApiKey(((PasswordBox)sender).Password);
     }
 
     private void OnImportCompleted(object? sender, EventArgs e)
