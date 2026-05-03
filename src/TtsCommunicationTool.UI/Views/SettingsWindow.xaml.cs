@@ -12,7 +12,9 @@ namespace TtsCommunicationTool.UI.Views;
 public partial class SettingsWindow : Window
 {
     private bool _importDialogOpen;
-    // Set to true after Save or an explicit Cancel so the Closing handler doesn't double-rollback.
+    // Set to true after an explicit Cancel so the Closing handler doesn't double-rollback.
+    // NOT set after Save — after Save both IsDirty and HasSessionChanges are already false,
+    // so the Closing guard is satisfied naturally and further changes can still be caught.
     private bool _committed;
     private IServiceProvider? _services;
 
@@ -33,9 +35,10 @@ public partial class SettingsWindow : Window
             ?.GetName().Version;
         if (ver is not null)
             Title = $"Settings — VoxBridge v{ver.Major}.{ver.Minor}.{ver.Build}";
-        // Save applies settings and re-takes the snapshot but does NOT close the window.
-        // _committed prevents the Closing handler from triggering a rollback after a save.
-        vm.Saved += (_, _) => _committed = true;
+        // After Save, IsDirty and HasSessionChanges are both reset to false, so the
+        // Closing guard is already satisfied — _committed does NOT need to be set here.
+        // Setting it here caused a bug: any phrase change made AFTER a Save in the same
+        // window session would bypass the unsaved-changes prompt when X was pressed.
         vm.Phrases.ImportCompleted += OnImportCompleted;
 
         // Wire the Phrase Editor

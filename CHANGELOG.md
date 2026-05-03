@@ -4,6 +4,15 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [v0.14.2] — 2026-05-03
+
+### Bug Fixes
+
+- **X button bypasses unsaved-changes prompt after a Save** — `_committed` was set to `true` when the global Save button was clicked and never reset. Any phrase changes made *after* a Save in the same window session would silently bypass the "You have unsaved changes — discard?" dialog when X was pressed. Fix: removed the `vm.Saved → _committed = true` binding. After a genuine Save, both `IsDirty` and `HasSessionChanges` are already `false`, so the guard is satisfied without `_committed`. `_committed` is now only set in the Cancel path (to prevent double-rollback).
+- **Phrase list column overflow / horizontal scrollbar** — Removed the "V.Ovr" column and tightened column widths so the phrase list fits within the default 680px settings window without a horizontal scrollbar (total column budget ≈ 616px).
+
+---
+
 ## [v0.14.1] — 2026-05-03
 
 ### Bug Fixes

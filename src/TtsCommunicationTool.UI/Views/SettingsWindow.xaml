@@ -1891,7 +1891,7 @@
                                 </GridViewColumn>
 
                                 <!-- col 2: Name &amp; Text — sortable, auto-fill width -->
-                                <GridViewColumn Header="Name &amp; Text  &#x21C5;" Width="175">
+                                <GridViewColumn Header="Name &amp; Text  &#x21C5;" Width="185">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Margin="2,2,4,2">
@@ -1904,7 +1904,7 @@
                                 </GridViewColumn>
 
                                 <!-- col 3: Engine — sortable -->
-                                <GridViewColumn Header="Engine  &#x21C5;" Width="80">
+                                <GridViewColumn Header="Engine  &#x21C5;" Width="75">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding EngineDisplay}"
@@ -1915,20 +1915,8 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
 
-                                <!-- col 4: Voice Override icon -->
-                                <GridViewColumn Header="V.Ovr" Width="38">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding VoiceOverrideDisplay}"
-                                                       Foreground="#A6E3A1" FontSize="12"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-
-                                <!-- col 5: Voice name -->
-                                <GridViewColumn Header="Voice" Width="100">
+                                <!-- col 4: Voice name -->
+                                <GridViewColumn Header="Voice" Width="95">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding VoiceDisplay}"
@@ -1939,8 +1927,8 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
 
-                                <!-- col 6: Category — sortable -->
-                                <GridViewColumn Header="Category  &#x21C5;" Width="120">
+                                <!-- col 5: Category — sortable -->
+                                <GridViewColumn Header="Category  &#x21C5;" Width="95">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Category}"
@@ -1951,8 +1939,8 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
 
-                                <!-- col 4: Hotkey — not sortable -->
-                                <GridViewColumn Header="Hotkey" Width="130">
+                                <!-- col 6: Hotkey — not sortable -->
+                                <GridViewColumn Header="Hotkey" Width="110">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Hotkey, Converter={StaticResource HotkeyDisplayConverter}}"
