@@ -15,6 +15,16 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
     private readonly ITtsService _tts;
     private readonly IAudioRouterService _audioRouter;
     private readonly IConfigService _config;
+
+    /// <summary>
+    /// Returns the correct VoiceId to pass in a TtsRequest.
+    /// For Kokoro: the saved voice ID. For ElevenLabs: empty string so
+    /// ElevenLabsTtsService falls back to its own configured voice.
+    /// </summary>
+    private string ResolveVoiceId() =>
+        _config.CurrentConfig.VoiceSettings.Engine == VoiceEngine.ElevenLabs
+            ? string.Empty
+            : _config.CurrentConfig.VoiceSettings.SelectedVoiceId;
     private readonly ILoggingService _log;
     private readonly ITextReplacementService _textReplacement;
     private readonly ITranscriptService _transcript;
@@ -219,7 +229,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
             "TTS synthesis requested from overlay",
             new
             {
-                voice_id    = _config.CurrentConfig.VoiceSettings.SelectedVoiceId,
+                voice_id    = ResolveVoiceId(),
                 text_length = text.Length,
                 text_hash   = Infrastructure.Logging.FileLoggingService.ComputeTextHash(text),
                 text        = _log.LogRawText ? text : (string?)null,
@@ -233,7 +243,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
             var result = await _tts.SynthesizeAsync(new TtsRequest
             {
                 Text      = text,
-                VoiceId   = _config.CurrentConfig.VoiceSettings.SelectedVoiceId,
+                VoiceId   = ResolveVoiceId(),
                 RequestId = requestId,
                 Pitch     = pitch
             });
@@ -340,7 +350,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
                 var result = await _tts.SynthesizeAsync(new TtsRequest
                 {
                     Text    = text,
-                    VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId,
+                    VoiceId = ResolveVoiceId(),
                     Pitch   = pitch
                 });
                 if (!result.Success)
@@ -435,7 +445,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
                 var result = await _tts.SynthesizeAsync(new TtsRequest
                 {
                     Text    = text,
-                    VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId,
+                    VoiceId = ResolveVoiceId(),
                     Pitch   = pitch
                 });
 

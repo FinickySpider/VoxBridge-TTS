@@ -87,7 +87,11 @@ public sealed class PhraseCacheService : IPhraseCacheService
                 return;
             }
 
-            var voiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId;
+            // For ElevenLabs pass empty string — ElevenLabsTtsService uses its own configured
+            // voice ID internally. For Kokoro pass the selected Kokoro voice.
+            var voiceId = _config.CurrentConfig.VoiceSettings.Engine == VoiceEngine.ElevenLabs
+                ? string.Empty
+                : _config.CurrentConfig.VoiceSettings.SelectedVoiceId;
             var result = await _tts.SynthesizeAsync(new TtsRequest
             {
                 Text = phrase.Text,

@@ -10,6 +10,21 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.11.3] -- 2026-05-03
+
+### Bug Fixes
+
+- **ElevenLabs voice routing**: Overlay and phrase playback no longer pass the Kokoro voice ID to ElevenLabs. Added `ResolveVoiceId()` helper in `OverlayViewModel` — returns empty string for ElevenLabs (service uses its own configured voice) and the Kokoro voice ID otherwise. Same fix applied to `PhraseCacheService.GenerateCacheAsync`.
+- **Phrase cache with ElevenLabs**: Cache generation now correctly routes synthesis to ElevenLabs when that engine is active, instead of failing with an unknown Kokoro voice ID.
+- **Text replacement grid deselect**: Clicking an empty area in the Replacements DataGrid now clears the selection (same behavior as the Phrases ListView).
+
+### Improvements
+
+- **Column reordering disabled**: Phrases ListView columns can no longer be dragged over each other; `GridView.AllowsColumnReorder="False"` prevents accidental column swaps.
+- **Window title shows version**: The Settings window title bar and taskbar button now dynamically display the current assembly version (e.g. `Settings — VoxBridge v0.11.3`) instead of a hardcoded stale version string.
+
+---
 ## [v0.11.2] -- 2026-05-03
 
 ### Bug Fixes

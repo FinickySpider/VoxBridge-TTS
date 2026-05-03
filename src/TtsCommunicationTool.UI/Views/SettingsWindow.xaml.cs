@@ -23,6 +23,12 @@ public partial class SettingsWindow : Window
     public SettingsWindow(SettingsViewModel vm) : this()
     {
         DataContext = vm;
+
+        // Show current assembly version in the title bar so the taskbar always reflects it.
+        var ver = System.Reflection.Assembly.GetEntryAssembly()
+            ?.GetName().Version;
+        if (ver is not null)
+            Title = $"Settings — VoxBridge v{ver.Major}.{ver.Minor}.{ver.Build}";
         // Save applies settings and re-takes the snapshot but does NOT close the window.
         // _committed prevents the Closing handler from triggering a rollback after a save.
         vm.Saved += (_, _) => _committed = true;
@@ -373,6 +379,13 @@ public partial class SettingsWindow : Window
         _dragStartPoint = e.GetPosition(null);
         var row = FindVisualParent<DataGridRow>(e.OriginalSource as DependencyObject);
         _draggedRule = row?.DataContext as TextReplacementRuleViewModel;
+
+        // Deselect when clicking an empty area (no row hit)
+        if (row is null)
+        {
+            ReplacementsGrid.UnselectAll();
+            ReplacementsGrid.CurrentCell = new DataGridCellInfo();
+        }
     }
 
     private void ReplacementsGrid_PreviewMouseMove(object sender, MouseEventArgs e)

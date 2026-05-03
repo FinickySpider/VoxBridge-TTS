@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:TtsCommunicationTool.UI.ViewModels"
         xmlns:conv="clr-namespace:TtsCommunicationTool.UI.Converters"
-        Title="Settings — The Traveling Star Swirlotl v0.10.0"
+        Title="Settings — VoxBridge"
         Width="680" Height="540"
         WindowStartupLocation="CenterScreen"
         Background="#1E1E2E"
@@ -1549,7 +1549,7 @@
                             </Style>
                         </ListView.ItemContainerStyle>
                         <ListView.View>
-                            <GridView>
+                            <GridView AllowsColumnReorder="False">
                                 <!-- Dark-themed column header style shared by all 5 columns -->
                                 <GridView.ColumnHeaderContainerStyle>
                                     <Style TargetType="GridViewColumnHeader">
