@@ -12,6 +12,14 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.12.1] -- 2026-05-03
+
+### Bug Fixes
+
+- **ElevenLabs Model dropdown was blank**: `ElevenLabsModelOptions` was declared `static`, which WPF's instance-binding path (`{Binding Voice.ElevenLabsModelOptions}`) cannot reach. Changed to a non-static instance property backed by a private static list. Dropdown now populates correctly with all four hard-coded models.
+
+---
 ## [v0.12.0] -- 2026-05-03
 
 ### Features
