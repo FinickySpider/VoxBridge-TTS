@@ -170,6 +170,74 @@ And local checklists within:
 
 ---
 
+## Build Automation (MANDATORY FOR EVERY TASK)
+
+### Build Script
+
+**Location:** `build.ps1` at the root of the workspace (`e:\Projects\tts\build.ps1`)
+
+**What it does:**
+1. Kills any running `TtsCommunicationTool.App.exe` process
+2. (Optional) Bumps the version in `.csproj` based on arguments
+3. (Optional) Updates `CHANGELOG.md` with new version header
+4. Runs `dotnet build` to compile the project
+
+### Build Script Usage
+
+Run from PowerShell in the project root:
+
+```powershell
+# No version bump (build with current version)
+.\build.ps1
+
+# With specific configuration
+.\build.ps1 -Configuration Release
+.\build.ps1 -Configuration Debug
+
+# Bump PATCH version (0.9.2 → 0.9.3)
+.\build.ps1 -VersionBump patch
+
+# Bump MINOR version (0.9.2 → 0.10.0, PATCH resets to 0)
+.\build.ps1 -VersionBump minor
+
+# Bump MAJOR version (0.9.2 → 1.0.0, MINOR/PATCH reset to 0)
+.\build.ps1 -VersionBump major
+
+# Combine options
+.\build.ps1 -VersionBump minor -Configuration Release
+```
+
+### When Version is Bumped
+
+When any `VersionBump` argument (patch/minor/major) is used:
+1. `.csproj` version fields are updated (Version, AssemblyVersion, FileVersion)
+2. `CHANGELOG.md` gets a new version header with template sections for Features, Bug Fixes, and Improvements
+3. **YOU MUST edit `CHANGELOG.md` after the build** to fill in the actual changes
+4. The build proceeds and succeeds
+
+### Building Strategy
+
+- **During development:** Use `.\build.ps1` (no bump) to iterate
+- **Before committing fixes:** Use `.\build.ps1 -VersionBump patch` (or minor/major as appropriate)
+- **Always update CHANGELOG.md** after version bumps to describe changes in detail
+- **Always run the build script before ending a task** to verify compilation succeeds
+
+### Post-Task Checklist
+
+After implementing any feature, bug fix, or refactor, **ALWAYS execute:**
+
+```powershell
+# Example: Bump patch after a bug fix, build Release config
+.\build.ps1 -VersionBump patch -Configuration Release
+```
+
+Then:
+1. ✅ Verify build output shows **0 errors, 0 warnings**
+2. ✅ Update `CHANGELOG.md` with detailed change descriptions
+3. ✅ Confirm the executable exists at `src\TtsCommunicationTool.App\bin\Release\net10.0-windows\TtsCommunicationTool.App.exe`
+
+---
+
 ## When in Doubt
 
 - Check `docs/index/MASTER_INDEX.md` first.
