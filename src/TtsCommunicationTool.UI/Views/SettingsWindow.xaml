@@ -1156,7 +1156,8 @@
                     </Grid>
 
                     <!-- Phrase list -->
-                    <ListBox Grid.Row="2"
+                    <ListBox x:Name="PhraseListBox"
+                             Grid.Row="2"
                              ItemsSource="{Binding Phrases.FilteredPhrases}"
                              SelectedItem="{Binding Phrases.SelectedPhrase}"
                              Background="#2B2B3D"
@@ -1169,6 +1170,42 @@
                                 <Setter Property="Foreground" Value="#CDD6F4"/>
                                 <Setter Property="Padding" Value="4,2"/>
                                 <Setter Property="BorderThickness" Value="0"/>
+                                <!-- Tag tunnels window DataContext into the ContextMenu (lives outside visual tree) -->
+                                <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext}"/>
+                                <Setter Property="ContextMenu">
+                                    <Setter.Value>
+                                        <ContextMenu Background="#2B2B3D" BorderBrush="#45475A" BorderThickness="1">
+                                            <ContextMenu.Resources>
+                                                <Style TargetType="MenuItem">
+                                                    <Setter Property="Background" Value="#2B2B3D"/>
+                                                    <Setter Property="Foreground" Value="#CDD6F4"/>
+                                                    <Setter Property="FontSize" Value="13"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsHighlighted" Value="True">
+                                                            <Setter Property="Background" Value="#45475A"/>
+                                                            <Setter Property="Foreground" Value="#CDD6F4"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ContextMenu.Resources>
+                                            <!-- PlacementTarget = the ListBoxItem; Tag on it = window DataContext; DataContext on it = PhraseItem -->
+                                            <MenuItem Header="Toggle Favorite"
+                                                      Command="{Binding Path=PlacementTarget.Tag.Phrases.ToggleFavoriteByItemCommand,
+                                                                        RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                      CommandParameter="{Binding Path=PlacementTarget.DataContext,
+                                                                                 RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                            <MenuItem Header="Toggle Pin"
+                                                      Command="{Binding Path=PlacementTarget.Tag.Phrases.TogglePinnedByItemCommand,
+                                                                        RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                      CommandParameter="{Binding Path=PlacementTarget.DataContext,
+                                                                                 RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                            <Separator Background="#45475A"/>
+                                            <MenuItem Header="Delete"
+                                                      Command="{Binding Path=PlacementTarget.Tag.Phrases.DeleteCommand,
+                                                                        RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        </ContextMenu>
+                                    </Setter.Value>
+                                </Setter>
                                 <Style.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter Property="Background" Value="#45475A"/>
@@ -1190,40 +1227,104 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <!-- Favorite star -->
-                                    <TextBlock Grid.Column="0"
-                                               Text="&#x2605;"
-                                               FontSize="12"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,4,0">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
+
+                                    <!-- Favorite star — always visible, direct click toggles favorite status -->
+                                    <Button Grid.Column="0"
+                                            Content="&#x2605;"
+                                            CommandParameter="{Binding}"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=Window},
+                                                              Path=DataContext.Phrases.ToggleFavoriteByItemCommand}"
+                                            VerticalAlignment="Center"
+                                            Margin="0,0,4,0"
+                                            Cursor="Hand"
+                                            ToolTip="Toggle favorite"
+                                            Focusable="False">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                                <Setter Property="Padding" Value="1"/>
+                                                <Setter Property="FontSize" Value="12"/>
                                                 <Setter Property="Foreground" Value="#45475A"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                                  VerticalAlignment="Center"
+                                                                                  TextElement.Foreground="{TemplateBinding Foreground}"
+                                                                                  TextElement.FontSize="{TemplateBinding FontSize}"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
                                                 <Style.Triggers>
+                                                    <!-- Filled gold when favorite -->
                                                     <DataTrigger Binding="{Binding IsFavorite}" Value="True">
                                                         <Setter Property="Foreground" Value="#F9E2AF"/>
                                                     </DataTrigger>
+                                                    <!-- Brighter outline on hover when not favorite -->
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Foreground" Value="#8899AA"/>
+                                                    </Trigger>
+                                                    <!-- Stay gold on hover when already favorite -->
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding IsFavorite}" Value="True"/>
+                                                            <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True"/>
+                                                        </MultiDataTrigger.Conditions>
+                                                        <Setter Property="Foreground" Value="#FFD966"/>
+                                                    </MultiDataTrigger>
                                                 </Style.Triggers>
                                             </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                    <!-- Pin indicator -->
-                                    <TextBlock Grid.Column="1"
-                                               Text="&#x1F4CC;"
-                                               FontSize="11"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,4,0">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
+                                        </Button.Style>
+                                    </Button>
+
+                                    <!-- Pin indicator — invisible but occupies layout space when not pinned;
+                                         dims to 35% on row hover so users discover it; full opacity when pinned.
+                                         Direct click toggles pin status. -->
+                                    <Button Grid.Column="1"
+                                            Content="&#x1F4CC;"
+                                            CommandParameter="{Binding}"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=Window},
+                                                              Path=DataContext.Phrases.TogglePinnedByItemCommand}"
+                                            VerticalAlignment="Center"
+                                            Margin="0,0,4,0"
+                                            Cursor="Hand"
+                                            ToolTip="Toggle pin"
+                                            Focusable="False">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                                <Setter Property="Padding" Value="1"/>
+                                                <Setter Property="FontSize" Value="11"/>
                                                 <Setter Property="Opacity" Value="0"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                                  VerticalAlignment="Center"
+                                                                                  TextElement.FontSize="{TemplateBinding FontSize}"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
                                                 <Style.Triggers>
+                                                    <!-- Fully visible when pinned -->
                                                     <DataTrigger Binding="{Binding IsPinned}" Value="True">
                                                         <Setter Property="Opacity" Value="1"/>
                                                     </DataTrigger>
+                                                    <!-- Dimly visible on direct hover to hint it's clickable -->
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Opacity" Value="0.5"/>
+                                                    </Trigger>
                                                 </Style.Triggers>
                                             </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                        </Button.Style>
+                                    </Button>
+
                                     <!-- Name + text -->
                                     <StackPanel Grid.Column="2">
                                         <DockPanel>

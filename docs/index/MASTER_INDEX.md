@@ -81,7 +81,7 @@ TTS Communication Tool
 
 ## Operating Rules
 
-- Work only on items listed in the active sprint
+- Work only on items listed in the active sprint(UNLESS THE USER TELLS YOU OTHERWISE)
 - No new work without an ID + file
 - If docs conflict, MASTER_INDEX wins
 - Update the CHANGELOG.md file at the end of every full agent request run via copilot and bump version number

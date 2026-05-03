@@ -98,6 +98,10 @@ public sealed class PhraseListViewModel : ViewModelBase
     public ICommand ExportCommand { get; }
     public ICommand ToggleFavoriteCommand { get; }
     public ICommand TogglePinnedCommand { get; }
+    // Inline list-item variants — accept a PhraseItem parameter directly so the
+    // star/pin buttons in the DataTemplate don't require changing SelectedPhrase first.
+    public ICommand ToggleFavoriteByItemCommand { get; }
+    public ICommand TogglePinnedByItemCommand { get; }
 
     // For inline editing
     private string _editName = string.Empty;
@@ -192,6 +196,14 @@ public sealed class PhraseListViewModel : ViewModelBase
         ExportCommand = new RelayCommand(ExportPhrases, () => Phrases.Count > 0);
         ToggleFavoriteCommand = new RelayCommand(ToggleFavorite, () => SelectedPhrase is not null);
         TogglePinnedCommand = new RelayCommand(TogglePinned, () => SelectedPhrase is not null);
+        ToggleFavoriteByItemCommand = new RelayCommand(param =>
+        {
+            if (param is PhraseItem item) ToggleFavoriteForItem(item);
+        });
+        TogglePinnedByItemCommand = new RelayCommand(param =>
+        {
+            if (param is PhraseItem item) TogglePinnedForItem(item);
+        });
 
         Refresh();
         TakeSnapshot(); // baseline for cancel/rollback
@@ -356,9 +368,14 @@ public sealed class PhraseListViewModel : ViewModelBase
     private void ToggleFavorite()
     {
         if (SelectedPhrase is null) return;
-        SelectedPhrase.IsFavorite = !SelectedPhrase.IsFavorite;
-        SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
-        _phraseService.Update(SelectedPhrase);
+        ToggleFavoriteForItem(SelectedPhrase);
+    }
+
+    private void ToggleFavoriteForItem(PhraseItem item)
+    {
+        item.IsFavorite = !item.IsFavorite;
+        item.UpdatedUtc = DateTime.UtcNow;
+        _phraseService.Update(item);
         MarkDirty();
         Refresh();
     }
@@ -377,9 +394,14 @@ public sealed class PhraseListViewModel : ViewModelBase
     private void TogglePinned()
     {
         if (SelectedPhrase is null) return;
-        SelectedPhrase.IsPinned = !SelectedPhrase.IsPinned;
-        SelectedPhrase.UpdatedUtc = DateTime.UtcNow;
-        _phraseService.Update(SelectedPhrase);
+        TogglePinnedForItem(SelectedPhrase);
+    }
+
+    private void TogglePinnedForItem(PhraseItem item)
+    {
+        item.IsPinned = !item.IsPinned;
+        item.UpdatedUtc = DateTime.UtcNow;
+        _phraseService.Update(item);
         MarkDirty();
         Refresh();
     }

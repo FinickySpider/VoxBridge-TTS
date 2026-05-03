@@ -4,6 +4,20 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [v0.9.6] — 2026-05-08
+
+### Features
+
+- **Clickable star icon in phrase list** — The favorite star (★) in each phrase row is now an interactive button. Clicking it directly toggles `IsFavorite` on that phrase without needing to select it first. Unfavorited rows show a dim outline star; favorited rows show a filled gold star. Cursor changes to hand on hover.
+- **Clickable pin icon in phrase list** — The pin icon (📌) in each phrase row is now an interactive button. Clicking it directly toggles `IsPinned` on that phrase. Unpinned rows show the pin at low opacity; pinned rows show it at full opacity with a colored tint. Cursor changes to hand on hover.
+- **Right-click context menu on phrase list items** — Right-clicking any phrase row now opens a styled dark context menu with three items: **Toggle Favorite**, **Toggle Pin**, and **Delete**. Commands operate on the right-clicked item directly, not on the current selection.
+
+### Improvements
+
+- **`ToggleFavoriteByItemCommand` and `TogglePinnedByItemCommand`** — New parameterized `RelayCommand` properties on `PhraseListViewModel` that accept a `PhraseItem` argument. Shared implementation via `ToggleFavoriteForItem()` and `TogglePinnedForItem()` private helpers. The original `ToggleFavoriteCommand` and `TogglePinnedCommand` (selected-item versions) now delegate to the same helpers, eliminating duplicate logic.
+
+---
+
 ## [v0.9.5] — 2026-05-07
 
 ### Features
