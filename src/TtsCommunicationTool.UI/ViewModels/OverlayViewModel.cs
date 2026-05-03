@@ -10,7 +10,7 @@ using TtsCommunicationTool.UI.Commands;
 
 namespace TtsCommunicationTool.UI.ViewModels;
 
-public sealed class OverlayViewModel : INotifyPropertyChanged
+public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
 {
     private readonly ITtsService _tts;
     private readonly IAudioRouterService _audioRouter;
@@ -25,6 +25,14 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     private string _statusText = string.Empty;  // Empty = idle (no noise)
     private StatusSeverity _statusSeverity = StatusSeverity.None;
     private bool _isSending;
+
+    // ── Playback countdown timer ────────────────────────────────────────────────
+    private bool     _speakingStatusActive;
+    private double   _playbackDurationSeconds;
+    private DateTime _playbackStartUtc;
+    private System.Windows.Threading.DispatcherTimer? _countdownTimer;
+    // Stored so Dispose() can cleanly unsubscribe
+    private readonly EventHandler _playbackFinishedHandler;
 
     /// <summary>Raised when the user attempts a blocked submission. Triggers the window shake animation.</summary>
     public event Action? ShakeRequested;
@@ -54,23 +62,30 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         StopCommand = new RelayCommand(Stop, () => _playbackState.IsPlaying);
         ClearCommand = new RelayCommand(Clear);
 
-        _audioRouter.PlaybackFinished += (_, _) =>
+        _playbackFinishedHandler = (_, _) =>
         {
             _playbackState.Reset();
             System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
             {
+                StopSpeaking();
                 NotifyCanSubmitChanged();
-                if (StatusText is "Speaking..." or "Audio is already playing")
-                    StatusText = string.Empty;
             });
         };
+        _audioRouter.PlaybackFinished += _playbackFinishedHandler;
 
         // Reflect external playback state changes (e.g. phrase hotkeys) in the status bar
         _playbackState.PropertyChanged += OnPlaybackStateChanged;
 
-        // If the overlay opens while audio is already playing, show status immediately
+        // If the overlay opens while audio is already playing, resume countdown from shared state.
+        // PlaybackDurationSeconds may still be 0 here if synthesis hasn't finished yet —
+        // OnPlaybackStateChanged will upgrade us to a live countdown once it arrives.
         if (_playbackState.IsPlaying || _audioRouter.IsPlaying)
-            SetStatus("Speaking...", StatusSeverity.Info);
+        {
+            var dur  = _playbackState.PlaybackDurationSeconds;
+            var when = _playbackState.PlaybackStartedUtc;
+            StartSpeaking(dur > 0 && when != default ? dur : 0,
+                          dur > 0 && when != default ? when : DateTime.UtcNow);
+        }
     }
 
     public string InputText
@@ -229,13 +244,18 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
                 return;
             }
 
-            SetStatus("Speaking...", StatusSeverity.Info);
+            // Apply silence trimming then compute duration for the countdown timer
+            var audioData = ApplySilenceTrim(result.AudioData!, result.SampleRate, result.Channels, result.BitsPerSample);
+            double dur = audioData.Length / (double)(result.SampleRate * result.Channels * (result.BitsPerSample / 8));
+
             _playbackState.IsPlaying = true;
             _playbackState.CurrentText = text;
             _recentMessages.Add(text);
             OnPropertyChanged(nameof(LastMessage));
             OnPropertyChanged(nameof(HasRecentMessage));
             _ = _transcript.LogAsync(text);
+
+            StartSpeaking(dur); // sets "Speaking… (Xs)" status and starts timer
 
             _log.LogEvent(DiagnosticLogLevel.Info, "audio", "playback_started",
                 "Audio playback started",
@@ -244,7 +264,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             var cfg = _config.CurrentConfig;
             var playback = new PlaybackRequest
             {
-                AudioData    = result.AudioData!,
+                AudioData    = audioData,
                 SampleRate   = result.SampleRate,
                 Channels     = result.Channels,
                 BitsPerSample = result.BitsPerSample
@@ -328,10 +348,18 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
                     return;
                 }
 
+                var audioData = ApplySilenceTrim(result.AudioData!, result.SampleRate, result.Channels, result.BitsPerSample);
+                double dur = audioData.Length / (double)(result.SampleRate * result.Channels * (result.BitsPerSample / 8));
+                // Write to singleton BEFORE PlayAsync so any open overlay can start the countdown.
+                // Do NOT dispatch StartSpeaking — this VM is disposed (overlay closed on send).
+                // The open overlay (if any) listens on PlaybackState.PropertyChanged and upgrades.
+                _playbackState.PlaybackStartedUtc      = DateTime.UtcNow;
+                _playbackState.PlaybackDurationSeconds = dur;
+
                 var cfg = _config.CurrentConfig;
                 var playback = new PlaybackRequest
                 {
-                    AudioData    = result.AudioData!,
+                    AudioData    = audioData,
                     SampleRate   = result.SampleRate,
                     Channels     = result.Channels,
                     BitsPerSample = result.BitsPerSample
@@ -419,14 +447,17 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
                     return;
                 }
 
-                System.Windows.Application.Current?.Dispatcher.InvokeAsync(
-                    () => SetStatus("Speaking...", StatusSeverity.Info));
+                var audioData = ApplySilenceTrim(result.AudioData!, result.SampleRate, result.Channels, result.BitsPerSample);
+                double dur = audioData.Length / (double)(result.SampleRate * result.Channels * (result.BitsPerSample / 8));
+                // Write to singleton; the open overlay upgrades via PlaybackState.PropertyChanged.
+                _playbackState.PlaybackStartedUtc      = DateTime.UtcNow;
+                _playbackState.PlaybackDurationSeconds = dur;
 
                 var cfg = _config.CurrentConfig;
                 await _audioRouter.PlayAsync(
                     new PlaybackRequest
                     {
-                        AudioData     = result.AudioData!,
+                        AudioData     = audioData,
                         SampleRate    = result.SampleRate,
                         Channels      = result.Channels,
                         BitsPerSample = result.BitsPerSample
@@ -444,6 +475,83 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         });
 
         return true;
+    }
+
+    // ── Playback timer helpers ────────────────────────────────────────────────────
+
+    private void StartSpeaking(double durationSeconds)
+        => StartSpeaking(durationSeconds, DateTime.UtcNow);
+
+    private void StartSpeaking(double durationSeconds, DateTime startUtc)
+    {
+        _speakingStatusActive    = true;
+        _playbackDurationSeconds = durationSeconds;
+        _playbackStartUtc        = startUtc;
+        // Persist in singleton so the next overlay open can resume the countdown.
+        // Only overwrite if we have real data (don't clobber with zeros from phrase-hotkey path).
+        if (durationSeconds > 0)
+        {
+            _playbackState.PlaybackDurationSeconds = durationSeconds;
+            _playbackState.PlaybackStartedUtc      = startUtc;
+        }
+
+        _countdownTimer?.Stop();
+        _countdownTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(50) // 20 fps — smooth sub-second display
+        };
+        _countdownTimer.Tick += OnCountdownTick;
+        _countdownTimer.Start();
+
+        SetStatus(BuildSpeakingStatus(), StatusSeverity.Info);
+    }
+
+    private void StopSpeaking()
+    {
+        _speakingStatusActive = false;
+        _countdownTimer?.Stop();
+        _countdownTimer = null;
+        // NOTE: do NOT clear PlaybackState timing here — it must survive across overlay opens
+        // so the next open can resume the countdown. PlaybackState.Reset() clears it when audio ends.
+
+        if (StatusText.StartsWith("Speaking", StringComparison.Ordinal))
+            SetStatus(string.Empty, StatusSeverity.None);
+    }
+
+    private void OnCountdownTick(object? sender, EventArgs e)
+    {
+        if (!_speakingStatusActive)
+        {
+            _countdownTimer?.Stop();
+            return;
+        }
+        StatusText = BuildSpeakingStatus();
+    }
+
+    private string BuildSpeakingStatus()
+    {
+        var showTimer = _config.CurrentConfig.GeneralSettings.ShowPlaybackTimer;
+        if (!showTimer || _playbackDurationSeconds <= 0)
+            return "Speaking...";
+
+        double elapsed   = (DateTime.UtcNow - _playbackStartUtc).TotalSeconds;
+        double remaining = Math.Max(0, _playbackDurationSeconds - elapsed);
+        int    mins      = (int)(remaining / 60);
+        double secs      = remaining - mins * 60;
+        return mins > 0
+            ? $"Speaking...  ({mins}m {secs:00.0}s)"
+            : $"Speaking...  ({secs:0.0}s)";
+    }
+
+    private byte[] ApplySilenceTrim(byte[] audioData, int sampleRate, int channels, int bitsPerSample)
+    {
+        var audio = _config.CurrentConfig.AudioSettings;
+        if (!audio.TrimTrailingSilence)
+            return audioData;
+
+        float retention = Math.Clamp(audio.SilenceRetentionPercent / 100.0f, 0.05f, 1.0f);
+        return TtsCommunicationTool.Core.Utilities.SilenceTrimmer.Trim(
+            audioData, sampleRate, channels, bitsPerSample, retention);
     }
 
     private void Stop()
@@ -477,18 +585,39 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
 
     private void OnPlaybackStateChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(PlaybackState.IsPlaying)) return;
         System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
         {
-            NotifyCanSubmitChanged();
+            // IsPlaying changed
+            if (e.PropertyName == nameof(PlaybackState.IsPlaying))
+            {
+                NotifyCanSubmitChanged();
+                if (_playbackState.IsPlaying && string.IsNullOrEmpty(StatusText))
+                    StartSpeaking(0); // phrase hotkey path — no duration known yet
+                else if (!_playbackState.IsPlaying)
+                    StopSpeaking();
+                return;
+            }
 
-            // Only set "Speaking..." from external sources (e.g. phrase hotkeys).
-            // SendAsync already manages its own "Generating..." / "Speaking..." flow.
-            if (_playbackState.IsPlaying && string.IsNullOrEmpty(StatusText))
-                SetStatus("Speaking...", StatusSeverity.Info);
-            else if (!_playbackState.IsPlaying && StatusText is "Speaking..." or "Audio is already playing")
-                SetStatus(string.Empty, StatusSeverity.None);
+            // Timing data arrived (synthesis just finished while this overlay was already open).
+            // Upgrade from static "Speaking..." to a live countdown.
+            if (e.PropertyName == nameof(PlaybackState.PlaybackDurationSeconds))
+            {
+                var dur  = _playbackState.PlaybackDurationSeconds;
+                var when = _playbackState.PlaybackStartedUtc;
+                if (_speakingStatusActive && _playbackDurationSeconds == 0 && dur > 0 && when != default)
+                    StartSpeaking(dur, when);
+            }
         });
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe events so this dead VM can't react after close (and won't prevent GC).
+        _audioRouter.PlaybackFinished -= _playbackFinishedHandler;
+        _playbackState.PropertyChanged -= OnPlaybackStateChanged;
+        // Stop the countdown timer. PlaybackState timing survives — next open resumes from there.
+        _countdownTimer?.Stop();
+        _countdownTimer = null;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

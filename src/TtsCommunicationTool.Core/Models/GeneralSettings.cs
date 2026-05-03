@@ -15,4 +15,7 @@ public sealed class GeneralSettings
     /// <summary>Persisted size of the Settings window.</summary>
     public double SettingsWindowWidth { get; set; } = 680;
     public double SettingsWindowHeight { get; set; } = 540;
+
+    /// <summary>Show a live countdown of remaining playback time in the overlay while speaking.</summary>
+    public bool ShowPlaybackTimer { get; set; } = true;
 }

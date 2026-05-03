@@ -314,6 +314,15 @@
                                    TextWrapping="Wrap"
                                    Margin="0,0,0,8"/>
 
+                        <CheckBox Content="Show remaining playback time in overlay"
+                                  IsChecked="{Binding General.ShowPlaybackTimer}"
+                                  ToolTip="Displays a live countdown next to 'Speaking...' in the overlay status bar."
+                                  Style="{StaticResource SettingsCheckBox}"/>
+                        <TextBlock Text="Shows a countdown timer in the overlay status bar while audio is playing, e.g. 'Speaking...  (45s)'."
+                                   Foreground="#6C7086" FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,8"/>
+
                         <Separator Background="#45475A" Margin="0,12,0,12"/>
                         <TextBlock Text="Message Length" Style="{StaticResource SectionHeader}" Margin="0,0,0,4"/>
 
@@ -688,6 +697,43 @@
                                            Text="Only TTS speech and phrase audio are sent to the secondary (app) device. Any non-voice sounds such as UI feedback or error tones play on the monitor device only and will not be heard in Discord or VRChat."/>
                             </StackPanel>
                         </Border>
+
+                        <!-- Trailing Silence -->
+                        <Separator Background="#45475A" Margin="0,16,0,12"/>
+                        <TextBlock Text="Trailing Silence" Style="{StaticResource SectionHeader}" Margin="0,0,0,8"/>
+
+                        <Border Background="#1C1200" BorderBrush="#FAB387" BorderThickness="1"
+                                CornerRadius="4" Padding="12,10" Margin="0,0,0,10">
+                            <TextBlock TextWrapping="Wrap" Foreground="#FAB387" FontSize="12"
+                                       Text="⚠  Trimming too aggressively may clip the last word of a sentence. Start with a high retention value (80–95%) and reduce gradually."/>
+                        </Border>
+
+                        <CheckBox Content="Trim trailing silence from generated audio"
+                                  IsChecked="{Binding Audio.TrimTrailingSilence}"
+                                  ToolTip="Removes silence at the end of each generated audio clip so playback ends sooner."
+                                  Style="{StaticResource SettingsCheckBox}"/>
+
+                        <Grid Margin="0,8,0,4"
+                              IsEnabled="{Binding Audio.TrimTrailingSilence}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="48"/>
+                            </Grid.ColumnDefinitions>
+                            <Slider Grid.Column="0"
+                                    Minimum="5" Maximum="100" TickFrequency="5"
+                                    Value="{Binding Audio.SilenceRetentionPercent}"
+                                    VerticalAlignment="Center"
+                                    ToolTip="How much trailing silence to keep after trimming. 100% keeps all silence; 5% keeps almost none."/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding Audio.SilenceRetentionDisplay}"
+                                       Foreground="#CDD6F4" FontSize="12"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                        <TextBlock Text="Silence retention  (5% = most trimmed, 100% = off)"
+                                   Foreground="#6C7086" FontSize="11" Margin="0,0,0,4"/>
+                        <TextBlock Text="Only applies to real-time TTS output. Cached phrase audio is not trimmed."
+                                   Foreground="#6C7086" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

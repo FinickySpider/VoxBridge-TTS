@@ -7,6 +7,22 @@ public sealed class PlaybackState : INotifyPropertyChanged
 {
     private bool _isPlaying;
     private string? _currentText;
+    private double _playbackDurationSeconds;
+    private DateTime _playbackStartedUtc;
+
+    /// <summary>Total audio duration in seconds, set when playback begins.</summary>
+    public double PlaybackDurationSeconds
+    {
+        get => _playbackDurationSeconds;
+        set => SetField(ref _playbackDurationSeconds, value);
+    }
+
+    /// <summary>UTC time when the current audio clip started playing.</summary>
+    public DateTime PlaybackStartedUtc
+    {
+        get => _playbackStartedUtc;
+        set => SetField(ref _playbackStartedUtc, value);
+    }
 
     public bool IsPlaying
     {
@@ -24,6 +40,8 @@ public sealed class PlaybackState : INotifyPropertyChanged
     {
         IsPlaying = false;
         CurrentText = null;
+        PlaybackDurationSeconds = 0;
+        PlaybackStartedUtc = default;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

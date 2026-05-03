@@ -25,6 +25,7 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
     private bool _keepOverlayText;
     private bool _enableCharacterLimit = true;
     private int _maxOverlayInputLength = 500;
+    private bool _showPlaybackTimer = true;
 
     // ── Diagnostic Logging ────────────────────────────────────────────────────
     private bool _enableDiagnosticLogging;
@@ -75,6 +76,12 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
     {
         get => _maxOverlayInputLength;
         set => SetField(ref _maxOverlayInputLength, value < 10 ? 10 : value);
+    }
+
+    public bool ShowPlaybackTimer
+    {
+        get => _showPlaybackTimer;
+        set => SetField(ref _showPlaybackTimer, value);
     }
 
     // Window dimensions are persisted independently — not tracked by IsDirty
@@ -204,6 +211,7 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         KeepOverlayText        = s.KeepOverlayText;
         EnableCharacterLimit   = s.EnableCharacterLimit;
         MaxOverlayInputLength  = s.MaxOverlayInputLength > 0 ? s.MaxOverlayInputLength : 500;
+        ShowPlaybackTimer      = s.ShowPlaybackTimer;
         SettingsWindowWidth    = s.SettingsWindowWidth  > 400 ? s.SettingsWindowWidth  : 680;
         SettingsWindowHeight   = s.SettingsWindowHeight > 300 ? s.SettingsWindowHeight : 540;
     }
@@ -217,6 +225,7 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         s.KeepOverlayText        = KeepOverlayText;
         s.EnableCharacterLimit   = EnableCharacterLimit;
         s.MaxOverlayInputLength  = MaxOverlayInputLength;
+        s.ShowPlaybackTimer      = ShowPlaybackTimer;
         s.SettingsWindowWidth    = SettingsWindowWidth;
         s.SettingsWindowHeight   = SettingsWindowHeight;
     }

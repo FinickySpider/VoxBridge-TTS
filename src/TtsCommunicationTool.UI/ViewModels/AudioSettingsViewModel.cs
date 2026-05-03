@@ -18,6 +18,8 @@ public sealed class AudioSettingsViewModel : ViewModelBase
     private string _deviceWarning = string.Empty;
     private int _monitorVolume = 100;
     private int _secondaryVolume = 100;
+    private bool _trimTrailingSilence;
+    private int _silenceRetentionPercent = 100;
 
     public ObservableCollection<AudioDeviceInfo> OutputDevices { get; } = new();
 
@@ -52,6 +54,24 @@ public sealed class AudioSettingsViewModel : ViewModelBase
         get => _secondaryVolume;
         set => SetField(ref _secondaryVolume, Math.Clamp(value, 0, 100));
     }
+
+    public bool TrimTrailingSilence
+    {
+        get => _trimTrailingSilence;
+        set => SetField(ref _trimTrailingSilence, value);
+    }
+
+    public int SilenceRetentionPercent
+    {
+        get => _silenceRetentionPercent;
+        set
+        {
+            if (SetField(ref _silenceRetentionPercent, Math.Clamp(value, 5, 100)))
+                OnPropertyChanged(nameof(SilenceRetentionDisplay));
+        }
+    }
+
+    public string SilenceRetentionDisplay => $"{_silenceRetentionPercent}%";
 
     public ICommand RefreshDevicesCommand { get; }
     public ICommand TestMonitorCommand { get; }
@@ -141,6 +161,8 @@ public sealed class AudioSettingsViewModel : ViewModelBase
         SelectedSecondaryDeviceId = s.SecondaryOutputDeviceId;
         MonitorVolume = (int)Math.Round(s.MonitorVolume * 100);
         SecondaryVolume = (int)Math.Round(s.SecondaryVolume * 100);
+        TrimTrailingSilence = s.TrimTrailingSilence;
+        SilenceRetentionPercent = Math.Clamp(s.SilenceRetentionPercent, 5, 100);
         RefreshDevices();
     }
 
@@ -150,6 +172,8 @@ public sealed class AudioSettingsViewModel : ViewModelBase
         s.SecondaryOutputDeviceId = SelectedSecondaryDeviceId;
         s.MonitorVolume = MonitorVolume / 100f;
         s.SecondaryVolume = SecondaryVolume / 100f;
+        s.TrimTrailingSilence = TrimTrailingSilence;
+        s.SilenceRetentionPercent = SilenceRetentionPercent;
 
         // Cache friendly names
         var monitor = OutputDevices.FirstOrDefault(d => d.Id == SelectedMonitorDeviceId);

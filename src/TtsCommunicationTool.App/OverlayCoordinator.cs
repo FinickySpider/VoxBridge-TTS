@@ -32,6 +32,15 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
         _audioRouter = audioRouter;
         _config = config;
         _playbackState = playbackState;
+
+        // Global PlaybackFinished handler: reset state when audio completes naturally,
+        // even if the overlay is closed. This prevents "Speaking... (0.0s)" sticking
+        // across multiple messages.
+        _audioRouter.PlaybackFinished += (_, _) =>
+        {
+            _playbackState.Reset();
+            _log.Debug("Playback finished; PlaybackState fully reset.");
+        };
     }
 
     public event EventHandler? SettingsRequested;
@@ -81,11 +90,15 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
                     cfg.OverlaySettings.Top = closedWindow.Top;
                     _ = _config.SaveAsync(cfg);
 
-                    // Save draft text (will be empty if text was already sent via FireAndForget)
-                    if (cfg.GeneralSettings.KeepOverlayText &&
-                        closedWindow.DataContext is TtsCommunicationTool.UI.ViewModels.OverlayViewModel closedVm)
-                        _appState.DraftText = closedVm.InputText;
-                    else if (!cfg.GeneralSettings.KeepOverlayText)
+                    // Dispose the VM to stop its countdown timer now that the overlay is closed
+                    if (closedWindow.DataContext is TtsCommunicationTool.UI.ViewModels.OverlayViewModel closedVm)
+                    {
+                        closedVm.Dispose();
+                        // Save draft text (will be empty if text was already sent via FireAndForget)
+                        if (cfg.GeneralSettings.KeepOverlayText)
+                            _appState.DraftText = closedVm.InputText;
+                    }
+                    if (!cfg.GeneralSettings.KeepOverlayText)
                         _appState.DraftText = string.Empty;
                 }
                 _overlayWindow = null;

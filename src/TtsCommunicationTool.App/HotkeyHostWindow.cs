@@ -230,11 +230,17 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
                 return;
             }
 
+            // Compute duration and publish to PlaybackState so any open overlay can show the countdown.
+            var audioData = result.AudioData!;
+            double dur = audioData.Length / (double)(result.SampleRate * result.Channels * (result.BitsPerSample / 8));
+            _playbackState.PlaybackStartedUtc      = DateTime.UtcNow;
+            _playbackState.PlaybackDurationSeconds = dur;
+
             var playback = new PlaybackRequest
             {
-                AudioData = result.AudioData!,
-                SampleRate = result.SampleRate,
-                Channels = result.Channels,
+                AudioData    = audioData,
+                SampleRate   = result.SampleRate,
+                Channels     = result.Channels,
                 BitsPerSample = result.BitsPerSample
             };
 
@@ -275,6 +281,11 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
             var cached = _phraseCache.GetCachedAudio(phraseId);
             if (cached is not null)
             {
+                // Publish timing so the overlay countdown works for phrase playback.
+                double cachedDur = cached.AudioData.Length / (double)(cached.SampleRate * cached.Channels * (cached.BitsPerSample / 8));
+                _playbackState.PlaybackStartedUtc      = DateTime.UtcNow;
+                _playbackState.PlaybackDurationSeconds = cachedDur;
+
                 var cfg = _config.CurrentConfig;
                 await _audioRouter.PlayAsync(cached,
                     cfg.AudioSettings.MonitorOutputDeviceId,
@@ -297,6 +308,10 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
             var audio = _phraseCache.GetCachedAudio(phraseId);
             if (audio is not null)
             {
+                double generatedDur = audio.AudioData.Length / (double)(audio.SampleRate * audio.Channels * (audio.BitsPerSample / 8));
+                _playbackState.PlaybackStartedUtc      = DateTime.UtcNow;
+                _playbackState.PlaybackDurationSeconds = generatedDur;
+
                 var cfg = _config.CurrentConfig;
                 await _audioRouter.PlayAsync(audio,
                     cfg.AudioSettings.MonitorOutputDeviceId,

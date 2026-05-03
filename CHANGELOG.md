@@ -4,6 +4,22 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [v0.9.5] — 2026-05-07
+
+### Features
+
+- **Trailing silence trimming** — New option in Audio settings to trim silence from the end of each generated audio clip. A "Silence Retention" slider (5–100%) controls how much trailing silence is preserved. Disabled by default. Includes a yellow ⚠ warning noting that aggressive trimming may clip the last word.
+- **Playback countdown timer** — The overlay status bar now shows a live countdown while audio is playing, e.g. `Speaking...  (45.2s)` or `Speaking...  (1m 02.4s)`. Precision is 50ms (20fps) for smooth sub-second display. Works for all audio sources: Send, Resend, phrase hotkeys, and external playback. Can be disabled in General settings. Timer updates are pulled from a global singleton state so the overlay always shows current values regardless of when it opens.
+
+### Bug Fixes
+
+- **Countdown timer now displays correctly for all playback sources** — Resend hotkey and phrase hotkeys now write duration/start-time to the singleton `PlaybackState` before playback, so the overlay can display a live countdown regardless of open/close order. Previously only the Send path reported timing.
+- **Countdown timer resumes mid-stream when overlay reopens** — When the overlay opens during playback, it now reads elapsed time from the singleton and shows the remaining time rather than starting from the full duration.
+- **Countdown timer upgrades from static to live display** — When the overlay is open and synthesis is still in progress, `StartSpeaking(0)` shows static "Speaking...". Once synthesis completes and duration becomes available, `OnPlaybackStateChanged` watches `PlaybackDurationSeconds` and automatically upgrades to a live countdown without requiring a close/reopen cycle.
+- **Fixed "Speaking... (0.0s)" stuck state blocking all sends** — `PlaybackFinished` event is now subscribed to globally in `OverlayCoordinator` (singleton), not just in the transient `OverlayViewModel`. Previously when playback finished while the overlay was closed, `PlaybackState` was never reset, leaving the old `PlaybackDurationSeconds` value in place. Reopening the overlay would see this stale duration and display "Speaking... (0.0s)" forever, blocking new messages. Now `PlaybackState` is always fully reset when audio naturally completes, regardless of overlay state. Phrases and Resend hotkeys now work repeatedly without requiring manual reset or stop-hotkey intervention.
+
+---
+
 ## [v0.9.41] — 2026-05-02
 
 ### Bug Fixes
