@@ -791,45 +791,97 @@
                                          ToolTip="Your ElevenLabs API key. Required for online voice generation."/>
                             </Grid>
 
-                            <Grid Margin="0,0,0,8">
+                            <!-- Model dropdown -->
+                            <Grid Margin="0,0,0,4">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="140"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="Model:" Style="{StaticResource FieldLabel}"
-                                           ToolTip="The ElevenLabs model ID to use (e.g. eleven_multilingual_v2, eleven_turbo_v2). See ElevenLabs docs for available model IDs."/>
-                                <TextBox Grid.Column="1"
-                                         Text="{Binding Voice.ElevenLabsModelId, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource SettingsTextBox}"
-                                         ToolTip="ElevenLabs model ID. Common values: eleven_multilingual_v2, eleven_turbo_v2."/>
+                                           ToolTip="The ElevenLabs model to use. Flash/Turbo are faster and cheaper; Multilingual v2 and v3 offer higher quality."/>
+                                <ComboBox Grid.Column="1"
+                                          ItemsSource="{Binding Voice.ElevenLabsModelOptions, Mode=OneTime}"
+                                          SelectedValue="{Binding Voice.ElevenLabsModelId, Mode=TwoWay}"
+                                          SelectedValuePath="Id"
+                                          DisplayMemberPath="DisplayName"
+                                          Style="{StaticResource SettingsComboBox}"
+                                          ToolTip="Select the ElevenLabs model. Flash v2.5 and Turbo v2.5 cost $0.05/1K chars. v3 Multilingual and Multilingual v2 cost $0.10/1K chars."/>
                             </Grid>
 
+                            <!-- Subscription / lifetime credit display -->
+                            <TextBlock Text="{Binding Voice.ElevenLabsCreditsDisplay}"
+                                       Foreground="#89B4FA" FontSize="12"
+                                       Margin="140,0,0,2"
+                                       Visibility="{Binding Voice.ElevenLabsCreditsDisplay,
+                                           Converter={StaticResource NonEmptyToVisibleConverter}}"/>
+                            <TextBlock Text="{Binding Voice.ElevenLabsLifetimeCharacters}"
+                                       Foreground="#6C7086" FontSize="11"
+                                       Margin="140,0,0,10"
+                                       Visibility="{Binding Voice.ElevenLabsLifetimeCharacters,
+                                           Converter={StaticResource NonEmptyToVisibleConverter}}"/>
+
+                            <!-- Fetch Voices + status -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                 <Button Content="Fetch Voices"
                                         Command="{Binding Voice.FetchElevenLabsVoicesCommand}"
                                         Style="{StaticResource SecondaryButton}"
                                         Margin="0,0,8,0"
-                                        ToolTip="Download the list of voices available to your ElevenLabs account."/>
+                                        ToolTip="Download the list of voices available to your ElevenLabs account. Voices are also fetched automatically when you type your API key or select the ElevenLabs engine."/>
                                 <TextBlock Text="{Binding Voice.ElevenLabsStatus}"
                                            Foreground="#89B4FA" FontSize="12"
                                            VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <Grid Margin="0,0,0,12">
+                            <!-- Voice selector with custom voice highlighting -->
+                            <Grid Margin="0,0,0,4">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="140"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="Voice:" Style="{StaticResource FieldLabel}"
-                                           ToolTip="The ElevenLabs voice to use. Click Fetch Voices first if this list is empty."/>
+                                           ToolTip="The ElevenLabs voice to use. Voices shown in red require Creator or higher subscription."/>
                                 <ComboBox Grid.Column="1"
                                           ItemsSource="{Binding Voice.ElevenLabsVoices}"
                                           SelectedValue="{Binding Voice.ElevenLabsSelectedVoiceId}"
                                           SelectedValuePath="Id"
-                                          DisplayMemberPath="DisplayName"
                                           Style="{StaticResource SettingsComboBox}"
-                                          ToolTip="Select the ElevenLabs voice to use for speech generation. Use Fetch Voices to populate this list."/>
+                                          ToolTip="Select the ElevenLabs voice. Red entries are cloned or AI-generated voices requiring a Creator plan or higher.">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding DisplayName}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsCustomVoice}" Value="True">
+                                                                <Setter Property="Foreground" Value="#F38BA8"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                             </Grid>
+
+                            <!-- Custom voice info panel -->
+                            <Border Margin="0,4,0,12" Padding="12,10"
+                                    Background="#181825" CornerRadius="4"
+                                    BorderBrush="#313244" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Foreground="#F38BA8" FontSize="12"
+                                               FontWeight="SemiBold" Margin="0,0,0,4"
+                                               Text="About highlighted voices"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="12">
+                                        <Run Foreground="#A6ADC8">Voices shown in </Run>
+                                        <Run Foreground="#F38BA8" FontWeight="SemiBold">red</Run>
+                                        <Run Foreground="#A6ADC8"> are cloned or AI-generated voices stored on your ElevenLabs account. They require a </Run>
+                                        <Run Foreground="#CDD6F4" FontWeight="SemiBold">Creator plan or higher</Run>
+                                        <Run Foreground="#A6ADC8"> to use. Standard voices (shown in white) are available on all plans including Free and Starter.</Run>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                         <!-- Global Pitch (both engines) -->

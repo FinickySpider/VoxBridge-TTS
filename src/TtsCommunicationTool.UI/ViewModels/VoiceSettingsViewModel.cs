@@ -7,6 +7,9 @@ using TtsCommunicationTool.UI.Commands;
 
 namespace TtsCommunicationTool.UI.ViewModels;
 
+/// <summary>A model option shown in the ElevenLabs Model dropdown.</summary>
+public sealed record ElevenLabsModelOption(string Id, string DisplayName);
+
 public sealed class VoiceSettingsViewModel : ViewModelBase
 {
     private readonly ITtsService _tts;
@@ -63,6 +66,10 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
             OnPropertyChanged(nameof(IsElevenLabs));
             LoadVoices();
 
+            // Auto-fetch voices + subscription when switching to ElevenLabs
+            if (_engine == VoiceEngine.ElevenLabs && !string.IsNullOrWhiteSpace(_elevenLabsApiKey))
+                _ = FetchElevenLabsVoicesAsync();
+
             // Restore Kokoro voice when switching back
             if (_engine == VoiceEngine.Kokoro && !string.IsNullOrEmpty(_savedKokoroVoiceId))
                 SelectedVoiceId = _savedKokoroVoiceId;
@@ -94,6 +101,43 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         set => SetField(ref _engineName, value);
     }
 
+    // ── ElevenLabs model options (static, shown as dropdown) ────────────────
+    public static readonly IReadOnlyList<ElevenLabsModelOption> ElevenLabsModelOptions = new[]
+    {
+        new ElevenLabsModelOption("eleven_flash_v2_5",      "Flash v2.5 — Fast · $0.05/1K chars"),
+        new ElevenLabsModelOption("eleven_turbo_v2_5",      "Turbo v2.5 — Fast · $0.05/1K chars"),
+        new ElevenLabsModelOption("eleven_v3",              "v3 Multilingual — Quality · $0.10/1K chars"),
+        new ElevenLabsModelOption("eleven_multilingual_v2", "Multilingual v2 — Quality · $0.10/1K chars"),
+    };
+
+    // ── ElevenLabs subscription display ──────────────────────────────────────
+    private int _subCharUsed;
+    private int _subCharLimit;
+
+    /// <summary>Formatted subscription string, e.g. "5,000 / 100,000 characters remaining".</summary>
+    public string ElevenLabsCreditsDisplay
+    {
+        get
+        {
+            if (_subCharLimit <= 0) return string.Empty;
+            var remaining = Math.Max(0, _subCharLimit - _subCharUsed);
+            return $"{remaining:N0} / {_subCharLimit:N0} characters remaining";
+        }
+    }
+
+    /// <summary>Shows cumulative characters sent through this app across all sessions.</summary>
+    public string ElevenLabsLifetimeCharacters
+    {
+        get
+        {
+            var total = _config.CurrentConfig.ElevenLabs.TotalCharactersUsed;
+            return total == 0 ? string.Empty : $"{total:N0} chars sent lifetime";
+        }
+    }
+
+    // Debounce token for the API key auto-fetch
+    private CancellationTokenSource? _apiKeyDebounceCts;
+
     // ── ElevenLabs props ─────────────────────────────────────────────────────
     private string _elevenLabsApiKey = string.Empty;
     private string _elevenLabsModelId = "eleven_multilingual_v2";
@@ -104,7 +148,21 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     public string ElevenLabsApiKey
     {
         get => _elevenLabsApiKey;
-        set => SetField(ref _elevenLabsApiKey, value);
+        set
+        {
+            if (!SetField(ref _elevenLabsApiKey, value)) return;
+
+            // Debounce: auto-fetch voices + subscription 800 ms after the user stops typing.
+            _apiKeyDebounceCts?.Cancel();
+            _apiKeyDebounceCts = new CancellationTokenSource();
+            var cts = _apiKeyDebounceCts;
+            _ = Task.Delay(800, cts.Token).ContinueWith(t =>
+            {
+                if (t.IsCanceled || string.IsNullOrWhiteSpace(value)) return;
+                System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
+                    _ = FetchElevenLabsVoicesAsync());
+            }, TaskScheduler.Default);
+        }
     }
     public string ElevenLabsModelId
     {
@@ -182,7 +240,6 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
 
         if (voices.Count > 0)
         {
-            ElevenLabsStatus = $"Loaded {voices.Count} voices.";
             // Restore selected voice if still valid
             if (ElevenLabsVoices.All(v => v.Id != ElevenLabsSelectedVoiceId) && voices.Count > 0)
             {
@@ -197,6 +254,18 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         {
             ElevenLabsStatus = "No voices returned — check API key.";
         }
+
+        // Also refresh subscription info
+        var (used, limit) = await _elevenLabs.FetchUserSubscriptionAsync();
+        _subCharUsed  = used;
+        _subCharLimit = limit;
+        OnPropertyChanged(nameof(ElevenLabsCreditsDisplay));
+        OnPropertyChanged(nameof(ElevenLabsLifetimeCharacters));
+
+        var remaining = limit > 0 ? Math.Max(0, limit - used) : -1;
+        ElevenLabsStatus = voices.Count > 0
+            ? (remaining >= 0 ? $"Loaded {voices.Count} voices · {remaining:N0} chars remaining" : $"Loaded {voices.Count} voices.")
+            : ElevenLabsStatus;
     }
 
     private async Task TestVoiceAsync()
@@ -253,10 +322,17 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(GlobalPitchPercent));
 
         var el = _config.CurrentConfig.ElevenLabs;
-        ElevenLabsApiKey = el.ApiKey;
+        _elevenLabsApiKey = el.ApiKey;   // set backing field to avoid triggering debounce on load
+        OnPropertyChanged(nameof(ElevenLabsApiKey));
         ElevenLabsModelId = el.ModelId;
         ElevenLabsSelectedVoiceId = el.SelectedVoiceId;
         ElevenLabsSelectedVoiceName = el.SelectedVoiceName;
+
+        // Restore persisted subscription info
+        _subCharUsed  = el.SubscriptionCharacterCount;
+        _subCharLimit = el.SubscriptionCharacterLimit;
+        OnPropertyChanged(nameof(ElevenLabsCreditsDisplay));
+        OnPropertyChanged(nameof(ElevenLabsLifetimeCharacters));
 
         // Load any previously cached ElevenLabs voices
         ElevenLabsVoices.Clear();

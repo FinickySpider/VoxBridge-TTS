@@ -111,6 +111,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
             {
                 OnPropertyChanged(nameof(CharacterCount));
                 OnPropertyChanged(nameof(CharacterCountDisplay));
+                OnPropertyChanged(nameof(EstimatedCreditDisplay));
                 NotifyCanSubmitChanged();
             }
         }
@@ -161,6 +162,23 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
         _config.CurrentConfig.GeneralSettings.EnableCharacterLimit
             ? $"{InputText.Length}/{_config.CurrentConfig.GeneralSettings.MaxOverlayInputLength}"
             : InputText.Length.ToString();
+
+    /// <summary>True when ElevenLabs is the active TTS engine.</summary>
+    public bool IsElevenLabsActive =>
+        _config.CurrentConfig.VoiceSettings.Engine == VoiceEngine.ElevenLabs;
+
+    /// <summary>
+    /// Estimated ElevenLabs character cost for the current input, e.g. "≈107".
+    /// Empty when Kokoro is active or the input box is empty.
+    /// </summary>
+    public string EstimatedCreditDisplay
+    {
+        get
+        {
+            if (!IsElevenLabsActive || _inputText.Length == 0) return string.Empty;
+            return $"≈{_inputText.Length}";
+        }
+    }
 
     /// <summary>Last spoken text, or null if nothing has been sent this session.</summary>
     public string? LastMessage => _recentMessages.GetAll().FirstOrDefault();

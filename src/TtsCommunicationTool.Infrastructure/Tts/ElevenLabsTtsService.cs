@@ -101,6 +101,10 @@ public sealed class ElevenLabsTtsService : ITtsService
                 "ElevenLabs TTS API request completed",
                 new { provider = "elevenlabs", status = 200, duration_ms = (long)sw.Elapsed.TotalMilliseconds, request_id = _log.IncludeRequestIds ? request.RequestId : null });
 
+            // Track cumulative character usage across sessions and fire-and-forget persist.
+            _config.CurrentConfig.ElevenLabs.TotalCharactersUsed += request.Text.Length;
+            _ = _config.SaveAsync(_config.CurrentConfig);
+
             var (pcm, sampleRate, channels, bps) = DecodeMp3ToPcm(mp3Bytes);
             var pitchSampleRate = (int)(sampleRate * Math.Clamp(request.Pitch, 0.5f, 2.0f));
             return TtsResult.Ok(pcm, pitchSampleRate, channels, bps);
@@ -138,11 +142,14 @@ public sealed class ElevenLabsTtsService : ITtsService
             var voices = new List<VoiceInfo>();
             foreach (var v in doc.RootElement.GetProperty("voices").EnumerateArray())
             {
+                var category = v.TryGetProperty("category", out var cat) ? cat.GetString() : null;
                 voices.Add(new VoiceInfo
                 {
                     Id = v.GetProperty("voice_id").GetString() ?? string.Empty,
                     DisplayName = v.GetProperty("name").GetString() ?? string.Empty,
-                    EngineName = "ElevenLabs"
+                    EngineName = "ElevenLabs",
+                    // Cloned and AI-generated voices require Creator or higher plan.
+                    IsCustomVoice = category is "cloned" or "generated"
                 });
             }
 
@@ -154,6 +161,45 @@ public sealed class ElevenLabsTtsService : ITtsService
         {
             _log.Error("Failed to fetch ElevenLabs voices", ex);
             return new List<VoiceInfo>();
+        }
+    }
+
+    /// <summary>
+    /// Fetches the user's character usage and quota for the current billing period.
+    /// Stores the result in config (.SubscriptionCharacterCount / .SubscriptionCharacterLimit).
+    /// Returns (used, limit); returns (0, 0) on failure.
+    /// </summary>
+    public async Task<(int used, int limit)> FetchUserSubscriptionAsync(CancellationToken ct = default)
+    {
+        var settings = _config.CurrentConfig.ElevenLabs;
+        if (string.IsNullOrWhiteSpace(settings.ApiKey))
+            return (0, 0);
+
+        try
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/user/subscription");
+            req.Headers.Add("xi-api-key", settings.ApiKey);
+
+            using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
+            resp.EnsureSuccessStatusCode();
+
+            var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(json);
+
+            var used  = doc.RootElement.GetProperty("character_count").GetInt32();
+            var limit = doc.RootElement.GetProperty("character_limit").GetInt32();
+
+            settings.SubscriptionCharacterCount = used;
+            settings.SubscriptionCharacterLimit = limit;
+            _ = _config.SaveAsync(_config.CurrentConfig);
+
+            _log.Info($"ElevenLabs subscription: {used:N0} / {limit:N0} characters used.");
+            return (used, limit);
+        }
+        catch (Exception ex)
+        {
+            _log.Error("Failed to fetch ElevenLabs subscription info", ex);
+            return (0, 0);
         }
     }
 

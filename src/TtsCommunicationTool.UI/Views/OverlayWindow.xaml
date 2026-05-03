@@ -19,6 +19,7 @@
     <Window.Resources>
         <converters:StatusSeverityToColorConverter x:Key="StatusSeverityColorConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <converters:NonEmptyStringToVisibilityConverter x:Key="NonEmptyToVisibleConverter"/>
     </Window.Resources>
 
     <Border x:Name="OverlayBorder"
@@ -172,6 +173,17 @@
                                Foreground="#45475A"
                                FontSize="11"
                                FontFamily="Segoe UI"/>
+                    <!-- ElevenLabs credit estimate — right of char counter, only visible when ElevenLabs active -->
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="{Binding EstimatedCreditDisplay}"
+                               VerticalAlignment="Center"
+                               Foreground="#6C7086"
+                               FontSize="11"
+                               FontFamily="Segoe UI"
+                               Margin="0,0,8,0"
+                               ToolTip="Estimated ElevenLabs characters that will be consumed from your quota."
+                               Visibility="{Binding EstimatedCreditDisplay,
+                                   Converter={StaticResource NonEmptyToVisibleConverter}}"/>
                     <!-- Status text — left, colour driven by severity -->
                     <TextBlock DockPanel.Dock="Left"
                                Text="{Binding StatusText}"
