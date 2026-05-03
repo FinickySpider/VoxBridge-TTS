@@ -92,6 +92,13 @@ public sealed class SettingsViewModel : ViewModelBase
     /// <summary>Raised after a successful cancel/rollback. The settings window should close.</summary>
     public event EventHandler? Cancelled;
 
+    /// <summary>
+    /// Clears the dirty flag without rolling back values.  Call this after the window's
+    /// initial binding pass has settled so that WPF ComboBox TwoWay write-backs that occur
+    /// during first render don't permanently mark settings as dirty.
+    /// </summary>
+    public void ResetDirtyState() => IsDirty = false;
+
     public SettingsViewModel(
         IConfigService config,
         ILoggingService log,

@@ -68,7 +68,17 @@ public partial class SettingsWindow : Window
         // Persist window size changes immediately (before save)
         // Use this.Width/Height (includes chrome) rather than e.NewSize (client area only)
         bool _windowSizeInitialized = false;
-        Loaded += (_, _) => _windowSizeInitialized = true;
+        Loaded += (_, _) =>
+        {
+            _windowSizeInitialized = true;
+            // WPF TwoWay-bound ComboBoxes (audio devices, voice selection) write null back through
+            // their bindings during first render if the saved ID doesn't match any item, which
+            // fires PropertyChanged on child VMs and sets IsDirty=true before the user does
+            // anything. Reset the flag once all binding evaluation has settled.
+            Dispatcher.BeginInvoke(
+                System.Windows.Threading.DispatcherPriority.ApplicationIdle,
+                () => vm.ResetDirtyState());
+        };
         SizeChanged += (_, _) =>
         {
             if (_windowSizeInitialized && DataContext is SettingsViewModel svm && WindowState == WindowState.Normal)

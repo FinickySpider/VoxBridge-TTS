@@ -5,6 +5,15 @@ All notable changes to TTS Communication Tool are documented here.
 ---
 
 
+
+## [v0.14.4] -- 2026-05-03
+
+### Bug Fixes
+
+- Fixed Phrase Editor category (and voice) dropdowns showing no items: the custom `EditorComboBox` ControlTemplate used `<StackPanel IsItemsHost="True"/>` inside the popup, which is unreliable for `ComboBox` item generation. Replaced with the standard `<ItemsPresenter/>` that WPF's ComboBox relies on.
+- Fixed Settings window falsely prompting "unsaved changes" when the user only navigated tabs without changing anything: WPF TwoWay-bound ComboBoxes (audio device selectors, voice selectors) write `null` back through their bindings during first render if the persisted ID doesn't match any list item, which fired `PropertyChanged` on child VMs and set `IsDirty = true` immediately on open. The window now calls `vm.ResetDirtyState()` at `DispatcherPriority.ApplicationIdle` after `Loaded` so all initial binding evaluation settles before the dirty flag is considered meaningful.
+
+---
 ## [v0.14.3] -- 2026-05-03
 
 ### Bug Fixes

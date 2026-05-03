@@ -127,8 +127,8 @@
                                                   VerticalScrollBarVisibility="Auto"
                                                   HorizontalScrollBarVisibility="Disabled"
                                                   SnapsToDevicePixels="True">
-                                        <StackPanel IsItemsHost="True"
-                                                    KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"
+                                                        SnapsToDevicePixels="True"/>
                                     </ScrollViewer>
                                 </Border>
                             </Popup>
