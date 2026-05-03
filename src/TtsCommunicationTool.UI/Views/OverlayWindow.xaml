@@ -119,6 +119,7 @@
                             Width="Auto" Height="16"
                             Margin="0,0,8,0"
                             VerticalAlignment="Center"
+                            IsEnabled="{Binding CanResend}"
                             Visibility="{Binding HasRecentMessage, Converter={StaticResource BoolToVisConverter}}">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
@@ -131,9 +132,18 @@
                                                VerticalAlignment="Center"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="ResendText" Property="Foreground" Value="#CDD6F4"/>
+                                    <!-- Disabled: audio is already playing — dim to match blocked-send visual -->
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter TargetName="ResendText" Property="Foreground" Value="#45475A"/>
                                     </Trigger>
+                                    <!-- Hover only when enabled -->
+                                    <MultiTrigger>
+                                        <MultiTrigger.Conditions>
+                                            <Condition Property="IsMouseOver" Value="True"/>
+                                            <Condition Property="IsEnabled" Value="True"/>
+                                        </MultiTrigger.Conditions>
+                                        <Setter TargetName="ResendText" Property="Foreground" Value="#CDD6F4"/>
+                                    </MultiTrigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>

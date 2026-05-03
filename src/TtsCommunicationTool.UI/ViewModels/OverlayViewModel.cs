@@ -186,6 +186,13 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
     /// <summary>True when there is a message available to resend.</summary>
     public bool HasRecentMessage => LastMessage is not null;
 
+    /// <summary>
+    /// True when the Resend button should be enabled.
+    /// Requires a recent message and no active audio playback or TTS generation.
+    /// Same blocking conditions as CanSubmit, but does not require non-empty InputText.
+    /// </summary>
+    public bool CanResend => HasRecentMessage && !IsSending && !_playbackState.IsPlaying && !_audioRouter.IsPlaying;
+
     public ICommand SendCommand { get; }
     public ICommand StopCommand { get; }
     public ICommand ClearCommand { get; }
@@ -285,6 +292,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
             _recentMessages.Add(text);
             OnPropertyChanged(nameof(LastMessage));
             OnPropertyChanged(nameof(HasRecentMessage));
+            OnPropertyChanged(nameof(CanResend));
             _ = _transcript.LogAsync(text);
 
             StartSpeaking(dur); // sets "Speaking… (Xs)" status and starts timer
@@ -359,6 +367,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
         _recentMessages.Add(text);
         OnPropertyChanged(nameof(LastMessage));
         OnPropertyChanged(nameof(HasRecentMessage));
+        OnPropertyChanged(nameof(CanResend));
         _ = _transcript.LogAsync(text);
 
         _ = Task.Run(async () =>
@@ -436,6 +445,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
         _recentMessages.Add(text);
         OnPropertyChanged(nameof(LastMessage));
         OnPropertyChanged(nameof(HasRecentMessage));
+        OnPropertyChanged(nameof(CanResend));
         _ = _transcript.LogAsync(text);
 
         // Mark playing immediately so CanSubmit blocks new sends during stop+synthesis.
@@ -622,6 +632,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
     {
         OnPropertyChanged(nameof(CanSend));
         OnPropertyChanged(nameof(CanSubmit));
+        OnPropertyChanged(nameof(CanResend));
         CommandManager.InvalidateRequerySuggested();
     }
 

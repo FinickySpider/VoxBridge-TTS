@@ -98,6 +98,12 @@ public sealed class PhraseListViewModel : ViewModelBase
     public ICommand UpdateCommand { get; }
     public ICommand DeleteCommand { get; }
     public ICommand PlayCommand { get; }
+
+    /// <summary>
+    /// Optional confirmation callback injected by the view.
+    /// Called with the phrase name before deletion. Return false to cancel.
+    /// </summary>
+    public Func<string, bool>? ConfirmDelete { get; set; }
     public ICommand RefreshCommand { get; }
     public ICommand ClearHotkeyCommand { get; }
     public ICommand ImportCommand { get; }
@@ -299,6 +305,9 @@ public sealed class PhraseListViewModel : ViewModelBase
     private void DeleteSelected()
     {
         if (SelectedPhrase is null) return;
+        // Ask the view to confirm before deleting.
+        if (ConfirmDelete is not null && !ConfirmDelete(SelectedPhrase.Name))
+            return;
         var id = SelectedPhrase.Id;
         // If this phrase was in the snapshot, track it so rollback can regenerate its cache
         if (_snapshot.Any(p => p.Id == id))

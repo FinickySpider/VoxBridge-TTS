@@ -34,6 +34,15 @@ public partial class SettingsWindow : Window
         vm.Saved += (_, _) => _committed = true;
         vm.Phrases.ImportCompleted += OnImportCompleted;
 
+        // Show a Yes/No confirmation before a phrase is deleted.
+        vm.Phrases.ConfirmDelete = name =>
+            MessageBox.Show(
+                $"Delete the phrase \u201c{name}\u201d?\n\nThis cannot be undone.",
+                "Confirm Delete",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question,
+                MessageBoxResult.No) == MessageBoxResult.Yes;
+
         // PasswordBox bridge: PasswordBox cannot bind to a VM property, so code-behind
         // pushes the value in and also listens for the VM's request to clear the box.
         vm.Voice.RequestPasswordBoxClear += (_, _) =>

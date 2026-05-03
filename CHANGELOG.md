@@ -6,6 +6,22 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.13.3] -- 2026-05-03
+
+### Bug Fixes
+
+- **Resend button active while audio was already playing**: Clicking "↩ Resend" while audio was playing would incorrectly fill the input and attempt to send — now Resend is disabled under the exact same conditions as the Send button: while audio is playing (`_playbackState.IsPlaying || _audioRouter.IsPlaying`) or while TTS is generating (`IsSending`). Added `CanResend` property to `OverlayViewModel` which is notified in `NotifyCanSubmitChanged()` and at all three `HasRecentMessage` update sites. The button now visually dims to `#45475A` (matching the blocked-send look) when disabled, and the hover highlight only fires when enabled.
+
+- **Phrases tab — column resize could shrink resizable columns to zero**: Added `MinWidth="40"` to the shared `GridView.ColumnHeaderContainerStyle` so Name & Text, Category, and Hotkey columns cannot be collapsed by dragging the resize grip all the way left.
+
+- **Phrases tab — Pin and Star columns could be resized (gripper present)**: Both the 📌 Pin (col 0) and ★ Favorite (col 1) columns now have a per-column `GridViewColumn.HeaderContainerStyle` that omits `PART_HeaderGripper` entirely and locks the column to exactly 28 px (`MinWidth="28"` / `MaxWidth="28"`). These columns cannot be resized.
+
+- **Phrases tab — no confirmation before deleting a phrase**: Right-clicking a phrase and choosing Delete now shows a "Delete the phrase "…"? — This cannot be undone." Yes/No modal before any data is removed. Implemented via a `Func<string, bool>? ConfirmDelete` callback on `PhraseListViewModel`, set by `SettingsWindow` on construction; the ViewModel stays testable without taking a UI dependency.
+
+---
+
+---
 ## [v0.13.2] -- 2026-05-03
 
 ### Bug Fixes

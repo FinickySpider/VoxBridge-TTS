@@ -1698,6 +1698,8 @@
                                         <Setter Property="BorderThickness" Value="0,0,0,1"/>
                                         <Setter Property="Padding" Value="4,6"/>
                                         <Setter Property="MinHeight" Value="34"/>
+                                        <!-- Prevent resizable columns from being shrunk to zero/negative -->
+                                        <Setter Property="MinWidth" Value="40"/>
                                         <Setter Property="Cursor" Value="Hand"/>
                                         <Setter Property="Template">
                                             <Setter.Value>
@@ -1790,8 +1792,47 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
 
-                                <!-- col 1: ★ Favorite — sortable -->
+                                <!-- col 1: ★ Favorite — width-locked, no resize gripper -->
                                 <GridViewColumn Header="&#x2605;" Width="28">
+                                    <!-- Override shared style: remove gripper and lock width so this column cannot be resized -->
+                                    <GridViewColumn.HeaderContainerStyle>
+                                        <Style TargetType="GridViewColumnHeader">
+                                            <Setter Property="MinWidth" Value="28"/>
+                                            <Setter Property="MaxWidth" Value="28"/>
+                                            <Setter Property="Cursor" Value="Hand"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="GridViewColumnHeader">
+                                                        <Border x:Name="Bd"
+                                                                Background="#1E1E2E"
+                                                                BorderBrush="#45475A"
+                                                                BorderThickness="0,0,0,1"
+                                                                MinHeight="34"
+                                                                Padding="4,6">
+                                                            <ContentPresenter HorizontalAlignment="Left"
+                                                                              VerticalAlignment="Center"
+                                                                              TextElement.Foreground="#E0E8FF"
+                                                                              TextElement.FontSize="13"
+                                                                              TextElement.FontWeight="SemiBold"/>
+                                                        </Border>
+                                                        <!-- No PART_HeaderGripper: Star column is fixed-width -->
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="#2B2B3D"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="#3B3B55"/>
+                                                            </Trigger>
+                                                            <Trigger Property="Role" Value="Padding">
+                                                                <Setter Property="Cursor" Value="Arrow"/>
+                                                                <Setter TargetName="Bd" Property="Background" Value="#1E1E2E"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </GridViewColumn.HeaderContainerStyle>
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <Button Content="&#x2605;"
