@@ -4,6 +4,17 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [v0.9.41] — 2026-05-02
+
+### Bug Fixes
+
+- **Stop + Send no longer freezes the UI** — `WasapiOut.Stop()` blocks the calling thread (it joins the NAudio playback thread internally). Previously `ForceStopAndSend` called `StopAll()` on the UI dispatcher, freezing the window. It now runs `StopAll()` inside `Task.Run`, keeping the UI thread free.
+- **Stop + Send no longer breaks subsequent sends** — `DualOutputAudioRouter` now uses a per-session `CancellationTokenSource`. When `StopAll()` cancels it, in-flight `PlayOnDeviceAsync` tasks throw `OperationCanceledException`, causing `PlayAsync` to skip `PlaybackFinished.Invoke()`. Previously the forced-stop triggered `PlaybackFinished`, which called `_playbackState.Reset()` *after* `ForceStopAndSend` had already set `IsPlaying = true`, permanently locking `CanSubmit = false` and breaking all further audio.
+- **`CanSubmit` now always recovers after a `PlayAsync` exception** — Added `_playbackState.Reset()` to the catch block in `FireAndForgetSend`'s background task so a device crash or driver error can never leave the Send button permanently disabled.
+- **Test Voice button now uses the current pitch slider value** — Previously the Test Voice playback always used the default pitch (1.0×) regardless of where the slider was set.
+
+---
+
 ## [v0.9.4] — 2026-05-03
 
 ### New Features

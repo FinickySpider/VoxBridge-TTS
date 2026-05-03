@@ -210,7 +210,8 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         var result = await _tts.SynthesizeAsync(new TtsRequest
         {
             Text = "Hello, this is a voice test.",
-            VoiceId = voiceId
+            VoiceId = voiceId,
+            Pitch = Math.Clamp(_globalPitch, 0.5f, 2.0f)
         });
 
         if (!result.Success || result.AudioData is null)
