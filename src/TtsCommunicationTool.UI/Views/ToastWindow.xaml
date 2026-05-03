@@ -7,42 +7,69 @@
         Topmost="True"
         ShowInTaskbar="False"
         SizeToContent="Height"
-        Width="340"
+        Width="380"
         ResizeMode="NoResize"
         Focusable="False"
         ShowActivated="False">
 
+    <!-- Outer margin creates shadow gutter -->
     <Border x:Name="ToastBorder"
-            Background="#E6313244"
             CornerRadius="10"
-            BorderBrush="#45475A"
+            BorderBrush="#55585E"
             BorderThickness="1"
             Margin="8"
-            Padding="16,12">
+            ClipToBounds="True">
         <Border.Effect>
-            <DropShadowEffect Color="Black" BlurRadius="12" Opacity="0.4" ShadowDepth="2"/>
+            <DropShadowEffect Color="Black" BlurRadius="18" Opacity="0.55" ShadowDepth="3"/>
         </Border.Effect>
 
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
+                <!-- Colored accent strip -->
+                <ColumnDefinition Width="5"/>
+                <!-- Content -->
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Icon -->
-            <TextBlock x:Name="IconBlock"
-                       Grid.Column="0"
-                       FontSize="18"
-                       VerticalAlignment="Top"
-                       Margin="0,0,10,0"/>
+            <!-- Left accent bar -->
+            <Border x:Name="AccentBar" Grid.Column="0" Background="#89B4FA"/>
 
-            <!-- Message -->
-            <TextBlock x:Name="MessageBlock"
-                       Grid.Column="1"
-                       Foreground="#CDD6F4"
-                       FontSize="13"
-                       TextWrapping="Wrap"
-                       VerticalAlignment="Center"/>
+            <!-- Content panel -->
+            <Border x:Name="ContentPanel"
+                    Grid.Column="1"
+                    Background="#E8202030"
+                    Padding="14,14,16,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Icon -->
+                    <TextBlock x:Name="IconBlock"
+                               Grid.Column="0"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Top"
+                               Margin="0,1,11,0"/>
+
+                    <!-- Message -->
+                    <StackPanel Grid.Column="1">
+                        <TextBlock x:Name="TitleBlock"
+                                   Foreground="#FFFFFF"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,3"
+                                   Visibility="Collapsed"/>
+                        <TextBlock x:Name="MessageBlock"
+                                   Foreground="#CDD6F4"
+                                   FontSize="13"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center"
+                                   LineHeight="18"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
         </Grid>
     </Border>
 </Window>

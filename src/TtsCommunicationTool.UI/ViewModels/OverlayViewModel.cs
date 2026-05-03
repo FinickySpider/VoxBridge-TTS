@@ -34,6 +34,10 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
     // Stored so Dispose() can cleanly unsubscribe
     private readonly EventHandler _playbackFinishedHandler;
 
+    // ── Status hold: prevents countdown ticks from overwriting transient warning messages ──
+    // Set to UtcNow + 1.5s whenever a Warning/Error status is shown mid-playback.
+    private DateTime _statusBlockedUntil = DateTime.MinValue;
+
     /// <summary>Raised when the user attempts a blocked submission. Triggers the window shake animation.</summary>
     public event Action? ShakeRequested;
 
@@ -525,6 +529,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
             _countdownTimer?.Stop();
             return;
         }
+        // Hold off updating if a transient warning/error message is still being shown.
+        if (DateTime.UtcNow < _statusBlockedUntil)
+            return;
         StatusText = BuildSpeakingStatus();
     }
 
@@ -574,6 +581,13 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
     {
         StatusText = text;
         StatusSeverity = severity;
+        // If audio is playing and we just set a transient warning/error (e.g. "blocked send"),
+        // block the countdown ticker from overwriting it for 1.5 seconds so the user can read it.
+        if (_speakingStatusActive && severity is StatusSeverity.Warning or StatusSeverity.Error
+            && !text.StartsWith("Speaking", StringComparison.Ordinal))
+        {
+            _statusBlockedUntil = DateTime.UtcNow.AddSeconds(1.5);
+        }
     }
 
     private void NotifyCanSubmitChanged()

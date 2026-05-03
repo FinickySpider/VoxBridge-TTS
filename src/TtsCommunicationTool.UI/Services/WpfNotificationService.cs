@@ -7,6 +7,7 @@ namespace TtsCommunicationTool.UI.Services;
 public sealed class WpfNotificationService : INotificationService
 {
     public void ShowInfo(string message) => ShowToast(message, ToastWindow.ToastLevel.Info);
+    public void ShowSuccess(string message) => ShowToast(message, ToastWindow.ToastLevel.Success);
     public void ShowWarning(string message) => ShowToast(message, ToastWindow.ToastLevel.Warning);
     public void ShowError(string message) => ShowToast(message, ToastWindow.ToastLevel.Error);
 

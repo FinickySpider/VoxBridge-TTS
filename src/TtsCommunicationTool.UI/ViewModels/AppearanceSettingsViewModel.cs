@@ -1,3 +1,4 @@
+using System.Windows.Media;
 using TtsCommunicationTool.Core.Models;
 
 namespace TtsCommunicationTool.UI.ViewModels;
@@ -7,6 +8,8 @@ public sealed class AppearanceSettingsViewModel : ViewModelBase
     private double _overlayWidth;
     private double _overlayHeight;
     private double _fontSize;
+    private double _overlayOpacity = 0.93;
+    private string _overlayFontFamily = "Segoe UI";
 
     public double OverlayWidth
     {
@@ -26,11 +29,34 @@ public sealed class AppearanceSettingsViewModel : ViewModelBase
         set => SetField(ref _fontSize, value);
     }
 
+    /// <summary>Background opacity of the overlay (clamped 0.2 – 0.95).</summary>
+    public double OverlayOpacity
+    {
+        get => _overlayOpacity;
+        set => SetField(ref _overlayOpacity, Math.Clamp(value, 0.20, 0.95));
+    }
+
+    /// <summary>Font family name for the overlay text input.</summary>
+    public string OverlayFontFamily
+    {
+        get => _overlayFontFamily;
+        set => SetField(ref _overlayFontFamily, value);
+    }
+
+    /// <summary>All installed font families sorted alphabetically (for the settings dropdown).</summary>
+    public IReadOnlyList<string> InstalledFonts { get; } =
+        Fonts.SystemFontFamilies
+             .Select(f => f.Source)
+             .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+             .ToList();
+
     public void LoadFrom(OverlaySettings s)
     {
         OverlayWidth = s.Width;
         OverlayHeight = s.Height;
         FontSize = s.FontSize;
+        OverlayOpacity = s.OverlayOpacity;
+        OverlayFontFamily = s.OverlayFontFamily;
     }
 
     public void ApplyTo(OverlaySettings s)
@@ -38,5 +64,7 @@ public sealed class AppearanceSettingsViewModel : ViewModelBase
         s.Width = OverlayWidth;
         s.Height = OverlayHeight;
         s.FontSize = FontSize;
+        s.OverlayOpacity = Math.Clamp(OverlayOpacity, 0.20, 0.95);
+        s.OverlayFontFamily = OverlayFontFamily;
     }
 }

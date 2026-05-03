@@ -70,6 +70,8 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
             _overlayWindow.Width = overlaySettings.Width;
             _overlayWindow.Height = overlaySettings.Height;
             _overlayWindow.SetFontSize(overlaySettings.FontSize);
+            _overlayWindow.SetOverlayOpacity(overlaySettings.OverlayOpacity);
+            _overlayWindow.SetFontFamily(overlaySettings.OverlayFontFamily);
 
             // Restore last position if saved and on-screen; otherwise center
             if (overlaySettings.Left.HasValue && overlaySettings.Top.HasValue &&

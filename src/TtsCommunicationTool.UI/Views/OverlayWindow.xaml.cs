@@ -106,6 +106,28 @@ public partial class OverlayWindow : Window
             InputBox.FontSize = fontSize;
     }
 
+    /// <summary>
+    /// Apply background opacity from appearance settings (clamped 0.20 – 0.95).
+    /// </summary>
+    public void SetOverlayOpacity(double opacity)
+    {
+        opacity = Math.Clamp(opacity, 0.20, 0.95);
+        if (OverlayBorder.Background is SolidColorBrush brush)
+        {
+            // Create a new brush so WPF detects the change
+            OverlayBorder.Background = new SolidColorBrush(brush.Color) { Opacity = opacity };
+        }
+    }
+
+    /// <summary>
+    /// Apply font family from appearance settings.
+    /// </summary>
+    public void SetFontFamily(string fontFamily)
+    {
+        if (!string.IsNullOrWhiteSpace(fontFamily))
+            InputBox.FontFamily = new FontFamily(fontFamily);
+    }
+
     private void OverlayWindow_Activated(object? sender, EventArgs e)
     {
         // Always grab keyboard focus when the overlay gets activated

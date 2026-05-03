@@ -21,7 +21,8 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
     </Window.Resources>
 
-    <Border CornerRadius="12"
+    <Border x:Name="OverlayBorder"
+            CornerRadius="12"
             BorderBrush="#45475A"
             BorderThickness="1"
             Margin="8">

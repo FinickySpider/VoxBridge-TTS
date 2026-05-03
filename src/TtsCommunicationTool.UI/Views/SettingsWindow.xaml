@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:TtsCommunicationTool.UI.ViewModels"
         xmlns:conv="clr-namespace:TtsCommunicationTool.UI.Converters"
-        Title="Settings — The Traveling Star Swirlotl v0.9.2"
+        Title="Settings — The Traveling Star Swirlotl v0.10.0"
         Width="680" Height="540"
         WindowStartupLocation="CenterScreen"
         Background="#1E1E2E"
@@ -911,6 +911,61 @@
                                      ToolTip="Font size (points) of the input field inside the overlay window."/>
                         </Grid>
 
+                        <!-- Overlay transparency slider (0.20 = see-through, 0.95 = opaque) -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="44"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Transparency:" Style="{StaticResource FieldLabel}"
+                                       ToolTip="Background opacity of the overlay window."/>
+                            <Slider Grid.Column="1"
+                                    Minimum="0.20" Maximum="0.95"
+                                    Value="{Binding Appearance.OverlayOpacity, UpdateSourceTrigger=PropertyChanged}"
+                                    SmallChange="0.05" LargeChange="0.1"
+                                    TickFrequency="0.05"
+                                    IsSnapToTickEnabled="True"
+                                    VerticalAlignment="Center"
+                                    ToolTip="Background opacity of the overlay."/>
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding Appearance.OverlayOpacity, StringFormat={}{0:P0}}"
+                                       Foreground="#A6ADC8" FontSize="11"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"
+                                       Margin="4,0,0,0"/>
+                        </Grid>
+
+                        <!-- Overlay font family dropdown -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Font Type:" Style="{StaticResource FieldLabel}"
+                                       ToolTip="Font used in the overlay text input."/>
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding Appearance.InstalledFonts}"
+                                      SelectedItem="{Binding Appearance.OverlayFontFamily, UpdateSourceTrigger=PropertyChanged}"
+                                      Background="#313145"
+                                      Foreground="#CDD6F4"
+                                      BorderBrush="#45475A"
+                                      MaxDropDownHeight="240"
+                                      ToolTip="Font family used in the overlay text input field.">
+                                <ComboBox.ItemContainerStyle>
+                                    <Style TargetType="ComboBoxItem">
+                                        <Setter Property="Background" Value="#313145"/>
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsHighlighted" Value="True">
+                                                <Setter Property="Background" Value="#45475A"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ComboBox.ItemContainerStyle>
+                            </ComboBox>
+                        </Grid>
+
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                             <Button Content="Reset Overlay Position"
                                     Command="{Binding ResetOverlayPositionCommand}"
@@ -930,6 +985,7 @@
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <TextBlock Text="Text Replacements" Style="{StaticResource SectionHeader}" Margin="8,0"/>
@@ -942,7 +998,8 @@
                               Margin="8,8,8,8"/>
 
                     <!-- Rules DataGrid -->
-                    <DataGrid Grid.Row="2"
+                    <DataGrid x:Name="ReplacementsGrid"
+                              Grid.Row="2"
                               ItemsSource="{Binding TextReplacements.Rules}"
                               SelectedItem="{Binding TextReplacements.SelectedRule}"
                               AutoGenerateColumns="False"
@@ -961,7 +1018,11 @@
                               AlternatingRowBackground="#313145"
                               HorizontalGridLinesBrush="#45475A"
                               VerticalGridLinesBrush="#45475A"
-                              Margin="8,0">
+                              AllowDrop="True"
+                              Margin="8,0"
+                              PreviewMouseLeftButtonDown="ReplacementsGrid_PreviewMouseLeftButtonDown"
+                              PreviewMouseMove="ReplacementsGrid_PreviewMouseMove"
+                              Drop="ReplacementsGrid_Drop">
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="Background" Value="#1E1E2E"/>
@@ -993,6 +1054,11 @@
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter Property="Background" Value="#3B3B55"/>
                                     </Trigger>
+                                    <!-- New/empty rows get a pale indicator so users know they can click in -->
+                                    <DataTrigger Binding="{Binding TriggerText}" Value="">
+                                        <Setter Property="Background" Value="#2E2E50"/>
+                                        <Setter Property="FontStyle" Value="Italic"/>
+                                    </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </DataGrid.RowStyle>
@@ -1057,7 +1123,31 @@
                     <TextBlock Grid.Row="4" Text="{Binding TextReplacements.StatusMessage}"
                                Foreground="#A6E3A1" FontSize="12"
                                Visibility="{Binding TextReplacements.StatusMessage, Converter={StaticResource NonEmptyToVisibleConverter}}"
-                               Margin="8,2,8,4" TextWrapping="Wrap"/>
+                               Margin="8,2,8,2" TextWrapping="Wrap"/>
+
+                    <!-- Order instructions -->
+                    <Border Grid.Row="5"
+                            Background="#1A1A2E"
+                            BorderBrush="#3A3A5C"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Margin="8,4,8,8"
+                            Padding="12,10">
+                        <StackPanel>
+                            <TextBlock Foreground="#89B4FA" FontSize="12" FontWeight="SemiBold"
+                                       Text="How replacements work" Margin="0,0,0,5"/>
+                            <TextBlock Foreground="#A6ADC8" FontSize="12" TextWrapping="Wrap" LineHeight="18">
+                                <Run>Rules apply </Run><Run FontWeight="SemiBold" Foreground="#CDD6F4">top-to-bottom</Run><Run>. The </Run><Run FontWeight="SemiBold" Foreground="#CDD6F4">first matching rule wins</Run><Run> &#x2014; processing stops at that rule for each matched position.</Run>
+                            </TextBlock>
+                            <TextBlock Foreground="#6C7086" FontSize="11" TextWrapping="Wrap" Margin="0,7,0,0" LineHeight="17">
+                                <Run FontWeight="SemiBold" Foreground="#7F849C">Example A &#x2014; correct order:</Run><Run>  &#x201C;ty&#x201D; &#x2192; &#x201C;thank you&#x201D; is above &#x201C;t&#x201D; &#x2192; &#x201C;thanks&#x201D;.</Run><LineBreak/>
+                                <Run>Typing &#x201C;ty&#x201D; produces &#x201C;thank you&#x201D; &#x2014; the full &#x201C;ty&#x201D; is matched by the top rule first.</Run><LineBreak/><LineBreak/>
+                                <Run FontWeight="SemiBold" Foreground="#7F849C">Example B &#x2014; wrong order:</Run><Run>  &#x201C;t&#x201D; &#x2192; &#x201C;thanks&#x201D; is above &#x201C;ty&#x201D; &#x2192; &#x201C;thank you&#x201D;.</Run><LineBreak/>
+                                <Run>Typing &#x201C;ty&#x201D; may produce &#x201C;thanksy&#x201D; &#x2014; &#x201C;t&#x201D; matches first, leaving &#x201C;y&#x201D; behind. Move broader rules down.</Run><LineBreak/><LineBreak/>
+                                <Run>Use &#x25B2; Up / &#x25BC; Down or drag rows to reorder.</Run>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </TabItem>            <!-- Phrases Tab -->
             <TabItem Header="Phrases">
@@ -1176,16 +1266,39 @@
                                     <Setter.Value>
                                         <ContextMenu Background="#2B2B3D" BorderBrush="#45475A" BorderThickness="1">
                                             <ContextMenu.Resources>
+                                                <!-- Full ControlTemplate required — WPF defaults ignore Background without it -->
                                                 <Style TargetType="MenuItem">
                                                     <Setter Property="Background" Value="#2B2B3D"/>
                                                     <Setter Property="Foreground" Value="#CDD6F4"/>
                                                     <Setter Property="FontSize" Value="13"/>
-                                                    <Style.Triggers>
-                                                        <Trigger Property="IsHighlighted" Value="True">
-                                                            <Setter Property="Background" Value="#45475A"/>
-                                                            <Setter Property="Foreground" Value="#CDD6F4"/>
-                                                        </Trigger>
-                                                    </Style.Triggers>
+                                                    <Setter Property="Padding" Value="22,7,18,7"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="MenuItem">
+                                                                <Border x:Name="Bd"
+                                                                        Background="{TemplateBinding Background}"
+                                                                        Padding="{TemplateBinding Padding}">
+                                                                    <ContentPresenter ContentSource="Header"
+                                                                                      TextElement.Foreground="{TemplateBinding Foreground}"
+                                                                                      TextElement.FontSize="{TemplateBinding FontSize}"
+                                                                                      RecognizesAccessKey="True"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsHighlighted" Value="True">
+                                                                        <Setter TargetName="Bd" Property="Background" Value="#45475A"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsEnabled" Value="False">
+                                                                        <Setter Property="Foreground" Value="#6C7086"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                                <Style TargetType="Separator">
+                                                    <Setter Property="Background" Value="#45475A"/>
+                                                    <Setter Property="Height" Value="1"/>
+                                                    <Setter Property="Margin" Value="6,3"/>
                                                 </Style>
                                             </ContextMenu.Resources>
                                             <!-- PlacementTarget = the ListBoxItem; Tag on it = window DataContext; DataContext on it = PhraseItem -->

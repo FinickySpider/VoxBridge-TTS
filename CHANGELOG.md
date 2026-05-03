@@ -4,6 +4,29 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+
+## [v0.10.0] -- 2026-05-03
+
+### Features
+
+- **Overlay transparency slider** — New slider in Appearance settings (0.20–0.95) controls the background opacity of the overlay window. Default is 0.93 (matching prior behavior). Applies next time the overlay opens.
+- **Overlay font type selector** — New dropdown in Appearance settings populated with all installed system fonts. Changes the font used in the overlay text input. Default is Segoe UI.
+- **Drag to reorder text replacements** — Rows in the Replacements DataGrid can now be dragged to new positions without needing the ▲/▼ buttons. Standard WPF drag threshold prevents accidental drags during normal clicks.
+- **Toast notification redesign** — Toasts are now taller, wider (380px), and visually distinct per type via a colored left-accent bar and matching tinted background: blue (Info), green (Success), orange (Warning), red (Error). Warning/Error types now show a bold type label above the message body. New `Success` toast type added.
+- **`ShowSuccess()` notification method** — `INotificationService` gains a `ShowSuccess()` method for confirming successful operations.
+
+### Bug Fixes
+
+- **Context menu dark theme fix** — Right-click menus in the Phrases list now show proper dark styling. WPF's default MenuItem ControlTemplate was ignoring the Background setter; a full ControlTemplate override is now applied in ContextMenu.Resources.
+
+### Improvements
+
+- **Status bar warning hold (1.5s)** — "Blocked send" warning messages (e.g. "Wait until speaking finishes") are now held for 1.5 seconds before the countdown ticker resumes, so the user can actually read them instead of them being overwritten in 50ms.
+- **Empty-row highlight in replacements** — Newly added blank rows in the Text Replacements list show a lighter purple-tinted background and italic style to distinguish them from populated rows.
+- **Replacement order instructions panel** — A styled info box at the bottom of the Replacements tab explains top-to-bottom rule matching with two worked examples (correct vs. ambiguous ordering).
+- **Settings window title version** — Title bar now shows v0.10.0 (was hardcoded v0.9.2).
+
+---
 ## [v0.9.6] — 2026-05-08
 
 ### Features

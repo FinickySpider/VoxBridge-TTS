@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using TtsCommunicationTool.Core.Models;
 using TtsCommunicationTool.UI.ViewModels;
@@ -355,5 +356,66 @@ public partial class SettingsWindow : Window
             Win   = false, // Win key not supported — unreliable with RegisterHotKey
             Key   = key.ToString()
         };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Replacements DataGrid — drag-to-reorder
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private TextReplacementRuleViewModel? _draggedRule;
+    private Point _dragStartPoint;
+
+    private void ReplacementsGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _dragStartPoint = e.GetPosition(null);
+        var row = FindVisualParent<DataGridRow>(e.OriginalSource as DependencyObject);
+        _draggedRule = row?.DataContext as TextReplacementRuleViewModel;
+    }
+
+    private void ReplacementsGrid_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || _draggedRule is null) return;
+
+        var pos  = e.GetPosition(null);
+        var diff = pos - _dragStartPoint;
+
+        // Only start drag after the standard drag distance threshold
+        if (Math.Abs(diff.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(diff.Y) < SystemParameters.MinimumVerticalDragDistance)
+            return;
+
+        var data = new DataObject(typeof(TextReplacementRuleViewModel), _draggedRule);
+        DragDrop.DoDragDrop((DataGrid)sender, data, DragDropEffects.Move);
+    }
+
+    private void ReplacementsGrid_Drop(object sender, DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(typeof(TextReplacementRuleViewModel))) return;
+
+        var dragged = (TextReplacementRuleViewModel)e.Data.GetData(typeof(TextReplacementRuleViewModel));
+        var target  = FindVisualParent<DataGridRow>(e.OriginalSource as DependencyObject)?.DataContext
+                      as TextReplacementRuleViewModel;
+
+        if (target is not null && !ReferenceEquals(dragged, target) &&
+            DataContext is SettingsViewModel svm)
+        {
+            var rules  = svm.TextReplacements.Rules;
+            var srcIdx = rules.IndexOf(dragged);
+            var tgtIdx = rules.IndexOf(target);
+            if (srcIdx >= 0 && tgtIdx >= 0)
+                rules.Move(srcIdx, tgtIdx);
+        }
+
+        _draggedRule = null;
+    }
+
+    private static T? FindVisualParent<T>(DependencyObject? child) where T : DependencyObject
+    {
+        while (child is not null)
+        {
+            if (child is T match) return match;
+            child = System.Windows.Media.VisualTreeHelper.GetParent(child);
+        }
+        return null;
     }
 }
