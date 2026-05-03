@@ -4,6 +4,46 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [v0.9.3] — 2026-05-02
+
+### New Features
+
+#### Structured Diagnostic Logging
+- **JSONL session logging** — Optional structured diagnostic logging to disk as JSONL (one file per app session, timestamped filename: `session_YYYY-MM-DD_HH-mm-ss_{id}.jsonl`). Files stored at `%AppData%\TtsCommunicationTool\logs\`.
+- **Always-on crash logging** — Unhandled exceptions and fatal errors always logged to `crash.log` regardless of settings. Ensures critical failures are never silent.
+- **Privacy-safe by default** — Text content logged as SHA-256 hash (16-char hex prefix) instead of raw text. Raw text only logged when explicitly enabled in settings with a privacy warning.
+- **Diagnostic settings** — New "Diagnostics / Debug Logging" section at bottom of General settings tab:
+  - **Enable diagnostic logging** — Master toggle for session JSONL logs (default: off)
+  - **Verbose logging** — Include DEBUG-level events (default: off)
+  - **Trace logging** — Include TRACE-level events, extremely chatty (default: off)
+  - **Include request correlation IDs** — Attach request IDs to TTS pipeline events for tracing (default: off)
+  - **Log raw spoken text (unsafe)** — Store full spoken text in logs; shows strong privacy warning (default: off)
+- **Log folder access** — "Open Logs Folder" button opens the logs directory in File Explorer
+- **Cleanup utility** — "Delete Old Logs" button with confirmation dialog; preserves current session log while deleting older session files
+
+#### Instrumentation
+Structured log events added to:
+- **App lifecycle**: `app_startup`, `app_shutdown`, `app_unhandled_exception`
+- **TTS pipeline**: `synthesis_requested`, `synthesis_started`, `synthesis_completed`, `synthesis_failed` (Kokoro + ElevenLabs)
+- **API calls**: `api_request_started`, `api_request_completed`, `api_request_failed`, `api_rate_limited` (ElevenLabs)
+- **Audio playback**: `playback_started`, `playback_stopped`, `playback_failed`
+- **Phrase cache**: `cache_hit`, `cache_miss`, `cache_write`
+- **Import/Export**: `import_started`, `import_completed`, `import_failed`, `export_started`, `export_completed`, `export_failed`
+- **UI interactions**: `overlay_submit_blocked` (blocked send, with reason)
+- **Settings**: `settings_loaded`, `settings_saved`
+
+#### Log Schema
+Each JSONL entry includes:
+- `ts` — RFC 3339 UTC timestamp
+- `level` — `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL` (uppercase)
+- `category` — `app`, `settings`, `tts`, `audio`, `cache`, `api`, `file`, `import`, `export`, `ui`, `hotkey`
+- `event` — snake_case event name
+- `msg` — human-readable message
+- `session_id` — unique session identifier (16-char hex)
+- Optional metadata fields: `request_id`, `voice_id`, `engine`, `provider`, `duration_ms`, `text_length`, `text_hash`, `cache_key`, `error`, `stack`, `source`, `path`, etc.
+
+---
+
 ## [v0.9.2] — 2026-05-02
 
 ### Renamed
@@ -14,7 +54,7 @@ All notable changes to TTS Communication Tool are documented here.
 
 ### Bug Fixes
 - **Win key blocked as hotkey modifier** — The Windows key is no longer accepted as a hotkey modifier. Validation rejects any binding that includes Win, and the capture logic never stores it.
-- **OEM / Shift key naming fixed** — Hotkey capture now runs a scan-code round-trip (`VK → scan → VK`) to normalize the stored key name. This ensures that pressing Shift+`` ` `` and `` ` `` alone both produce the same binding key (`OemTilde`) rather than different OEM names depending on what character the OS emitted.
+- **OEM key numbering fixed** — Hotkey names for OEM keys (e.g., backtick, braces, semicolon) now correctly resolve in the virtual-key lookup table. WPF sometimes produces numbered aliases (e.g., `Oem3` for backtick) instead of descriptive names. Added support for all numbered OEM variants in `KeyToVk`, and improved the display normalizer to show user-friendly names (e.g., `` ` / ~ `` instead of `Oem3`).
 
 ---
 
