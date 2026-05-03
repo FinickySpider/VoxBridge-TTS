@@ -983,7 +983,6 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <TextBlock Text="Text Replacements" Style="{StaticResource SectionHeader}" Margin="8,0"/>
@@ -1151,20 +1150,13 @@
                         <Button Content="▼ Down" Command="{Binding TextReplacements.MoveDownCommand}"
                                 Style="{StaticResource SecondaryButton}"/>
                     </StackPanel>
-                    <!-- Import / Export on their own row so the button bar stays uncluttered -->
-                    <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="8,0,8,2">
-                        <Button Content="Import..." Command="{Binding TextReplacements.ImportCommand}"
-                                Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
-                        <Button Content="Export..." Command="{Binding TextReplacements.ExportCommand}"
-                                Style="{StaticResource SecondaryButton}"/>
-                    </StackPanel>
-                    <TextBlock Grid.Row="5" Text="{Binding TextReplacements.StatusMessage}"
+                    <TextBlock Grid.Row="4" Text="{Binding TextReplacements.StatusMessage}"
                                Foreground="#A6E3A1" FontSize="12"
                                Visibility="{Binding TextReplacements.StatusMessage, Converter={StaticResource NonEmptyToVisibleConverter}}"
                                Margin="8,2,8,2" TextWrapping="Wrap"/>
 
                     <!-- How it works — 2-column reference panel -->
-                    <Border Grid.Row="6"
+                    <Border Grid.Row="5"
                             Background="#1A1A2E"
                             BorderBrush="#3A3A5C"
                             BorderThickness="1"
@@ -1428,6 +1420,8 @@
                               Grid.Row="2"
                               GridViewColumnHeader.Click="PhraseSort_Click"
                               SizeChanged="PhraseListView_SizeChanged"
+                              Loaded="PhraseListView_Loaded"
+                              PreviewMouseDown="PhraseListView_PreviewMouseDown"
                               ItemsSource="{Binding Phrases.FilteredPhrases}"
                               SelectedItem="{Binding Phrases.SelectedPhrase}"
                               Background="#2B2B3D"
@@ -1441,6 +1435,35 @@
                                 <Setter Property="Padding" Value="0"/>
                                 <Setter Property="BorderThickness" Value="0"/>
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <!-- Flat ControlTemplate: replaces WPF's Aero/theme selection chrome (the thick top bar) -->
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListViewItem">
+                                            <Border x:Name="Bd"
+                                                    Background="{TemplateBinding Background}"
+                                                    Padding="{TemplateBinding Padding}"
+                                                    BorderThickness="0"
+                                                    SnapsToDevicePixels="True">
+                                                <GridViewRowPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#45475A"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#3B3B55"/>
+                                                </Trigger>
+                                                <MultiTrigger>
+                                                    <MultiTrigger.Conditions>
+                                                        <Condition Property="IsSelected" Value="True"/>
+                                                        <Condition Property="IsMouseOver" Value="True"/>
+                                                    </MultiTrigger.Conditions>
+                                                    <Setter TargetName="Bd" Property="Background" Value="#4A4E6A"/>
+                                                </MultiTrigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
                                 <!-- Tag tunnels window DataContext into the ContextMenu (lives outside visual tree) -->
                                 <Setter Property="Tag" Value="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext}"/>
                                 <Setter Property="ContextMenu">
@@ -1522,14 +1545,6 @@
                                     </Setter.Value>
                                 </Setter>
                                 <Style.Triggers>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="#45475A"/>
-                                        <Setter Property="Foreground" Value="#CDD6F4"/>
-                                    </Trigger>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#3B3B55"/>
-                                        <Setter Property="Foreground" Value="#CDD6F4"/>
-                                    </Trigger>
                                 </Style.Triggers>
                             </Style>
                         </ListView.ItemContainerStyle>
@@ -1550,6 +1565,7 @@
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="GridViewColumnHeader">
+                                                    <Grid>
                                                     <Border x:Name="Bd"
                                                             Background="{TemplateBinding Background}"
                                                             BorderBrush="{TemplateBinding BorderBrush}"
@@ -1561,6 +1577,19 @@
                                                                           TextElement.FontSize="{TemplateBinding FontSize}"
                                                                           TextElement.FontWeight="{TemplateBinding FontWeight}"/>
                                                     </Border>
+                                                    <!-- PART_HeaderGripper: transparent drag handle on right edge enables column resize -->
+                                                    <Thumb x:Name="PART_HeaderGripper"
+                                                           HorizontalAlignment="Right"
+                                                           Margin="0,0,-9,0"
+                                                           Width="18"
+                                                           Cursor="SizeWE">
+                                                        <Thumb.Template>
+                                                            <ControlTemplate TargetType="Thumb">
+                                                                <Border Background="Transparent"/>
+                                                            </ControlTemplate>
+                                                        </Thumb.Template>
+                                                    </Thumb>
+                                                    </Grid>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
                                                             <Setter TargetName="Bd" Property="Background" Value="#2B2B3D"/>
@@ -1579,7 +1608,52 @@
                                     </Style>
                                 </GridView.ColumnHeaderContainerStyle>
 
-                                <!-- col 0: ★ Favorite — sortable -->
+                                <!-- col 0: 📌 Pin — not sortable (pinned items always float to top via primary sort) -->
+                                <GridViewColumn Header="&#x1F4CC;" Width="28">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="&#x1F4CC;"
+                                                    CommandParameter="{Binding}"
+                                                    Command="{Binding RelativeSource={RelativeSource AncestorType=Window},
+                                                                      Path=DataContext.Phrases.TogglePinnedByItemCommand}"
+                                                    VerticalAlignment="Center"
+                                                    Cursor="Hand"
+                                                    ToolTip="Toggle pin"
+                                                    Focusable="False">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Background" Value="Transparent"/>
+                                                        <Setter Property="BorderThickness" Value="0"/>
+                                                        <Setter Property="Padding" Value="1"/>
+                                                        <Setter Property="FontSize" Value="11"/>
+                                                        <Setter Property="Opacity" Value="0"/>
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                                                                        <ContentPresenter HorizontalAlignment="Center"
+                                                                                          VerticalAlignment="Center"
+                                                                                          TextElement.FontSize="{TemplateBinding FontSize}"/>
+                                                                    </Border>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                                                <Setter Property="Opacity" Value="1"/>
+                                                            </DataTrigger>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="Opacity" Value="0.6"/>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+
+                                <!-- col 1: ★ Favorite — sortable -->
                                 <GridViewColumn Header="&#x2605;" Width="28">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -1624,51 +1698,6 @@
                                                                 </MultiDataTrigger.Conditions>
                                                                 <Setter Property="Foreground" Value="#FFD966"/>
                                                             </MultiDataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Button.Style>
-                                            </Button>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-
-                                <!-- col 1: 📌 Pin — not sortable -->
-                                <GridViewColumn Header="&#x1F4CC;" Width="28">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Content="&#x1F4CC;"
-                                                    CommandParameter="{Binding}"
-                                                    Command="{Binding RelativeSource={RelativeSource AncestorType=Window},
-                                                                      Path=DataContext.Phrases.TogglePinnedByItemCommand}"
-                                                    VerticalAlignment="Center"
-                                                    Cursor="Hand"
-                                                    ToolTip="Toggle pin"
-                                                    Focusable="False">
-                                                <Button.Style>
-                                                    <Style TargetType="Button">
-                                                        <Setter Property="Background" Value="Transparent"/>
-                                                        <Setter Property="BorderThickness" Value="0"/>
-                                                        <Setter Property="Padding" Value="1"/>
-                                                        <Setter Property="FontSize" Value="11"/>
-                                                        <Setter Property="Opacity" Value="0"/>
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate TargetType="Button">
-                                                                    <Border Background="Transparent" Padding="{TemplateBinding Padding}">
-                                                                        <ContentPresenter HorizontalAlignment="Center"
-                                                                                          VerticalAlignment="Center"
-                                                                                          TextElement.FontSize="{TemplateBinding FontSize}"/>
-                                                                    </Border>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsPinned}" Value="True">
-                                                                <Setter Property="Opacity" Value="1"/>
-                                                            </DataTrigger>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter Property="Opacity" Value="0.5"/>
-                                                            </Trigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Button.Style>
@@ -1776,12 +1805,7 @@
                             -->
                         </StackPanel>
                         <!-- Import / Export on their own row so the button bar stays uncluttered -->
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <Button Content="Import..." Command="{Binding Phrases.ImportCommand}"
-                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
-                            <Button Content="Export..." Command="{Binding Phrases.ExportCommand}"
-                                    Style="{StaticResource SecondaryButton}"/>
-                        </StackPanel>
+                        <!-- NOTE: Import and Export are now in the bottom bar (visible on Phrases and Replacements tabs) -->
 
                         <TextBlock Text="{Binding Phrases.PhraseStatusMessage}"
                                    Foreground="#A6E3A1" FontSize="12"
@@ -1828,6 +1852,26 @@
             <DockPanel>
                 <Button Content="Reset Defaults" Command="{Binding ResetDefaultsCommand}"
                         Style="{StaticResource SecondaryButton}" DockPanel.Dock="Left"/>
+                <!-- Import / Export: visible only on Replacements (tab 5) and Phrases (tab 6) -->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" Margin="8,0,0,0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="5">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="6">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <Button Content="Import..." Command="{Binding ImportCommand}"
+                            Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                    <Button Content="Export..." Command="{Binding ExportCommand}"
+                            Style="{StaticResource SecondaryButton}"/>
+                </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <TextBlock Text="{Binding SaveError}"
                                Foreground="#F38BA8" FontSize="12"

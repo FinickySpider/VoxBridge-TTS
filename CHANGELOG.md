@@ -9,6 +9,23 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.11.2] -- 2026-05-03
+
+### Bug Fixes
+
+- **Pinned phrases always at top**: Every sort operation now inserts `IsPinned Descending` as the primary `SortDescription` before the user-selected column. Pinned items appear first regardless of how the list is further sorted. Initial load also applies this order.
+- **ListView selection thick-bar highlight**: Added a full `ControlTemplate` override to `ListViewItem` using `GridViewRowPresenter`. Removes the WPF Aero/theme glass chrome (the horizontal bar at the top) and replaces it with a flat, flat-colour selection.
+- **Deselecting a phrase clears edit fields**: `PhraseListViewModel.SelectedPhrase` setter now clears `EditName`, `EditText`, `EditCategory` when set to `null`. Code-behind `PreviewMouseDown` handler deselects the item when clicking blank space in the list.
+- **ElevenLabs 404 diagnostic**: Error message now includes the `voice_id` sent in the request and attempts to parse the JSON error detail body from ElevenLabs for a more human-readable message (e.g. "voice_not_found (voice_id=\"…\")").
+
+### Improvements
+
+- **Column resize (Phrases)**: Added `PART_HeaderGripper` `Thumb` to the `GridViewColumnHeader` `ControlTemplate`. Drag the right edge of any column header to resize, matching Windows File Explorer behaviour.
+- **Pin and Star columns swapped**: 📌 Pin is now col 0; ★ Favorite is col 1. Column index mapping in `PhraseSort_Click` updated accordingly.
+- **Import / Export moved to bottom bar**: Import and Export buttons are now in the global settings bottom bar, visible only when the Replacements or Phrases tab is active. Removed from inline tab controls.
+
+---
 ## [v0.11.1] -- 2026-05-03
 
 ### Bug Fixes

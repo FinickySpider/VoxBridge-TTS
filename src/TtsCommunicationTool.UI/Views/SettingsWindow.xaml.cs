@@ -522,11 +522,11 @@ public partial class SettingsWindow : Window
         if (header.Role == GridViewColumnHeaderRole.Padding) return;
         if (PhraseListView.View is not GridView gv) return;
 
-        // Identify column by index: 0=★(IsFavorite), 1=📌(skip), 2=Name, 3=Category, 4=Hotkey(skip)
+        // Column layout after swap: 0=📌Pin(skip), 1=★IsFavorite, 2=Name, 3=Category, 4=Hotkey(skip)
         var idx = gv.Columns.IndexOf(header.Column);
         var column = idx switch
         {
-            0 => "IsFavorite",
+            1 => "IsFavorite",
             2 => "Name",
             3 => "Category",
             _ => string.Empty
@@ -541,27 +541,61 @@ public partial class SettingsWindow : Window
             _phrasesSortAscending = true;
         }
 
+        ApplyPhraseSort();
+    }
+
+    /// <summary>
+    /// Applies the current sort to the phrases view, always with IsPinned Descending as
+    /// the primary key so pinned items are locked to the top regardless of secondary sort.
+    /// </summary>
+    private void ApplyPhraseSort()
+    {
         var view = System.Windows.Data.CollectionViewSource.GetDefaultView(PhraseListView.ItemsSource);
         if (view is null) return;
         view.SortDescriptions.Clear();
-        try
+        // Primary: pinned items always float to top.
+        view.SortDescriptions.Add(new System.ComponentModel.SortDescription(
+            "IsPinned", System.ComponentModel.ListSortDirection.Descending));
+        // Secondary: user-chosen column (or default to Name ascending).
+        if (!string.IsNullOrEmpty(_phrasesSortColumn))
         {
-            view.SortDescriptions.Add(new System.ComponentModel.SortDescription(
-                column,
-                _phrasesSortAscending
-                    ? System.ComponentModel.ListSortDirection.Ascending
-                    : System.ComponentModel.ListSortDirection.Descending));
-        }
-        catch
-        {
-            view.SortDescriptions.Clear();
+            try
+            {
+                view.SortDescriptions.Add(new System.ComponentModel.SortDescription(
+                    _phrasesSortColumn,
+                    _phrasesSortAscending
+                        ? System.ComponentModel.ListSortDirection.Ascending
+                        : System.ComponentModel.ListSortDirection.Descending));
+            }
+            catch
+            {
+                view.SortDescriptions.Clear();
+            }
         }
     }
 
     private void UpdatePhraseSortIndicators()
     {
         // Sort indicators are shown by the column header text (↕ suffix).
-        // No action needed — GridViewColumnHeader click is sufficient visual feedback.
+    }
+
+    private void PhraseListView_Loaded(object sender, RoutedEventArgs e)
+    {
+        // Set the initial sort: pinned first, then by Name ascending.
+        _phrasesSortColumn = "Name";
+        _phrasesSortAscending = true;
+        ApplyPhraseSort();
+    }
+
+    private void PhraseListView_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not ListView lv) return;
+        // Walk up from the clicked element; if no ListViewItem is found, clear selection.
+        var hit = VisualTreeHelper.HitTest(lv, e.GetPosition(lv))?.VisualHit as DependencyObject;
+        while (hit is not null && hit is not ListViewItem)
+            hit = VisualTreeHelper.GetParent(hit);
+        if (hit is null)
+            lv.SelectedItem = null;
     }
 
     private void PhraseListView_SizeChanged(object sender, SizeChangedEventArgs e)

@@ -85,7 +85,14 @@ public sealed class ElevenLabsTtsService : ITtsService
                     statusCode == 429 ? "api_rate_limited" : "api_request_failed",
                     $"ElevenLabs API returned {statusCode}",
                     new { provider = "elevenlabs", status = statusCode, error = err, request_id = _log.IncludeRequestIds ? request.RequestId : null });
-                return TtsResult.Fail($"ElevenLabs API returned {statusCode}: {resp.ReasonPhrase}");
+
+                // Parse ElevenLabs JSON error body for a human-readable detail message.
+                var detail = TryParseElevenLabsError(err);
+                var userMsg = detail ?? resp.ReasonPhrase ?? statusCode.ToString();
+                // Include the voice ID in 404s so the user can see what was sent.
+                if (statusCode == 404)
+                    userMsg = $"{userMsg} (voice_id=\"{voiceId}\")";
+                return TtsResult.Fail($"ElevenLabs API returned {statusCode}: {userMsg}");
             }
 
             var mp3Bytes = await resp.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false);
@@ -151,6 +158,29 @@ public sealed class ElevenLabsTtsService : ITtsService
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Attempts to extract a human-readable message from an ElevenLabs JSON error body.
+    /// ElevenLabs error bodies are typically <c>{"detail": {"message": "..."}}  </c> or
+    /// <c>{"detail": "..."}</c>. Returns null if parsing fails.
+    /// </summary>
+    private static string? TryParseElevenLabsError(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("detail", out var detail)) return null;
+            if (detail.ValueKind == JsonValueKind.String)
+                return detail.GetString();
+            if (detail.ValueKind == JsonValueKind.Object &&
+                detail.TryGetProperty("message", out var msg) &&
+                msg.ValueKind == JsonValueKind.String)
+                return msg.GetString();
+            return null;
+        }
+        catch { return null; }
+    }
 
     private static (byte[] pcm, int sampleRate, int channels, int bitsPerSample) DecodeMp3ToPcm(byte[] mp3)
     {

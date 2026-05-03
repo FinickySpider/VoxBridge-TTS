@@ -32,8 +32,29 @@ public sealed class SettingsViewModel : ViewModelBase
     public int SelectedTabIndex
     {
         get => _selectedTabIndex;
-        set => SetField(ref _selectedTabIndex, value);
+        set
+        {
+            if (SetField(ref _selectedTabIndex, value))
+            {
+                OnPropertyChanged(nameof(ShowImportExport));
+                OnPropertyChanged(nameof(ImportCommand));
+                OnPropertyChanged(nameof(ExportCommand));
+            }
+        }
     }
+
+    /// <summary>True when the active tab is Replacements (5) or Phrases (6) — shows Import/Export in the bottom bar.</summary>
+    public bool ShowImportExport => _selectedTabIndex is 5 or 6;
+
+    /// <summary>Delegates to the active tab's ImportCommand (Replacements or Phrases).</summary>
+    public ICommand ImportCommand => _selectedTabIndex == 5
+        ? (ICommand)TextReplacements.ImportCommand
+        : Phrases.ImportCommand;
+
+    /// <summary>Delegates to the active tab's ExportCommand (Replacements or Phrases).</summary>
+    public ICommand ExportCommand => _selectedTabIndex == 5
+        ? (ICommand)TextReplacements.ExportCommand
+        : Phrases.ExportCommand;
 
     public bool IsRegenerating
     {

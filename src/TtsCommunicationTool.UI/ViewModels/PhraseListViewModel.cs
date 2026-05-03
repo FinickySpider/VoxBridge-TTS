@@ -60,12 +60,18 @@ public sealed class PhraseListViewModel : ViewModelBase
             if (SetField(ref _selectedPhrase, value))
             {
                 OnPropertyChanged(nameof(SelectedPhraseHotkeyDisplay));
-                // Populate edit fields when a phrase is selected
+                // Populate edit fields when a phrase is selected; clear them when deselected
                 if (value is not null)
                 {
                     EditName = value.Name;
                     EditText = value.Text;
                     EditCategory = value.Category ?? string.Empty;
+                }
+                else
+                {
+                    EditName = string.Empty;
+                    EditText = string.Empty;
+                    EditCategory = string.Empty;
                 }
             }
         }
