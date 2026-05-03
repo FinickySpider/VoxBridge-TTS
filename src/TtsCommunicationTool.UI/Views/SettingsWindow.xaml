@@ -777,7 +777,7 @@
                                 <TextBlock Text="Voice:" Style="{StaticResource FieldLabel}"
                                            ToolTip="The Kokoro voice model to use for speech generation."/>
                                 <ComboBox Grid.Column="1"
-                                          ItemsSource="{Binding Voice.AvailableVoices}"
+                                          ItemsSource="{Binding Voice.KokoroVoices}"
                                           SelectedValue="{Binding Voice.SelectedVoiceId}"
                                           SelectedValuePath="Id"
                                           DisplayMemberPath="DisplayName"

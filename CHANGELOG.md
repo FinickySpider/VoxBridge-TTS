@@ -4,6 +4,21 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+
+## [v0.13.1] -- 2026-05-03
+
+### Bug Fixes
+
+- **Voice selection forgotten on settings reopen (both engines)**: Root cause was a shared `AvailableVoices` collection used by the Kokoro ComboBox. When switching to ElevenLabs, `LoadVoices()` cleared and refilled `AvailableVoices` with ElevenLabs voices. The hidden Kokoro ComboBox's `TwoWay` binding could not match its saved `SelectedVoiceId` against the ElevenLabs items and pushed `null` back, silently destroying the Kokoro voice selection. On the next settings open the ViewModel read `SelectedVoiceId` as empty/wrong and saved the wrong value.
+- **Fix — separate permanent collections**: Added `KokoroVoices` (a new `ObservableCollection` bound exclusively to the Kokoro ComboBox, populated once from the Kokoro service and never cleared on engine switch). `ElevenLabsVoices` remains the separate ELevenLabs collection. The XAML Kokoro ComboBox now binds to `KokoroVoices` instead of `AvailableVoices`. `AvailableVoices` is now an alias for `KokoroVoices` for backward compatibility.
+- **Fix — removed fragile `_savedKokoroVoiceId` workaround**: The `_savedKokoroVoiceId` field was a sticking-plaster that tried to save/restore the Kokoro voice around engine switches. It is now deleted. `SelectedVoiceId` always reliably holds the Kokoro voice because the Kokoro ComboBox list never changes. `ApplyTo` reads `SelectedVoiceId` directly.
+- **Fix — removed `LoadVoices()`**: All calls to the engine-conditional `LoadVoices()` method (which was the source of the shared-collection corruption) are removed. `PopulateKokoroVoices()` fills Kokoro voices once; `FetchElevenLabsVoicesAsync` fills ElevenLabs voices when needed.
+- **Auto-fetch on settings open**: If ElevenLabs is the active engine at settings open time and the service cache is empty (e.g. fresh process start), a background voice fetch is triggered automatically so the ElevenLabs voice list is never blank with a valid API key.
+- **ElevenLabs voice name sync**: After a fetch, if the saved voice ID is still in the list, the display name is refreshed from the API response in case it was renamed on the ElevenLabs side.
+
+---
+
+---
 ## [v0.13.0] -- 2026-05-03
 
 ### Features

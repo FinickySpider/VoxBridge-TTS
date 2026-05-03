@@ -25,7 +25,6 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
 
     // ── Kokoro ───────────────────────────────────────────────────────────────
     private string _selectedVoiceId = string.Empty;
-    private string _savedKokoroVoiceId = string.Empty;  // remembered when switching to ElevenLabs
     private string _engineName = "Kokoro";
 
     // ── Global pitch ─────────────────────────────────────────────────────────
@@ -61,22 +60,13 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         set
         {
             if (_engine == value) return;
-            // Save Kokoro voice before switching away
-            if (_engine == VoiceEngine.Kokoro && !string.IsNullOrEmpty(_selectedVoiceId))
-                _savedKokoroVoiceId = _selectedVoiceId;
-
             SetField(ref _engine, value);
             OnPropertyChanged(nameof(IsKokoro));
             OnPropertyChanged(nameof(IsElevenLabs));
-            LoadVoices();
 
             // Auto-fetch voices + subscription when switching to ElevenLabs
             if (_engine == VoiceEngine.ElevenLabs && _elevenLabs.HasApiKey())
                 _ = FetchElevenLabsVoicesAsync();
-
-            // Restore Kokoro voice when switching back
-            if (_engine == VoiceEngine.Kokoro && !string.IsNullOrEmpty(_savedKokoroVoiceId))
-                SelectedVoiceId = _savedKokoroVoiceId;
         }
     }
     public bool IsKokoro
@@ -91,7 +81,14 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     }
 
     // ── Kokoro props ─────────────────────────────────────────────────────────
-    public ObservableCollection<VoiceInfo> AvailableVoices { get; } = new();
+    /// <summary>
+    /// Permanent Kokoro voice list — populated once at load, never cleared on engine switch.
+    /// Bound exclusively to the Kokoro voice ComboBox so switching to ElevenLabs never corrupts it.
+    /// </summary>
+    public ObservableCollection<VoiceInfo> KokoroVoices { get; } = new();
+
+    // Kept for any callers that still reference AvailableVoices.
+    public ObservableCollection<VoiceInfo> AvailableVoices => KokoroVoices;
 
     public string SelectedVoiceId
     {
@@ -254,24 +251,19 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         ConfirmClearApiKeyCommand    = new RelayCommand(ConfirmClearApiKey);
         CancelApiKeyCommand          = new RelayCommand(CancelApiKey);
 
-        LoadVoices();
+        PopulateKokoroVoices();
     }
 
-    private void LoadVoices()
+    /// <summary>
+    /// Fills <see cref="KokoroVoices"/> from the Kokoro service.
+    /// Safe to call multiple times; clears and repopulates.
+    /// Never touches ElevenLabsVoices or engine state.
+    /// </summary>
+    private void PopulateKokoroVoices()
     {
-        AvailableVoices.Clear();
-        // Always use the concrete Kokoro service for Kokoro voices — TtsRouter routes
-        // to the active engine which may not be Kokoro if ElevenLabs is saved config.
-        if (_engine == VoiceEngine.ElevenLabs)
-        {
-            foreach (var v in _elevenLabs.GetAvailableVoices())
-                AvailableVoices.Add(v);
-        }
-        else
-        {
-            foreach (var v in _kokoro.GetAvailableVoices())
-                AvailableVoices.Add(v);
-        }
+        KokoroVoices.Clear();
+        foreach (var v in _kokoro.GetAvailableVoices())
+            KokoroVoices.Add(v);
     }
 
     private async Task FetchElevenLabsVoicesAsync()
@@ -285,15 +277,19 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
 
         if (voices.Count > 0)
         {
-            // Restore selected voice if still valid
-            if (ElevenLabsVoices.All(v => v.Id != ElevenLabsSelectedVoiceId) && voices.Count > 0)
+            if (ElevenLabsVoices.All(v => v.Id != ElevenLabsSelectedVoiceId))
             {
+                // Saved voice is no longer in the account's voice list — fall back to first available.
                 ElevenLabsSelectedVoiceId = voices[0].Id;
                 ElevenLabsSelectedVoiceName = voices[0].DisplayName;
             }
-            // Also update AvailableVoices if engine is ElevenLabs
-            if (_engine == VoiceEngine.ElevenLabs)
-                LoadVoices();
+            else
+            {
+                // Saved voice is valid — sync the display name in case it changed on EL side.
+                var matched = voices.FirstOrDefault(v => v.Id == ElevenLabsSelectedVoiceId);
+                if (matched is not null)
+                    ElevenLabsSelectedVoiceName = matched.DisplayName;
+            }
         }
         else
         {
@@ -352,11 +348,13 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
 
     public void LoadFrom(VoiceSettings s)
     {
-        _savedKokoroVoiceId = s.SelectedVoiceId;  // remember the persisted Kokoro voice
-        LoadVoices();
+        // Always populate Kokoro voices from the singleton service (always available offline).
+        PopulateKokoroVoices();
+
+        // Restore Kokoro voice selection directly from config — no in-memory tracking needed.
         SelectedVoiceId = s.SelectedVoiceId;
         EngineName = s.EngineName;
-        _engine = s.Engine;   // set backing field directly to avoid double LoadVoices
+        _engine = s.Engine;   // set backing field directly to avoid triggering Engine setter side-effects
         OnPropertyChanged(nameof(Engine));
         OnPropertyChanged(nameof(IsKokoro));
         OnPropertyChanged(nameof(IsElevenLabs));
@@ -391,7 +389,10 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         foreach (var v in _elevenLabs.GetAvailableVoices())
             ElevenLabsVoices.Add(v);
 
-        LoadVoices();
+        // If ElevenLabs is the active engine and we have an API key, trigger a background
+        // fetch so the voice list is populated even on first open after a fresh process start.
+        if (_engine == VoiceEngine.ElevenLabs && _elevenLabs.HasApiKey() && ElevenLabsVoices.Count == 0)
+            _ = FetchElevenLabsVoicesAsync();
     }
 
     public void ApplyTo(VoiceSettings s)
@@ -399,11 +400,9 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         s.Engine = _engine;
         s.EngineName = _engine.ToString();
         s.GlobalPitch = _globalPitch;
-        // Always persist the Kokoro voice ID — when ElevenLabs is active the ComboBox
-        // binding clears SelectedVoiceId from the VM, so use the saved copy.
-        var kokoroId = _engine == VoiceEngine.ElevenLabs
-            ? (_savedKokoroVoiceId.Length > 0 ? _savedKokoroVoiceId : "af_heart")
-            : (SelectedVoiceId.Length > 0 ? SelectedVoiceId : "af_heart");
+        // SelectedVoiceId always holds the Kokoro voice regardless of which engine is active,
+        // because KokoroVoices is a separate collection that is never cleared on engine switch.
+        var kokoroId = SelectedVoiceId.Length > 0 ? SelectedVoiceId : "af_heart";
         s.SelectedVoiceId = kokoroId;
         s.SelectedVoiceDisplayName = _kokoro.GetAvailableVoices()
             .FirstOrDefault(v => v.Id == kokoroId)?.DisplayName ?? string.Empty;
