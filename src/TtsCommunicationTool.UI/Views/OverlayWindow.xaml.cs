@@ -23,6 +23,15 @@ public partial class OverlayWindow : Window
     {
         InitializeComponent();
         Activated += OverlayWindow_Activated;
+        DataContextChanged += OverlayWindow_DataContextChanged;
+    }
+
+    private void OverlayWindow_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.OldValue is OverlayViewModel oldVm)
+            oldVm.ShakeRequested -= TriggerShake;
+        if (e.NewValue is OverlayViewModel newVm)
+            newVm.ShakeRequested += TriggerShake;
     }
 
     private void OverlayWindow_Loaded(object sender, RoutedEventArgs e)
@@ -35,6 +44,35 @@ public partial class OverlayWindow : Window
             new Duration(TimeSpan.FromMilliseconds(150)))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        });
+    }
+
+    /// <summary>
+    /// Plays a short shake animation to indicate a blocked action.
+    /// Animates window Left position to give a subtle horizontal jitter.
+    /// Safe to call from any thread via Dispatcher.
+    /// </summary>
+    public void TriggerShake()
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            var origin = Left;
+            var sb = new Storyboard();
+            var offsets = new double[] { 10, -10, 7, -7, 4, -4, 0 };
+            var step = TimeSpan.FromMilliseconds(40);
+            for (int i = 0; i < offsets.Length; i++)
+            {
+                var da = new DoubleAnimation
+                {
+                    To = origin + offsets[i],
+                    Duration = step,
+                    BeginTime = step * i
+                };
+                Storyboard.SetTarget(da, this);
+                Storyboard.SetTargetProperty(da, new PropertyPath(Window.LeftProperty));
+                sb.Children.Add(da);
+            }
+            sb.Begin();
         });
     }
 
@@ -83,10 +121,11 @@ public partial class OverlayWindow : Window
 
     private void SendButton_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is OverlayViewModel vm && vm.CanSend)
+        if (DataContext is OverlayViewModel vm)
         {
-            vm.FireAndForgetSend();
-            SafeClose();
+            if (vm.FireAndForgetSend())
+                SafeClose();
+            // If blocked, FireAndForgetSend already triggered shake + status — don't close
         }
     }
 
@@ -97,11 +136,8 @@ public partial class OverlayWindow : Window
             var last = vm.LastMessage;
             if (last is null) return;
             vm.InputText = last;
-            if (vm.CanSend)
-            {
-                vm.FireAndForgetSend();
+            if (vm.FireAndForgetSend())
                 SafeClose();
-            }
         }
     }
 
@@ -112,19 +148,33 @@ public partial class OverlayWindow : Window
     /// </summary>
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        switch (e.Key)
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        switch (key)
         {
-            case Key.Enter when !e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Shift):
-                if (DataContext is OverlayViewModel vm && vm.CanSend)
-                {
-                    vm.FireAndForgetSend();
-                    SafeClose();
-                }
-                e.Handled = true;
+            case Key.Return when e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Shift):
+                // Shift+Enter: let the TextBox insert a newline — don't mark handled
                 break;
 
-            case Key.Enter:
-                // Shift+Enter: let the TextBox insert a newline (don't mark handled)
+            case Key.Return:
+                e.Handled = true;
+                if (DataContext is OverlayViewModel vm)
+                {
+                    // Check override hotkey (e.g. Ctrl+Enter) — stops current audio then sends
+                    if (vm.MatchesOverrideHotkey(key, e.KeyboardDevice.Modifiers))
+                    {
+                        if (vm.ForceStopAndSend())
+                            SafeClose();
+                        // If ForceStopAndSend returns false (no text), shake was already triggered
+                    }
+                    else if (!e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Control))
+                    {
+                        // Plain Enter: send if allowed; shake if blocked
+                        if (vm.FireAndForgetSend())
+                            SafeClose();
+                    }
+                    // Ctrl+Enter not matching override: swallow without action
+                }
                 break;
 
             case Key.Escape:
@@ -174,3 +224,4 @@ public partial class OverlayWindow : Window
         base.OnClosing(e);
     }
 }
+

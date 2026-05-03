@@ -109,7 +109,10 @@ public sealed class KokoroTtsService : ITtsService, IDisposable
                     request_id  = _log.IncludeRequestIds ? request.RequestId : null
                 });
 
-            return TtsResult.Ok(audioBytes, SampleRate, channels: 1, bitsPerSample: 16);
+            // Apply global pitch by adjusting the declared sample rate.
+            // Higher declared rate → audio plays faster/higher-pitched; lower → slower/lower.
+            var pitchSampleRate = (int)(SampleRate * Math.Clamp(request.Pitch, 0.5f, 2.0f));
+            return TtsResult.Ok(audioBytes, pitchSampleRate, channels: 1, bitsPerSample: 16);
         }
         catch (OperationCanceledException)
         {

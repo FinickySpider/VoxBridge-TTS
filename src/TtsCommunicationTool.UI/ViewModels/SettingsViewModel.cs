@@ -12,11 +12,14 @@ public sealed class SettingsViewModel : ViewModelBase
     private readonly ILoggingService _log;
     private readonly IPhraseCacheService _phraseCache;
     private readonly IPhraseService _phraseService;
+    private readonly INotificationService _notifications;
     private int _selectedTabIndex;
     private bool _isRegenerating;
     private string _regenerationStatus = string.Empty;
     private string _saveError = string.Empty;
     private bool _isDirty;
+    private float _savedPitch = 1.0f;          // snapshot of pitch at last load/save
+    private DateTime _lastSaveToast = DateTime.MinValue;  // debounce tracker
 
     public GeneralSettingsViewModel General { get; }
     public HotkeySettingsViewModel Hotkeys { get; }
@@ -73,6 +76,7 @@ public sealed class SettingsViewModel : ViewModelBase
         ILoggingService log,
         IPhraseCacheService phraseCache,
         IPhraseService phraseService,
+        INotificationService notifications,
         GeneralSettingsViewModel general,
         HotkeySettingsViewModel hotkeys,
         AudioSettingsViewModel audio,
@@ -85,6 +89,7 @@ public sealed class SettingsViewModel : ViewModelBase
         _log = log;
         _phraseCache = phraseCache;
         _phraseService = phraseService;
+        _notifications = notifications;
         General = general;
         Hotkeys = hotkeys;
         Audio = audio;
@@ -113,6 +118,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private void LoadFromConfig()
     {
         var cfg = _config.CurrentConfig;
+        _savedPitch = cfg.VoiceSettings.GlobalPitch;  // snapshot for cancel rollback
         General.LoadFrom(cfg.GeneralSettings);
         General.LoadDiagnosticSettings(cfg.DiagnosticLogging);
         Hotkeys.LoadFrom(cfg.HotkeySettings);
@@ -160,6 +166,7 @@ public sealed class SettingsViewModel : ViewModelBase
         _log.LogEvent(DiagnosticLogLevel.Info, "settings", "settings_saved",
             "Settings saved successfully");
         IsDirty = false;
+        _savedPitch = cfg.VoiceSettings.GlobalPitch;  // update snapshot after save
         Phrases.Commit(); // finalize phrase session — takes new snapshot and re-registers hotkeys
 
         // Detect voice change — regenerate all phrase caches with visible progress
@@ -189,6 +196,14 @@ public sealed class SettingsViewModel : ViewModelBase
         }
 
         Saved?.Invoke(this, EventArgs.Empty);
+
+        // Toast notification with debounce (1.5 s between repeated toasts)
+        var now = DateTime.Now;
+        if ((now - _lastSaveToast).TotalSeconds > 1.5)
+        {
+            _lastSaveToast = now;
+            _notifications.ShowInfo("Settings saved.");
+        }
     }
 
     /// <summary>
@@ -197,6 +212,8 @@ public sealed class SettingsViewModel : ViewModelBase
     /// </summary>
     public async Task CancelAsync()
     {
+        // Restore live pitch in memory so the overlay uses the saved value again
+        _config.CurrentConfig.VoiceSettings.GlobalPitch = _savedPitch;
         await Phrases.RollbackAsync();
         LoadFromConfig(); // reload other tabs to last-saved config state
         IsDirty = false;

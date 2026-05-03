@@ -25,6 +25,7 @@ public sealed class StatusSeverityToColorConverter : IValueConverter
     {
         StatusSeverity.Success => new SolidColorBrush(Color.FromRgb(0xA6, 0xE3, 0xA1)), // green
         StatusSeverity.Error   => new SolidColorBrush(Color.FromRgb(0xF3, 0x8B, 0xA8)), // red
+        StatusSeverity.Warning => new SolidColorBrush(Color.FromRgb(0xFA, 0xB3, 0x87)), // orange
         StatusSeverity.Info    => new SolidColorBrush(Color.FromRgb(0x89, 0xB4, 0xFA)), // blue
         _                      => new SolidColorBrush(Color.FromRgb(0x6C, 0x70, 0x86)), // muted
     };

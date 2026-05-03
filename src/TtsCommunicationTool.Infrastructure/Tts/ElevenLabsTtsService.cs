@@ -95,7 +95,8 @@ public sealed class ElevenLabsTtsService : ITtsService
                 new { provider = "elevenlabs", status = 200, duration_ms = (long)sw.Elapsed.TotalMilliseconds, request_id = _log.IncludeRequestIds ? request.RequestId : null });
 
             var (pcm, sampleRate, channels, bps) = DecodeMp3ToPcm(mp3Bytes);
-            return TtsResult.Ok(pcm, sampleRate, channels, bps);
+            var pitchSampleRate = (int)(sampleRate * Math.Clamp(request.Pitch, 0.5f, 2.0f));
+            return TtsResult.Ok(pcm, pitchSampleRate, channels, bps);
         }
         catch (Exception ex)
         {

@@ -72,10 +72,11 @@
                 <!-- Send Button -->
                 <Button Grid.Column="1"
                         Click="SendButton_Click"
+                        IsEnabled="{Binding CanSubmit}"
                         Width="48" Height="36"
                         Margin="10,0,0,0"
                         Cursor="Hand"
-                        ToolTip="Send (Enter)">
+                        ToolTip="Send (Enter) — Ctrl+Enter to stop current audio and send">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="Bg"

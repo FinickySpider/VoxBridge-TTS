@@ -278,6 +278,35 @@ public partial class SettingsWindow : Window
         }
     }
 
+    // ----- Override hotkey (overlay-only Stop+Send) -----
+
+    private void OverrideHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        e.Handled = true;
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        if (key == Key.Escape)
+        {
+            if (DataContext is SettingsViewModel vm) vm.Hotkeys.ClearOverrideHotkey();
+            CancelCapture();
+            Keyboard.ClearFocus();
+            return;
+        }
+
+        var binding = CaptureHotkey(e);
+        if (binding is null) return;
+
+        if (DataContext is SettingsViewModel svm)
+        {
+            svm.Hotkeys.SetOverrideHotkey(binding);
+            if (string.IsNullOrEmpty(svm.Hotkeys.ValidationMessage))
+            {
+                CancelCapture();
+                Keyboard.ClearFocus();
+            }
+        }
+    }
+
     // ----- Phrase hotkey -----
 
     private void PhraseHotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)

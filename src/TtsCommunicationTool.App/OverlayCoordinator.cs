@@ -47,12 +47,8 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
             return;
         }
 
-        // Block overlay while audio is playing or TTS is generating
-        if (_audioRouter.IsPlaying || _playbackState.IsPlaying)
-        {
-            _log.Debug("Overlay blocked — audio is currently playing or generating.");
-            return;
-        }
+        // Note: overlay can open while audio is playing.
+        // Sending is blocked by CanSubmit in OverlayViewModel; only one audio source plays at a time.
 
         _isOpening = true;
         try

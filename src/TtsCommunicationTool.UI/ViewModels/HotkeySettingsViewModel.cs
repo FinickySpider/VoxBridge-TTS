@@ -9,12 +9,14 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
     private string _stopHotkeyDisplay = string.Empty;
     private string _settingsHotkeyDisplay = string.Empty;
     private string _resendHotkeyDisplay = string.Empty;
+    private string _overrideHotkeyDisplay = string.Empty;
     private string _validationMessage = string.Empty;
 
     private HotkeyBinding _overlayHotkey = new();
     private HotkeyBinding _stopHotkey = new();
     private HotkeyBinding _settingsHotkey = new();
     private HotkeyBinding _resendHotkey = new();
+    private HotkeyBinding _overrideHotkey = new();
 
     public string OverlayHotkeyDisplay
     {
@@ -40,6 +42,12 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
         set => SetField(ref _resendHotkeyDisplay, value);
     }
 
+    public string OverrideHotkeyDisplay
+    {
+        get => _overrideHotkeyDisplay;
+        set => SetField(ref _overrideHotkeyDisplay, value);
+    }
+
     public string ValidationMessage
     {
         get => _validationMessage;
@@ -50,6 +58,7 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
     public HotkeyBinding StopHotkey => _stopHotkey;
     public HotkeyBinding SettingsHotkey => _settingsHotkey;
     public HotkeyBinding ResendHotkey => _resendHotkey;
+    public HotkeyBinding OverrideHotkey => _overrideHotkey;
 
     public void ClearOverlayHotkey()
     {
@@ -180,16 +189,42 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
         ValidationMessage = string.Empty;
     }
 
+    /// <summary>
+    /// Sets the overlay-internal override hotkey (stop + send). This is NOT a global Win32 hotkey.
+    /// Accepts the standard validation rules but no conflict check against global hotkeys.
+    /// Allow clearing (empty binding means the feature is unbound).
+    /// </summary>
+    public void SetOverrideHotkey(HotkeyBinding binding)
+    {
+        if (!binding.IsEmpty)
+        {
+            var (valid, error) = HotkeyValidation.Validate(binding);
+            if (!valid) { ValidationMessage = error!; return; }
+        }
+        _overrideHotkey = binding;
+        OverrideHotkeyDisplay = binding.IsEmpty ? "(none)" : binding.ToString();
+        ValidationMessage = string.Empty;
+    }
+
+    public void ClearOverrideHotkey()
+    {
+        _overrideHotkey = new HotkeyBinding();
+        OverrideHotkeyDisplay = "(none)";
+        ValidationMessage = string.Empty;
+    }
+
     public void LoadFrom(HotkeySettings s)
     {
         _overlayHotkey = s.OverlayHotkey;
         _stopHotkey = s.StopHotkey;
         _settingsHotkey = s.SettingsHotkey;
         _resendHotkey = s.ResendHotkey;
+        _overrideHotkey = s.OverrideHotkey;
         OverlayHotkeyDisplay = s.OverlayHotkey.ToString();
         StopHotkeyDisplay = s.StopHotkey.ToString();
         SettingsHotkeyDisplay = s.SettingsHotkey.IsEmpty ? "(none)" : s.SettingsHotkey.ToString();
         ResendHotkeyDisplay = s.ResendHotkey.IsEmpty ? "(none)" : s.ResendHotkey.ToString();
+        OverrideHotkeyDisplay = s.OverrideHotkey.IsEmpty ? "(none)" : s.OverrideHotkey.ToString();
         ValidationMessage = string.Empty;
     }
 
@@ -199,5 +234,6 @@ public sealed class HotkeySettingsViewModel : ViewModelBase
         s.StopHotkey = _stopHotkey;
         s.SettingsHotkey = _settingsHotkey;
         s.ResendHotkey = _resendHotkey;
+        s.OverrideHotkey = _overrideHotkey;
     }
 }

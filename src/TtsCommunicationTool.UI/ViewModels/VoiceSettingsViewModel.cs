@@ -21,6 +21,31 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     private string _savedKokoroVoiceId = string.Empty;  // remembered when switching to ElevenLabs
     private string _engineName = "Kokoro";
 
+    // ── Global pitch ─────────────────────────────────────────────────────────
+    private float _globalPitch = 1.0f;
+    /// <summary>
+    /// Global pitch multiplier for standard TTS (not phrases).
+    /// Changes apply LIVE immediately after being set — before saving settings.
+    /// Clamped to [0.5, 2.0] on set.
+    /// </summary>
+    public float GlobalPitch
+    {
+        get => _globalPitch;
+        set
+        {
+            var clamped = Math.Clamp(value, 0.5f, 2.0f);
+            if (SetField(ref _globalPitch, clamped))
+            {
+                // Apply live to in-memory config so TTS uses new pitch immediately.
+                _config.CurrentConfig.VoiceSettings.GlobalPitch = clamped;
+                OnPropertyChanged(nameof(GlobalPitchPercent));
+            }
+        }
+    }
+
+    /// <summary>Pitch displayed as a percentage string, e.g. "100%".</summary>
+    public string GlobalPitchPercent => $"{(int)(_globalPitch * 100)}%";
+
     // ── Engine selection ─────────────────────────────────────────────────────
     private VoiceEngine _engine = VoiceEngine.Kokoro;
     public VoiceEngine Engine
@@ -221,6 +246,11 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsKokoro));
         OnPropertyChanged(nameof(IsElevenLabs));
 
+        // Load pitch — do NOT write back to config to avoid dirty the snapshot
+        _globalPitch = Math.Clamp(s.GlobalPitch, 0.5f, 2.0f);
+        OnPropertyChanged(nameof(GlobalPitch));
+        OnPropertyChanged(nameof(GlobalPitchPercent));
+
         var el = _config.CurrentConfig.ElevenLabs;
         ElevenLabsApiKey = el.ApiKey;
         ElevenLabsModelId = el.ModelId;
@@ -239,6 +269,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     {
         s.Engine = _engine;
         s.EngineName = _engine.ToString();
+        s.GlobalPitch = _globalPitch;
         // Always persist the Kokoro voice ID — when ElevenLabs is active the ComboBox
         // binding clears SelectedVoiceId from the VM, so use the saved copy.
         var kokoroId = _engine == VoiceEngine.ElevenLabs

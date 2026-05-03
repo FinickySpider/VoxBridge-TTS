@@ -8,5 +8,6 @@ public enum StatusSeverity
     None,
     Info,
     Success,
+    Warning,
     Error
 }

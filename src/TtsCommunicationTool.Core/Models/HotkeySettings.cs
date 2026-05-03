@@ -21,4 +21,15 @@ public sealed class HotkeySettings
 
     /// <summary>Global hotkey to resend the last spoken message. Empty = unbound.</summary>
     public HotkeyBinding ResendHotkey { get; set; } = new();
+
+    /// <summary>
+    /// In-overlay hotkey that immediately stops any current audio and sends the
+    /// typed overlay text. Only active while the overlay window is open.
+    /// Default: Ctrl+Enter.
+    /// </summary>
+    public HotkeyBinding OverrideHotkey { get; set; } = new()
+    {
+        Ctrl = true,
+        Key = "Return"
+    };
 }

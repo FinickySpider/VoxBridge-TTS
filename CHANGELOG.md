@@ -4,6 +4,49 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [v0.9.4] — 2026-05-03
+
+### New Features
+
+#### Global Pitch Control
+- **Pitch slider (Voice tab)** — New slider in the Voice settings tab adjusts the pitch of all real-time TTS output. Range 0.5× (lower/slower) to 2.0× (higher/faster), default 1.0×. Displays as a percentage (e.g. "100%").
+- **Live preview before save** — Moving the slider updates the pitch immediately, so you can use "Test Voice" to hear the change without saving first. Cancelling settings reverts the pitch to the last saved value.
+- **Resend hotkey respects pitch** — The global Resend Last hotkey now passes the current pitch value when re-speaking the last message.
+- **Phrase audio unaffected** — Cached phrase audio plays back verbatim; pitch multiplier is not applied to phrase playback.
+
+#### Overlay Improvements
+- **Overlay opens while audio is playing** — The overlay can now be opened even when TTS or phrase audio is actively playing. Previously the overlay open was blocked.
+- **Send disabled during playback** — The Send button is disabled while audio is playing (`CanSubmit` property). A status warning ("Wait until speaking finishes to send next message") is shown in the overlay.
+- **Stop + Send overlay shortcut** — New in-overlay shortcut (default: Ctrl+Enter) immediately stops any playing audio and sends the current overlay text. Only active while the overlay is open; does not require global hotkey registration.
+- **Shake animation on blocked send** — If Enter is pressed while `CanSubmit` is false, the overlay window shakes horizontally with a short animation to indicate the action is blocked.
+- **Improved status messages** — Overlay status bar now shows contextual messages: "Wait until speaking finishes…" (orange, Warning), "Generating…" (Info), "Speaking…" (Info), "Error — see log." (Error).
+- **Error toast on TTS failure** — A notification toast is now shown when TTS generation fails, in addition to the overlay status message.
+
+#### Settings UX
+- **Save toast notification** — A "Settings saved." info toast appears after saving from the Settings window. Debounced to 1.5 s to prevent rapid duplicates.
+- **Pitch cancel restore** — Clicking Cancel in Settings reverts the global pitch to the last saved value (undoing any live preview edits).
+
+#### Hotkeys Tab — Overlay Override Shortcut
+- **Stop + Send configurable** — The new overlay override shortcut (Ctrl+Enter by default) can be reconfigured in the Hotkeys tab under "Overlay Shortcuts".
+- Stored in config as `HotkeySettings.OverrideHotkey`.
+
+### Improvements
+
+#### Settings Tooltips
+- Added or improved ToolTip attributes across all settings tabs: Hotkeys, Audio, Voice (engine selector, API key, model, voice dropdowns, pitch slider), Appearance (width, height, font size).
+- Volume sliders now have descriptive tooltips.
+
+#### Settings Tab Reorder
+- **Replacements tab** now appears before the Phrases tab in settings (alphabetically: Replacements → Phrases). Existing tab order: General → Hotkeys → Audio → Voice → Appearance → Replacements → Phrases.
+
+#### Audio Routing Note
+- Added an informational callout in the Audio settings tab clarifying that only TTS speech and phrase audio are routed to the secondary (voice app) device. Non-voice UI sounds stay on the monitor device only.
+
+#### Status Severity
+- Added `Warning` severity level with an orange color (`#FAB387`) to the overlay status bar. Previously only `Success`, `Info`, and `Error` existed.
+
+---
+
 ## [v0.9.3] — 2026-05-02
 
 ### New Features

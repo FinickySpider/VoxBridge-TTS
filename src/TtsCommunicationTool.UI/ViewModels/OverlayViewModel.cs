@@ -26,6 +26,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     private StatusSeverity _statusSeverity = StatusSeverity.None;
     private bool _isSending;
 
+    /// <summary>Raised when the user attempts a blocked submission. Triggers the window shake animation.</summary>
+    public event Action? ShakeRequested;
+
     public OverlayViewModel(
         ITtsService tts,
         IAudioRouterService audioRouter,
@@ -54,11 +57,20 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         _audioRouter.PlaybackFinished += (_, _) =>
         {
             _playbackState.Reset();
-            StatusText = string.Empty;
+            System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                NotifyCanSubmitChanged();
+                if (StatusText is "Speaking..." or "Audio is already playing")
+                    StatusText = string.Empty;
+            });
         };
 
         // Reflect external playback state changes (e.g. phrase hotkeys) in the status bar
         _playbackState.PropertyChanged += OnPlaybackStateChanged;
+
+        // If the overlay opens while audio is already playing, show status immediately
+        if (_playbackState.IsPlaying || _audioRouter.IsPlaying)
+            SetStatus("Speaking...", StatusSeverity.Info);
     }
 
     public string InputText
@@ -70,7 +82,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             {
                 OnPropertyChanged(nameof(CharacterCount));
                 OnPropertyChanged(nameof(CharacterCountDisplay));
-                CommandManager.InvalidateRequerySuggested();
+                NotifyCanSubmitChanged();
             }
         }
     }
@@ -90,10 +102,22 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     public bool IsSending
     {
         get => _isSending;
-        private set => SetField(ref _isSending, value);
+        private set
+        {
+            if (SetField(ref _isSending, value))
+                NotifyCanSubmitChanged();
+        }
     }
 
+    /// <summary>True when there is text. Does NOT account for playback blocking.</summary>
     public bool CanSend => !IsSending && !string.IsNullOrWhiteSpace(InputText);
+
+    /// <summary>
+    /// True when the Send button should be enabled.
+    /// False whenever audio is playing, TTS is generating, or input is empty.
+    /// This is the property the Send button binds to for its IsEnabled state.
+    /// </summary>
+    public bool CanSubmit => CanSend && !_playbackState.IsPlaying && !_audioRouter.IsPlaying;
 
     /// <summary>0 = unlimited (WPF TextBox.MaxLength behaviour). Config-driven.</summary>
     public int MaxLength =>
@@ -119,12 +143,27 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     public ICommand StopCommand { get; }
     public ICommand ClearCommand { get; }
 
+    /// <summary>
+    /// Returns true if the given key + modifiers match the configured override hotkey.
+    /// Used by OverlayWindow to detect Ctrl+Enter (or user-configured equivalent).
+    /// </summary>
+    public bool MatchesOverrideHotkey(System.Windows.Input.Key key, System.Windows.Input.ModifierKeys modifiers)
+    {
+        var h = _config.CurrentConfig.HotkeySettings.OverrideHotkey;
+        if (h.IsEmpty) return false;
+        return key.ToString().Equals(h.Key, StringComparison.OrdinalIgnoreCase)
+            && modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control) == h.Ctrl
+            && modifiers.HasFlag(System.Windows.Input.ModifierKeys.Alt) == h.Alt
+            && modifiers.HasFlag(System.Windows.Input.ModifierKeys.Shift) == h.Shift;
+    }
+
     private async Task SendAsync()
     {
         // Block if any audio is already playing (phrase or previous send)
         if (_playbackState.IsPlaying || _audioRouter.IsPlaying)
         {
-            StatusText = "Audio is still playing...";
+            SetStatus("Wait until speaking finishes to send next message", StatusSeverity.Warning);
+            ShakeRequested?.Invoke();
             _log.LogEvent(DiagnosticLogLevel.Info, "ui", "overlay_submit_blocked",
                 "Overlay submit blocked — audio already playing",
                 new { reason = "audio_playing" });
@@ -136,7 +175,8 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         var (valid, error) = TextValidation.Validate(text, gs.MaxOverlayInputLength, gs.EnableCharacterLimit);
         if (!valid)
         {
-            StatusText = error!;
+            SetStatus(error!, StatusSeverity.Error);
+            ShakeRequested?.Invoke();
             _log.LogEvent(DiagnosticLogLevel.Info, "ui", "overlay_submit_blocked",
                 "Overlay submit blocked — validation failed",
                 new { reason = "validation", error });
@@ -144,6 +184,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         }
 
         text = _textReplacement.Apply(text);
+        var pitch = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalPitch, 0.5f, 2.0f);
 
         // Generate a request ID for this TTS pipeline run
         var requestId = _log.IncludeRequestIds
@@ -164,20 +205,23 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
                 text_hash   = Infrastructure.Logging.FileLoggingService.ComputeTextHash(text),
                 text        = _log.LogRawText ? text : (string?)null,
                 source      = "overlay",
-                request_id  = requestId
+                request_id  = requestId,
+                pitch
             });
 
         try
         {
             var result = await _tts.SynthesizeAsync(new TtsRequest
             {
-                Text    = text,
-                VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId,
-                RequestId = requestId
+                Text      = text,
+                VoiceId   = _config.CurrentConfig.VoiceSettings.SelectedVoiceId,
+                RequestId = requestId,
+                Pitch     = pitch
             });
             if (!result.Success)
             {
                 SetStatus($"TTS error: {result.ErrorMessage}", StatusSeverity.Error);
+                _notifications.ShowError($"TTS failed: {result.ErrorMessage}");
                 _log.Error($"TTS failed: {result.ErrorMessage}");
                 _log.LogEvent(DiagnosticLogLevel.Error, "tts", "synthesis_failed",
                     "TTS synthesis failed",
@@ -200,9 +244,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             var cfg = _config.CurrentConfig;
             var playback = new PlaybackRequest
             {
-                AudioData = result.AudioData!,
-                SampleRate = result.SampleRate,
-                Channels = result.Channels,
+                AudioData    = result.AudioData!,
+                SampleRate   = result.SampleRate,
+                Channels     = result.Channels,
                 BitsPerSample = result.BitsPerSample
             };
 
@@ -216,6 +260,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             SetStatus("Error — see log.", StatusSeverity.Error);
+            _notifications.ShowError("Playback error occurred.");
             _log.Error("Send failed", ex);
         }
         finally
@@ -227,22 +272,30 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
     /// <summary>
     /// Captures the current text and starts TTS generation + playback asynchronously.
     /// The overlay can close immediately after calling this.
+    /// Returns false if submission was blocked (audio already playing / validation failed / empty text).
     /// </summary>
-    public void FireAndForgetSend()
+    public bool FireAndForgetSend()
     {
         // Block if any audio is already playing (phrase or previous send)
         if (_playbackState.IsPlaying || _audioRouter.IsPlaying)
         {
+            SetStatus("Wait until speaking finishes to send next message", StatusSeverity.Warning);
+            ShakeRequested?.Invoke();
             _log.Debug("FireAndForgetSend blocked — audio already playing.");
-            return;
+            return false;
         }
 
         var text = TextValidation.Sanitize(InputText);
         var gs2 = _config.CurrentConfig.GeneralSettings;
         var (valid2, _) = TextValidation.Validate(text, gs2.MaxOverlayInputLength, gs2.EnableCharacterLimit);
-        if (!valid2) return;
+        if (!valid2)
+        {
+            ShakeRequested?.Invoke();
+            return false;
+        }
 
         text = _textReplacement.Apply(text);
+        var pitch = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalPitch, 0.5f, 2.0f);
 
         InputText = string.Empty;
         _log.Info($"Fire-and-forget sending text: {text}");
@@ -262,8 +315,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
             {
                 var result = await _tts.SynthesizeAsync(new TtsRequest
                 {
-                    Text = text,
-                    VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId
+                    Text    = text,
+                    VoiceId = _config.CurrentConfig.VoiceSettings.SelectedVoiceId,
+                    Pitch   = pitch
                 });
                 if (!result.Success)
                 {
@@ -277,9 +331,9 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
                 var cfg = _config.CurrentConfig;
                 var playback = new PlaybackRequest
                 {
-                    AudioData = result.AudioData!,
-                    SampleRate = result.SampleRate,
-                    Channels = result.Channels,
+                    AudioData    = result.AudioData!,
+                    SampleRate   = result.SampleRate,
+                    Channels     = result.Channels,
                     BitsPerSample = result.BitsPerSample
                 };
 
@@ -294,6 +348,35 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
                 _log.Error("Fire-and-forget send failed", ex);
             }
         });
+
+        return true;
+    }
+
+    /// <summary>
+    /// Immediately stops any current audio and sends the current overlay text.
+    /// Implements the override hotkey (Ctrl+Enter) behaviour.
+    /// Returns false if there is no text to send.
+    /// </summary>
+    public bool ForceStopAndSend()
+    {
+        var text = TextValidation.Sanitize(InputText);
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            SetStatus("Nothing to send", StatusSeverity.Warning);
+            ShakeRequested?.Invoke();
+            return false;
+        }
+
+        // Stop whatever is currently playing
+        if (_playbackState.IsPlaying || _audioRouter.IsPlaying)
+        {
+            _audioRouter.StopAll();
+            _playbackState.Reset();
+            _log.Info("Override hotkey: stopped current audio before sending.");
+        }
+
+        // Now submit normally — playback state should be clear
+        return FireAndForgetSend();
     }
 
     private void Stop()
@@ -318,16 +401,25 @@ public sealed class OverlayViewModel : INotifyPropertyChanged
         StatusSeverity = severity;
     }
 
+    private void NotifyCanSubmitChanged()
+    {
+        OnPropertyChanged(nameof(CanSend));
+        OnPropertyChanged(nameof(CanSubmit));
+        CommandManager.InvalidateRequerySuggested();
+    }
+
     private void OnPlaybackStateChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName != nameof(PlaybackState.IsPlaying)) return;
         System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
         {
+            NotifyCanSubmitChanged();
+
             // Only set "Speaking..." from external sources (e.g. phrase hotkeys).
             // SendAsync already manages its own "Generating..." / "Speaking..." flow.
             if (_playbackState.IsPlaying && string.IsNullOrEmpty(StatusText))
                 SetStatus("Speaking...", StatusSeverity.Info);
-            else if (!_playbackState.IsPlaying && StatusText == "Speaking...")
+            else if (!_playbackState.IsPlaying && StatusText is "Speaking..." or "Audio is already playing")
                 SetStatus(string.Empty, StatusSeverity.None);
         });
     }

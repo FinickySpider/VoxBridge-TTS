@@ -10,7 +10,7 @@ TTS Communication Tool
 - [PHASE-03: Comfort & Expression](../phases/PHASE-03-comfort-and-expression.md) — complete (Phase 3 fully complete)
 
 ## Active Sprint
-- none — planning Phase 4 next
+- none — v0.9.4 quality-of-life pass complete; planning Phase 4 next
 
 ## In Progress
 - (none)
@@ -30,6 +30,7 @@ TTS Communication Tool
 - [SPRINT-06](../sprints/SPRINT-06.md) — complete (PHASE-03)
 - [SPRINT-07](../sprints/SPRINT-07.md) — complete (PHASE-03)
 - [SPRINT-08](../sprints/SPRINT-08.md) — complete (PHASE-03)
+- [SPRINT-09](../sprints/SPRINT-09.md) — complete (v0.9.4 QoL pass)
 
 ## Features
 - [FEAT-001: Solution scaffold](../features/FEAT-001-solution-scaffold.md) — complete (SPRINT-01)
@@ -65,6 +66,9 @@ TTS Communication Tool
 - [FEAT-031: Repeat last / resend](../features/FEAT-031-repeat-last-resend.md) — complete (SPRINT-06)
 - [FEAT-032: Transcript logging](../features/FEAT-032-transcript-logging.md) — complete (SPRINT-06)
 - [FEAT-033: Optional ElevenLabs voice path](../features/FEAT-033-elevenlabs-voice-path.md) — complete (SPRINT-08)
+- [FEAT-034: Global pitch control](../features/FEAT-034-global-pitch-control.md) — complete (SPRINT-09)
+- [FEAT-035: Overlay playback-aware send](../features/FEAT-035-overlay-playback-aware-send.md) — complete (SPRINT-09)
+- [FEAT-036: Settings UX — save toast and debounce](../features/FEAT-036-settings-save-toast.md) — complete (SPRINT-09)
 
 ## Refactors
 - [REFACTOR-001: Config recovery](../refactors/REFACTOR-001-config-recovery.md) — complete (SPRINT-03)
@@ -80,3 +84,4 @@ TTS Communication Tool
 - Work only on items listed in the active sprint
 - No new work without an ID + file
 - If docs conflict, MASTER_INDEX wins
+- Update the CHANGELOG.md file at the end of every full agent request run via copilot and bump version number

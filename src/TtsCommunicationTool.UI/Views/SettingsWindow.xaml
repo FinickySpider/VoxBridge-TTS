@@ -454,22 +454,23 @@
                     <StackPanel Margin="8,0">
                         <TextBlock Text="Hotkeys" Style="{StaticResource SectionHeader}"/>
 
-                        <TextBlock Text="Click a field, then press the desired key combination. Esc clears a binding."
-                                   Foreground="#6C7086" FontSize="12" Margin="0,0,0,16"/>
+                        <TextBlock Text="Click a field, then press the desired key combination. Esc clears a binding. All global hotkeys require at least one modifier key (Ctrl, Alt, Shift, or Win)."
+                                   Foreground="#6C7086" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,16"/>
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="160"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Toggle Overlay:" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="Toggle Overlay:" Style="{StaticResource FieldLabel}"
+                                       ToolTip="Global hotkey to open or close the overlay input window from anywhere on your desktop."/>
                             <TextBox Grid.Column="1"
                                      x:Name="OverlayHotkeyBox"
                                      Text="{Binding Hotkeys.OverlayHotkeyDisplay, Mode=OneWay}"
                                      Style="{StaticResource SettingsTextBox}"
                                      IsReadOnly="True"
                                      Cursor="Hand"
-                                     ToolTip="Click here then press any key combination to set the overlay toggle hotkey."
+                                     ToolTip="Global hotkey to open or close the overlay input window. Click here, then press a key combination."
                                      PreviewKeyDown="OverlayHotkeyBox_PreviewKeyDown"
                                      GotFocus="HotkeyBox_GotFocus"
                                      LostFocus="HotkeyBox_LostFocus"/>
@@ -477,17 +478,18 @@
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="160"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Stop Playback:" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="Stop Playback:" Style="{StaticResource FieldLabel}"
+                                       ToolTip="Global hotkey to immediately stop any audio currently playing — TTS, phrase, or resend."/>
                             <TextBox Grid.Column="1"
                                      x:Name="StopHotkeyBox"
                                      Text="{Binding Hotkeys.StopHotkeyDisplay, Mode=OneWay}"
                                      Style="{StaticResource SettingsTextBox}"
                                      IsReadOnly="True"
                                      Cursor="Hand"
-                                     ToolTip="Click here then press any key combination to set the stop-playback hotkey."
+                                     ToolTip="Global hotkey to immediately stop any audio currently playing. Click here, then press a key combination."
                                      PreviewKeyDown="StopHotkeyBox_PreviewKeyDown"
                                      GotFocus="HotkeyBox_GotFocus"
                                      LostFocus="HotkeyBox_LostFocus"/>
@@ -495,17 +497,18 @@
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="160"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Open Settings:" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="Open Settings:" Style="{StaticResource FieldLabel}"
+                                       ToolTip="Optional global hotkey to open the Settings window. Leave as (none) to disable. Press Esc to clear."/>
                             <TextBox Grid.Column="1"
                                      x:Name="SettingsHotkeyBox"
                                      Text="{Binding Hotkeys.SettingsHotkeyDisplay, Mode=OneWay}"
                                      Style="{StaticResource SettingsTextBox}"
                                      IsReadOnly="True"
                                      Cursor="Hand"
-                                     ToolTip="Click here then press any key combination to set the open-settings hotkey. Optional — leave as (none) to disable."
+                                     ToolTip="Optional global hotkey to open the Settings window. Press Esc to clear and leave unbound."
                                      PreviewKeyDown="SettingsHotkeyBox_PreviewKeyDown"
                                      GotFocus="HotkeyBox_GotFocus"
                                      LostFocus="HotkeyBox_LostFocus"/>
@@ -513,18 +516,45 @@
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="160"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Resend Last:" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="Resend Last:" Style="{StaticResource FieldLabel}"
+                                       ToolTip="Optional global hotkey to re-speak the last message without opening the overlay. Leave as (none) to disable."/>
                             <TextBox Grid.Column="1"
                                      x:Name="ResendHotkeyBox"
                                      Text="{Binding Hotkeys.ResendHotkeyDisplay, Mode=OneWay}"
                                      Style="{StaticResource SettingsTextBox}"
                                      IsReadOnly="True"
                                      Cursor="Hand"
-                                     ToolTip="Click here then press any key combination to set the resend-last-message hotkey. Optional — leave as (none) to disable."
+                                     ToolTip="Optional global hotkey to re-speak your last spoken message. Press Esc to clear and leave unbound."
                                      PreviewKeyDown="ResendHotkeyBox_PreviewKeyDown"
+                                     GotFocus="HotkeyBox_GotFocus"
+                                     LostFocus="HotkeyBox_LostFocus"/>
+                        </Grid>
+
+                        <!-- Separator -->
+                        <Separator Margin="0,4,0,12" Background="#45475A"/>
+
+                        <TextBlock Text="Overlay Shortcuts" Style="{StaticResource SectionHeader}"/>
+                        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#6C7086" Margin="0,0,0,12"
+                                   Text="These shortcuts are only active while the overlay input window is open. They do not require global hotkey registration."/>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Stop + Send:" Style="{StaticResource FieldLabel}"
+                                       ToolTip="While the overlay is open: immediately stops any audio that is currently playing, then sends the text you have typed. Default is Ctrl+Enter."/>
+                            <TextBox Grid.Column="1"
+                                     x:Name="OverrideHotkeyBox"
+                                     Text="{Binding Hotkeys.OverrideHotkeyDisplay, Mode=OneWay}"
+                                     Style="{StaticResource SettingsTextBox}"
+                                     IsReadOnly="True"
+                                     Cursor="Hand"
+                                     ToolTip="Overlay-only shortcut: stops current audio and immediately sends your overlay text. Default: Ctrl+Enter. Press Esc to clear."
+                                     PreviewKeyDown="OverrideHotkeyBox_PreviewKeyDown"
                                      GotFocus="HotkeyBox_GotFocus"
                                      LostFocus="HotkeyBox_LostFocus"/>
                         </Grid>
@@ -547,13 +577,14 @@
                                 <ColumnDefinition Width="140"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Monitor (You):" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="Monitor (You):" Style="{StaticResource FieldLabel}"
+                                       ToolTip="The audio device you hear yourself on. Usually your headphones or speakers."/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding Audio.OutputDevices}"
                                       SelectedValue="{Binding Audio.SelectedMonitorDeviceId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="FriendlyName"
-                                      ToolTip="The audio device you hear yourself on (headphones, speakers, etc.)."
+                                      ToolTip="The audio device you hear yourself on (headphones, speakers, etc.). All TTS, phrases, and UI sounds play here."
                                       Style="{StaticResource SettingsComboBox}"/>
                         </Grid>
 
@@ -562,13 +593,14 @@
                                 <ColumnDefinition Width="140"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Secondary (App):" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="Secondary (App):" Style="{StaticResource FieldLabel}"
+                                       ToolTip="The virtual audio device routed into Discord, VRChat, or other voice apps. Usually VB-Cable or a similar virtual cable."/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding Audio.OutputDevices}"
                                       SelectedValue="{Binding Audio.SelectedSecondaryDeviceId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="FriendlyName"
-                                      ToolTip="The secondary output device (VB-Cable, virtual audio cable for Discord/VRChat, etc.)."
+                                      ToolTip="The secondary output device routed to Discord/VRChat (e.g. VB-Cable). Only TTS speech and phrase audio are sent here. UI sounds play on the monitor device only."
                                       Style="{StaticResource SettingsComboBox}"/>
                         </Grid>
 
@@ -596,13 +628,15 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="40"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Monitor:" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Monitor:" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"
+                                       ToolTip="Volume you hear in your own headphones/speakers."/>
                             <Slider Grid.Column="1"
                                     Minimum="0" Maximum="100"
                                     Value="{Binding Audio.MonitorVolume}"
                                     TickFrequency="10"
                                     IsSnapToTickEnabled="False"
-                                    VerticalAlignment="Center"/>
+                                    VerticalAlignment="Center"
+                                    ToolTip="Volume of TTS and phrase audio in your own monitor device."/>
                             <TextBlock Grid.Column="2"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Right"
@@ -623,13 +657,15 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="40"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Secondary:" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Secondary:" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"
+                                       ToolTip="Volume sent to the secondary voice device (Discord/VRChat)."/>
                             <Slider Grid.Column="1"
                                     Minimum="0" Maximum="100"
                                     Value="{Binding Audio.SecondaryVolume}"
                                     TickFrequency="10"
                                     IsSnapToTickEnabled="False"
-                                    VerticalAlignment="Center"/>
+                                    VerticalAlignment="Center"
+                                    ToolTip="Volume of TTS and phrase audio sent to the secondary voice device. UI sounds are never routed here."/>
                             <TextBlock Grid.Column="2"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Right"
@@ -642,6 +678,16 @@
                                 </TextBlock.Text>
                             </TextBlock>
                         </Grid>
+
+                        <!-- Audio routing note -->
+                        <Border Background="#1E1E2E" BorderBrush="#45475A" BorderThickness="1"
+                                CornerRadius="4" Padding="12,10" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock Text="ℹ Audio Routing" FontWeight="SemiBold" Foreground="#89B4FA" FontSize="12" Margin="0,0,0,4"/>
+                                <TextBlock TextWrapping="Wrap" Foreground="#A6ADC8" FontSize="12"
+                                           Text="Only TTS speech and phrase audio are sent to the secondary (app) device. Any non-voice sounds such as UI feedback or error tones play on the monitor device only and will not be heard in Discord or VRChat."/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -657,10 +703,12 @@
                             <RadioButton Content="Kokoro (Offline)"
                                          Foreground="#CDD6F4" GroupName="EngineGroup"
                                          IsChecked="{Binding Voice.IsKokoro, Mode=TwoWay}"
-                                         Margin="0,0,16,0"/>
+                                         Margin="0,0,16,0"
+                                         ToolTip="Kokoro is a local, fully offline TTS engine. No internet or API key required. Voice models are bundled with the app."/>
                             <RadioButton Content="ElevenLabs (Online)"
                                          Foreground="#CDD6F4" GroupName="EngineGroup"
-                                         IsChecked="{Binding Voice.IsElevenLabs, Mode=TwoWay}"/>
+                                         IsChecked="{Binding Voice.IsElevenLabs, Mode=TwoWay}"
+                                         ToolTip="ElevenLabs is a cloud TTS engine. Requires an internet connection and a valid ElevenLabs API key."/>
                         </StackPanel>
 
                         <!-- ── Kokoro section ───────────────── -->
@@ -670,13 +718,15 @@
                                     <ColumnDefinition Width="140"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Voice:" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="Voice:" Style="{StaticResource FieldLabel}"
+                                           ToolTip="The Kokoro voice model to use for speech generation."/>
                                 <ComboBox Grid.Column="1"
                                           ItemsSource="{Binding Voice.AvailableVoices}"
                                           SelectedValue="{Binding Voice.SelectedVoiceId}"
                                           SelectedValuePath="Id"
                                           DisplayMemberPath="DisplayName"
-                                          Style="{StaticResource SettingsComboBox}"/>
+                                          Style="{StaticResource SettingsComboBox}"
+                                          ToolTip="Select the Kokoro voice model to use for speech generation."/>
                             </Grid>
                         </StackPanel>
 
@@ -687,10 +737,12 @@
                                     <ColumnDefinition Width="140"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="API Key:" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="API Key:" Style="{StaticResource FieldLabel}"
+                                           ToolTip="Your ElevenLabs API key. Found in your ElevenLabs account settings at elevenlabs.io."/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding Voice.ElevenLabsApiKey, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource SettingsTextBox}"/>
+                                         Style="{StaticResource SettingsTextBox}"
+                                         ToolTip="Your ElevenLabs API key. Required for online voice generation."/>
                             </Grid>
 
                             <Grid Margin="0,0,0,8">
@@ -698,17 +750,20 @@
                                     <ColumnDefinition Width="140"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Model:" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="Model:" Style="{StaticResource FieldLabel}"
+                                           ToolTip="The ElevenLabs model ID to use (e.g. eleven_multilingual_v2, eleven_turbo_v2). See ElevenLabs docs for available model IDs."/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding Voice.ElevenLabsModelId, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource SettingsTextBox}"/>
+                                         Style="{StaticResource SettingsTextBox}"
+                                         ToolTip="ElevenLabs model ID. Common values: eleven_multilingual_v2, eleven_turbo_v2."/>
                             </Grid>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                 <Button Content="Fetch Voices"
                                         Command="{Binding Voice.FetchElevenLabsVoicesCommand}"
                                         Style="{StaticResource SecondaryButton}"
-                                        Margin="0,0,8,0"/>
+                                        Margin="0,0,8,0"
+                                        ToolTip="Download the list of voices available to your ElevenLabs account."/>
                                 <TextBlock Text="{Binding Voice.ElevenLabsStatus}"
                                            Foreground="#89B4FA" FontSize="12"
                                            VerticalAlignment="Center"/>
@@ -719,19 +774,48 @@
                                     <ColumnDefinition Width="140"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Voice:" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="Voice:" Style="{StaticResource FieldLabel}"
+                                           ToolTip="The ElevenLabs voice to use. Click Fetch Voices first if this list is empty."/>
                                 <ComboBox Grid.Column="1"
                                           ItemsSource="{Binding Voice.ElevenLabsVoices}"
                                           SelectedValue="{Binding Voice.ElevenLabsSelectedVoiceId}"
                                           SelectedValuePath="Id"
                                           DisplayMemberPath="DisplayName"
-                                          Style="{StaticResource SettingsComboBox}"/>
+                                          Style="{StaticResource SettingsComboBox}"
+                                          ToolTip="Select the ElevenLabs voice to use for speech generation. Use Fetch Voices to populate this list."/>
                             </Grid>
                         </StackPanel>
 
+                        <!-- Global Pitch (both engines) -->
+                        <TextBlock Text="Global Pitch" Style="{StaticResource SectionHeader}" Margin="0,16,0,4"/>
+                        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#6C7086" Margin="0,0,0,12"
+                                   Text="Adjusts the pitch of all standard TTS output. Changes apply immediately so you can hear the effect before saving. Cached phrases are unaffected."/>
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="50"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Pitch:" Style="{StaticResource FieldLabel}"
+                                       ToolTip="Pitch multiplier applied to real-time TTS output. 1.0 = normal pitch. 0.5 = lower/slower. 2.0 = higher/faster. Use Test Voice to preview."/>
+                            <Slider Grid.Column="1"
+                                    Minimum="0.5" Maximum="2.0"
+                                    SmallChange="0.05" LargeChange="0.1"
+                                    Value="{Binding Voice.GlobalPitch, Mode=TwoWay}"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,8,0"
+                                    ToolTip="Drag to adjust pitch. 1.0 = normal. Changes are previewed immediately; press Cancel to revert."/>
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding Voice.GlobalPitchPercent}"
+                                       Foreground="#CDD6F4"
+                                       VerticalAlignment="Center"
+                                       ToolTip="Current pitch value as a percentage of normal."/>
+                        </Grid>
+
                         <!-- Test Voice (both engines) -->
                         <Button Content="Test Voice" Command="{Binding Voice.TestVoiceCommand}"
-                                Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left"/>
+                                Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left"
+                                ToolTip="Speak a sample phrase using the current engine, voice, and pitch settings."/>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -747,10 +831,12 @@
                                 <ColumnDefinition Width="140"/>
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Width:" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="Width:" Style="{StaticResource FieldLabel}"
+                                       ToolTip="Width of the overlay input window in pixels."/>
                             <TextBox Grid.Column="1"
                                      Text="{Binding Appearance.OverlayWidth, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource SettingsTextBox}"/>
+                                     Style="{StaticResource SettingsTextBox}"
+                                     ToolTip="Width of the overlay input window in pixels."/>
                         </Grid>
 
                         <Grid Margin="0,0,0,12">
@@ -758,10 +844,12 @@
                                 <ColumnDefinition Width="140"/>
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Height:" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="Height:" Style="{StaticResource FieldLabel}"
+                                       ToolTip="Height of the overlay input window in pixels."/>
                             <TextBox Grid.Column="1"
                                      Text="{Binding Appearance.OverlayHeight, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource SettingsTextBox}"/>
+                                     Style="{StaticResource SettingsTextBox}"
+                                     ToolTip="Height of the overlay input window in pixels."/>
                         </Grid>
 
                         <Grid Margin="0,0,0,12">
@@ -769,10 +857,12 @@
                                 <ColumnDefinition Width="140"/>
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Font Size:" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="Font Size:" Style="{StaticResource FieldLabel}"
+                                       ToolTip="Font size of the text input field inside the overlay window."/>
                             <TextBox Grid.Column="1"
                                      Text="{Binding Appearance.FontSize, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource SettingsTextBox}"/>
+                                     Style="{StaticResource SettingsTextBox}"
+                                     ToolTip="Font size (points) of the input field inside the overlay window."/>
                         </Grid>
 
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
@@ -785,7 +875,145 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- Phrases Tab -->
+            <!-- Replacements Tab -->
+            <TabItem Header="Replacements">
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Text Replacements" Style="{StaticResource SectionHeader}" Margin="8,0"/>
+
+                    <!-- Global enable toggle -->
+                    <CheckBox Grid.Row="1"
+                              Content="Enable text replacements"
+                              IsChecked="{Binding TextReplacements.IsEnabled}"
+                              Foreground="#CDD6F4"
+                              Margin="8,8,8,8"/>
+
+                    <!-- Rules DataGrid -->
+                    <DataGrid Grid.Row="2"
+                              ItemsSource="{Binding TextReplacements.Rules}"
+                              SelectedItem="{Binding TextReplacements.SelectedRule}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserReorderColumns="False"
+                              CanUserSortColumns="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="None"
+                              SelectionMode="Single"
+                              Background="#2B2B3D"
+                              Foreground="#CDD6F4"
+                              BorderBrush="#45475A"
+                              BorderThickness="1"
+                              RowBackground="#2B2B3D"
+                              AlternatingRowBackground="#313145"
+                              HorizontalGridLinesBrush="#45475A"
+                              VerticalGridLinesBrush="#45475A"
+                              Margin="8,0">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#1E1E2E"/>
+                                <Setter Property="Foreground" Value="#89B4FA"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="Padding" Value="6,4"/>
+                                <Setter Property="BorderBrush" Value="#45475A"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="#CDD6F4"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="4,2"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#45475A"/>
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#3B3B55"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="On" Binding="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}" Width="36"/>
+                            <DataGridTextColumn Header="Trigger" Binding="{Binding TriggerText, UpdateSourceTrigger=PropertyChanged}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="4,2"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="#313145"/>
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                        <Setter Property="BorderBrush" Value="#89B4FA"/>
+                                        <Setter Property="CaretBrush" Value="#CDD6F4"/>
+                                        <Setter Property="Padding" Value="4,2"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Replacement" Binding="{Binding ReplacementText, UpdateSourceTrigger=PropertyChanged}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="4,2"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="#313145"/>
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                        <Setter Property="BorderBrush" Value="#89B4FA"/>
+                                        <Setter Property="CaretBrush" Value="#CDD6F4"/>
+                                        <Setter Property="Padding" Value="4,2"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridCheckBoxColumn Header="Case" Binding="{Binding IsCaseSensitive, UpdateSourceTrigger=PropertyChanged}" Width="46"/>
+                            <DataGridCheckBoxColumn Header="Word" Binding="{Binding WholeWordOnly, UpdateSourceTrigger=PropertyChanged}" Width="46"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Action buttons -->
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="8,8,8,4">
+                        <Button Content="Add" Command="{Binding TextReplacements.AddCommand}"
+                                Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
+                        <Button Content="Delete" Command="{Binding TextReplacements.DeleteCommand}"
+                                Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
+                        <Button Content="▲ Up" Command="{Binding TextReplacements.MoveUpCommand}"
+                                Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                        <Button Content="▼ Down" Command="{Binding TextReplacements.MoveDownCommand}"
+                                Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                        <Button Content="Import..." Command="{Binding TextReplacements.ImportCommand}"
+                                Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                        <Button Content="Export..." Command="{Binding TextReplacements.ExportCommand}"
+                                Style="{StaticResource SecondaryButton}"/>
+                    </StackPanel>
+                    <TextBlock Grid.Row="4" Text="{Binding TextReplacements.StatusMessage}"
+                               Foreground="#A6E3A1" FontSize="12"
+                               Visibility="{Binding TextReplacements.StatusMessage, Converter={StaticResource NonEmptyToVisibleConverter}}"
+                               Margin="8,2,8,4" TextWrapping="Wrap"/>
+                </Grid>
+            </TabItem>            <!-- Phrases Tab -->
             <TabItem Header="Phrases">
                 <Grid Margin="0,16,0,0">
                     <Grid.RowDefinitions>
@@ -1066,145 +1294,7 @@
                 </Grid>
             </TabItem>
 
-            <!-- Replacements Tab -->
-            <TabItem Header="Replacements">
-                <Grid Margin="0,16,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
 
-                    <TextBlock Text="Text Replacements" Style="{StaticResource SectionHeader}" Margin="8,0"/>
-
-                    <!-- Global enable toggle -->
-                    <CheckBox Grid.Row="1"
-                              Content="Enable text replacements"
-                              IsChecked="{Binding TextReplacements.IsEnabled}"
-                              Foreground="#CDD6F4"
-                              Margin="8,8,8,8"/>
-
-                    <!-- Rules DataGrid -->
-                    <DataGrid Grid.Row="2"
-                              ItemsSource="{Binding TextReplacements.Rules}"
-                              SelectedItem="{Binding TextReplacements.SelectedRule}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              CanUserReorderColumns="False"
-                              CanUserSortColumns="False"
-                              HeadersVisibility="Column"
-                              GridLinesVisibility="None"
-                              SelectionMode="Single"
-                              Background="#2B2B3D"
-                              Foreground="#CDD6F4"
-                              BorderBrush="#45475A"
-                              BorderThickness="1"
-                              RowBackground="#2B2B3D"
-                              AlternatingRowBackground="#313145"
-                              HorizontalGridLinesBrush="#45475A"
-                              VerticalGridLinesBrush="#45475A"
-                              Margin="8,0">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#1E1E2E"/>
-                                <Setter Property="Foreground" Value="#89B4FA"/>
-                                <Setter Property="FontSize" Value="12"/>
-                                <Setter Property="Padding" Value="6,4"/>
-                                <Setter Property="BorderBrush" Value="#45475A"/>
-                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
-                        <DataGrid.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="Foreground" Value="#CDD6F4"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Padding" Value="4,2"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="#45475A"/>
-                                        <Setter Property="Foreground" Value="#CDD6F4"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DataGrid.CellStyle>
-                        <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="#3B3B55"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DataGrid.RowStyle>
-                        <DataGrid.Columns>
-                            <DataGridCheckBoxColumn Header="On" Binding="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}" Width="36"/>
-                            <DataGridTextColumn Header="Trigger" Binding="{Binding TriggerText, UpdateSourceTrigger=PropertyChanged}" Width="*">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#CDD6F4"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Padding" Value="4,2"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                                <DataGridTextColumn.EditingElementStyle>
-                                    <Style TargetType="TextBox">
-                                        <Setter Property="Background" Value="#313145"/>
-                                        <Setter Property="Foreground" Value="#CDD6F4"/>
-                                        <Setter Property="BorderBrush" Value="#89B4FA"/>
-                                        <Setter Property="CaretBrush" Value="#CDD6F4"/>
-                                        <Setter Property="Padding" Value="4,2"/>
-                                    </Style>
-                                </DataGridTextColumn.EditingElementStyle>
-                            </DataGridTextColumn>
-                            <DataGridTextColumn Header="Replacement" Binding="{Binding ReplacementText, UpdateSourceTrigger=PropertyChanged}" Width="*">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#CDD6F4"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Padding" Value="4,2"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                                <DataGridTextColumn.EditingElementStyle>
-                                    <Style TargetType="TextBox">
-                                        <Setter Property="Background" Value="#313145"/>
-                                        <Setter Property="Foreground" Value="#CDD6F4"/>
-                                        <Setter Property="BorderBrush" Value="#89B4FA"/>
-                                        <Setter Property="CaretBrush" Value="#CDD6F4"/>
-                                        <Setter Property="Padding" Value="4,2"/>
-                                    </Style>
-                                </DataGridTextColumn.EditingElementStyle>
-                            </DataGridTextColumn>
-                            <DataGridCheckBoxColumn Header="Case" Binding="{Binding IsCaseSensitive, UpdateSourceTrigger=PropertyChanged}" Width="46"/>
-                            <DataGridCheckBoxColumn Header="Word" Binding="{Binding WholeWordOnly, UpdateSourceTrigger=PropertyChanged}" Width="46"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <!-- Action buttons -->
-                    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="8,8,8,4">
-                        <Button Content="Add" Command="{Binding TextReplacements.AddCommand}"
-                                Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
-                        <Button Content="Delete" Command="{Binding TextReplacements.DeleteCommand}"
-                                Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
-                        <Button Content="▲ Up" Command="{Binding TextReplacements.MoveUpCommand}"
-                                Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
-                        <Button Content="▼ Down" Command="{Binding TextReplacements.MoveDownCommand}"
-                                Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
-                        <Button Content="Import..." Command="{Binding TextReplacements.ImportCommand}"
-                                Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
-                        <Button Content="Export..." Command="{Binding TextReplacements.ExportCommand}"
-                                Style="{StaticResource SecondaryButton}"/>
-                    </StackPanel>
-                    <TextBlock Grid.Row="4" Text="{Binding TextReplacements.StatusMessage}"
-                               Foreground="#A6E3A1" FontSize="12"
-                               Visibility="{Binding TextReplacements.StatusMessage, Converter={StaticResource NonEmptyToVisibleConverter}}"
-                               Margin="8,2,8,4" TextWrapping="Wrap"/>
-                </Grid>
-            </TabItem>
         </TabControl>
 
         <!-- Bottom action bar -->

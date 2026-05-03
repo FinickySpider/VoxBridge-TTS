@@ -218,7 +218,8 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
             var result = await _tts.SynthesizeAsync(new TtsRequest
             {
                 Text = processed,
-                VoiceId = voiceId
+                VoiceId = voiceId,
+                Pitch = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalPitch, 0.5f, 2.0f)
             });
 
             if (!result.Success)
