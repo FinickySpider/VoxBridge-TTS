@@ -4,6 +4,15 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+
+## [v0.14.3] -- 2026-05-03
+
+### Bug Fixes
+
+- Fixed Name & Text column expanding to push Hotkey off the right edge of the screen: `PhraseListView_SizeChanged` had a stale `fixedTotal` (328px) that was missing the Engine (75px) and Voice (95px) columns added in v0.14.1 and used old widths for Category (120→95) and Hotkey (130→110).  Updated to 453px so the auto-fill calculation correctly leaves Name & Text only the leftover space.
+- Fixed Category sort header click doing nothing: column index mapping in `PhraseSort_Click` still mapped index 3 → "Category" but Category is now at index 5 after Engine and Voice columns were inserted.
+
+---
 ## [v0.14.2] — 2026-05-03
 
 ### Bug Fixes

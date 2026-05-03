@@ -630,13 +630,13 @@ public partial class SettingsWindow : Window
         if (header.Role == GridViewColumnHeaderRole.Padding) return;
         if (PhraseListView.View is not GridView gv) return;
 
-        // Column layout after swap: 0=📌Pin(skip), 1=★IsFavorite, 2=Name, 3=Category, 4=Hotkey(skip)
+        // Column layout: 0=📌Pin(skip), 1=★IsFavorite, 2=Name&Text, 3=Engine(skip), 4=Voice(skip), 5=Category, 6=Hotkey(skip)
         var idx = gv.Columns.IndexOf(header.Column);
         var column = idx switch
         {
             1 => "IsFavorite",
             2 => "Name",
-            3 => "Category",
+            5 => "Category",
             _ => string.Empty
         };
         if (string.IsNullOrEmpty(column)) return;
@@ -711,8 +711,8 @@ public partial class SettingsWindow : Window
         if (sender is not ListView lv) return;
         if (lv.View is not GridView gv) return;
         // Auto-fill the Name column (index 2) with the remaining horizontal space.
-        // Fixed columns: ★(28) + 📌(28) + Category(120) + Hotkey(130) + scrollbar(18) + border(4)
-        const double fixedTotal = 28 + 28 + 120 + 130 + 18 + 4;
+        // Fixed columns: 📌(28) + ★(28) + Engine(75) + Voice(95) + Category(95) + Hotkey(110) + scrollbar(18) + border(4)
+        const double fixedTotal = 28 + 28 + 75 + 95 + 95 + 110 + 18 + 4;
         var available = lv.ActualWidth - fixedTotal;
         if (available > 80 && gv.Columns.Count > 2)
             gv.Columns[2].Width = Math.Max(80, available);
