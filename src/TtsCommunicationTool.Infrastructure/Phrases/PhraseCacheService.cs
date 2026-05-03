@@ -81,15 +81,17 @@ public sealed class PhraseCacheService : IPhraseCacheService
     {
         try
         {
-            if (!_tts.IsInitialized)
-            {
-                _log.Warn($"Cannot cache phrase '{phrase.Name}': TTS not initialized.");
-                return;
-            }
-
-            // Resolve effective engine and voice from phrase-level overrides, falling back to global config.
+            // Resolve effective engine FIRST so we can check the right service's readiness.
             var globalCfg = _config.CurrentConfig;
             var effectiveEngine = phrase.OverrideEngine ?? globalCfg.VoiceSettings.Engine;
+
+            // Kokoro requires local model init; ElevenLabs (HTTP API) does not.
+            // Only block cache generation when Kokoro isn't ready yet.
+            if (effectiveEngine != VoiceEngine.ElevenLabs && !_tts.IsInitialized)
+            {
+                _log.Warn($"Cannot cache phrase '{phrase.Name}': Kokoro TTS not initialized.");
+                return;
+            }
 
             string voiceId;
             if (effectiveEngine == VoiceEngine.ElevenLabs)

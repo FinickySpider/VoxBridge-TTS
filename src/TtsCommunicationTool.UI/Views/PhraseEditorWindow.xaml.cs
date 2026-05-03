@@ -41,8 +41,26 @@ public partial class PhraseEditorWindow : Window
     {
         base.OnSourceInitialized(e);
 
-        if (DataContext is PhraseEditorViewModel vm)
-            vm.BeginEditing();
+        if (DataContext is not PhraseEditorViewModel vm) return;
+
+        vm.BeginEditing();
+
+        // Restore persisted size (written to disk on next global settings save).
+        Width  = vm.WindowWidth;
+        Height = vm.WindowHeight;
+
+        // Track when the window has fully loaded so we don't record pre-layout resize events.
+        bool _sizeInit = false;
+        Loaded += (_, _) => _sizeInit = true;
+
+        SizeChanged += (_, _) =>
+        {
+            if (_sizeInit && DataContext is PhraseEditorViewModel svm && WindowState == WindowState.Normal)
+            {
+                svm.WindowWidth  = this.Width;
+                svm.WindowHeight = this.Height;
+            }
+        };
     }
 
     protected override void OnClosed(EventArgs e)
@@ -121,5 +139,19 @@ public partial class PhraseEditorWindow : Window
             Win   = false,
             Key   = key.ToString()
         };
+    }
+
+    // ─── Category ComboBox ─────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Forces the typed category text into the ViewModel when the ComboBox loses focus.
+    /// WPF editable ComboBox can silently revert the Text binding when SelectedItem changes
+    /// (e.g. after selecting from dropdown then typing a new value). This handler guarantees
+    /// the VM always reflects exactly what the user typed.
+    /// </summary>
+    private void CategoryComboBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is ComboBox cb && DataContext is PhraseEditorViewModel vm)
+            vm.Category = cb.Text;
     }
 }

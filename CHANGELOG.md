@@ -4,9 +4,23 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [v0.14.1] — 2026-05-03
 
+### Bug Fixes
 
+- **`PhraseService.Update` data loss** — `Category`, `IsFavorite`, `IsPinned`, `OverrideEngine`, `UseVoiceOverride`, `OverrideVoiceId`, `OverrideVoiceName`, and `OverridePitch` were all silently discarded on every Phrase Editor save for existing phrases. All fields are now copied correctly.
+- **ElevenLabs cache generation blocked by Kokoro init check** — `PhraseCacheService.GenerateCacheAsync` used `_tts.IsInitialized` (which returns the *global* engine's readiness, i.e. Kokoro) even for ElevenLabs phrases. This caused every hotkey play to fall through to on-the-fly synthesis, consuming credits. Cache generation for ElevenLabs phrases now proceeds regardless of Kokoro state.
+- **Cache regen race condition** — `PhraseService.Update` previously fire-and-forgot its own internal cache regeneration, which could race against Phrase Editor's explicit regen and overwrite the newly generated ElevenLabs audio. Phrase Editor now passes `skipCacheRegen: true` and exclusively owns the regen lifecycle.
+- **Category field reverts after typing** — WPF editable `ComboBox` can silently revert the `Text` binding when `SelectedItem` changes. A `LostFocus` handler in `PhraseEditorWindow` now force-pushes the typed text to the ViewModel before save.
+- **Phrase hotkeys not live after Phrase Editor save** — New/edited phrase hotkeys now activate immediately after Phrase Editor save via `RegisterPhraseHotkeys()` in `OnEditorCommit`, without requiring a full global settings save.
 
+### Features
+
+- **Phrase Editor window size persistence** — The Phrase Editor now remembers its size between sessions. Stored in `GeneralSettings.PhraseEditorWindowWidth/Height`, persisted to disk on next global save.
+- **Three new columns in phrase list** — Engine (Kokoro / ElevenLabs / (Inherited)), V.Ovr (✓ / –), and Voice name columns inserted between "Name & Text" and "Category". Computed as read-only display properties on `PhraseItem`.
+- **Dark-theme `ComboBox` control template** — Phrase Editor dropdowns (Category and Voice) now use a proper `ControlTemplate` that renders consistently in the dark VoxBridge theme regardless of Windows system theme. Arrow glyph, dropdown popup, and selected-item text are all styled correctly.
+
+---
 
 ## [v0.14.0] -- 2026-05-03
 

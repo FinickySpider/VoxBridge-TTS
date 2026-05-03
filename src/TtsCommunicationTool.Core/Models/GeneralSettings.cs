@@ -16,6 +16,10 @@ public sealed class GeneralSettings
     public double SettingsWindowWidth { get; set; } = 680;
     public double SettingsWindowHeight { get; set; } = 540;
 
+    /// <summary>Persisted size of the Phrase Editor window.</summary>
+    public double PhraseEditorWindowWidth  { get; set; } = 560;
+    public double PhraseEditorWindowHeight { get; set; } = 760;
+
     /// <summary>Show a live countdown of remaining playback time in the overlay while speaking.</summary>
     public bool ShowPlaybackTimer { get; set; } = true;
 }

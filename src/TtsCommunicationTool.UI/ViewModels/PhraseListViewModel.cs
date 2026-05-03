@@ -290,12 +290,15 @@ public sealed class PhraseListViewModel : ViewModelBase
 
     /// <summary>
     /// Called by SettingsWindow after the Phrase Editor closes with a Save or Delete result.
-    /// Marks the session dirty and refreshes the list.
+    /// Marks the session dirty, refreshes the list, and re-registers phrase hotkeys so
+    /// a newly assigned hotkey is active immediately (before the next global save).
     /// </summary>
     public void OnEditorCommit()
     {
         MarkDirty();
         Refresh();
+        // Re-register so new/changed phrase hotkeys are live without requiring global save.
+        _hotkeyHost.RegisterPhraseHotkeys();
     }
 
     /// <summary>

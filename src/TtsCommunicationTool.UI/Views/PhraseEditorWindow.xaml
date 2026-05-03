@@ -55,22 +55,118 @@
         </Style>
 
         <Style x:Key="EditorComboBox" TargetType="ComboBox">
-            <Setter Property="Background" Value="#1E1E2E"/>
-            <Setter Property="Foreground" Value="#CDD6F4"/>
-            <Setter Property="BorderBrush" Value="#45475A"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,6"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Background"        Value="#1E1E2E"/>
+            <Setter Property="Foreground"        Value="#CDD6F4"/>
+            <Setter Property="BorderBrush"       Value="#45475A"/>
+            <Setter Property="BorderThickness"   Value="1"/>
+            <Setter Property="FontSize"          Value="13"/>
+            <Setter Property="MaxDropDownHeight" Value="200"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid x:Name="Root">
+                            <!-- Background chrome -->
+                            <Border x:Name="Bd"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4"/>
+                            <!-- Layout: content column + arrow column -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="22"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- Selected item display (non-editable mode) -->
+                                <ContentPresenter x:Name="ContentSite"
+                                                  Grid.Column="0"
+                                                  Margin="8,6,0,6"
+                                                  Content="{TemplateBinding SelectionBoxItem}"
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                  IsHitTestVisible="False"
+                                                  VerticalAlignment="Center"
+                                                  HorizontalAlignment="Left"
+                                                  TextBlock.Foreground="#CDD6F4"
+                                                  TextBlock.FontSize="{TemplateBinding FontSize}"/>
+                                <!-- Editable TextBox (visible when IsEditable=True) -->
+                                <TextBox x:Name="PART_EditableTextBox"
+                                         Grid.Column="0"
+                                         Style="{x:Null}"
+                                         Background="Transparent"
+                                         Foreground="#CDD6F4"
+                                         CaretBrush="#89B4FA"
+                                         SelectionBrush="#89B4FA"
+                                         BorderThickness="0"
+                                         Padding="8,6"
+                                         VerticalAlignment="Center"
+                                         Visibility="Collapsed"
+                                         Focusable="True"
+                                         IsReadOnly="{TemplateBinding IsReadOnly}"/>
+                                <!-- Arrow glyph (visual only, not hit-testable) -->
+                                <Path x:Name="Arrow"
+                                      Grid.Column="1"
+                                      Data="M0,0 L4,4 L8,0 Z"
+                                      Fill="#8B9CC8"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      IsHitTestVisible="False"/>
+                            </Grid>
+                            <!-- Dropdown popup -->
+                            <Popup x:Name="PART_Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   MinWidth="{TemplateBinding ActualWidth}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Border Background="#2B2B3D"
+                                        BorderBrush="#45475A"
+                                        BorderThickness="1"
+                                        MaxHeight="200">
+                                    <ScrollViewer CanContentScroll="True"
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled"
+                                                  SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True"
+                                                    KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEditable" Value="True">
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="ContentSite"          Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <Trigger Property="IsDropDownOpen" Value="True">
+                                <Setter TargetName="Bd"    Property="BorderBrush" Value="#89B4FA"/>
+                                <Setter TargetName="Arrow" Property="Fill"        Value="#89B4FA"/>
+                                <Setter TargetName="Arrow" Property="Data"        Value="M0,4 L4,0 L8,4 Z"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#6C7086"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Setter Property="ItemContainerStyle">
                 <Setter.Value>
                     <Style TargetType="ComboBoxItem">
-                        <Setter Property="Background" Value="#2B2B3D"/>
-                        <Setter Property="Foreground" Value="#CDD6F4"/>
-                        <Setter Property="Padding" Value="8,6"/>
+                        <Setter Property="Background"      Value="#2B2B3D"/>
+                        <Setter Property="Foreground"      Value="#CDD6F4"/>
+                        <Setter Property="FontSize"        Value="13"/>
+                        <Setter Property="Padding"         Value="8,6"/>
                         <Setter Property="BorderThickness" Value="0"/>
                         <Style.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
                                 <Setter Property="Background" Value="#45475A"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#313244"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
@@ -254,9 +350,12 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Category" Style="{StaticResource FieldLabel}"/>
                             <Grid Grid.Column="1">
-                                <ComboBox IsEditable="True"
+                                <ComboBox x:Name="CategoryComboBox"
+                                          IsEditable="True"
+                                          IsTextSearchEnabled="False"
                                           Text="{Binding Category, UpdateSourceTrigger=PropertyChanged}"
                                           ItemsSource="{Binding Categories}"
+                                          LostFocus="CategoryComboBox_LostFocus"
                                           Style="{StaticResource EditorComboBox}"/>
                             </Grid>
                         </Grid>

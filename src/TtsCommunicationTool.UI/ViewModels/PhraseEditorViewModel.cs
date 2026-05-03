@@ -71,6 +71,19 @@ public sealed class PhraseEditorViewModel : ViewModelBase
     /// <summary>Raised when Save, Cancel, or Delete finishes — the window should close.</summary>
     public event EventHandler? CloseRequested;
 
+    // ── Window geometry (backed by IConfigService; written to disk on next global save) ────────
+    public double WindowWidth
+    {
+        get => Math.Max(480, _config.CurrentConfig.GeneralSettings.PhraseEditorWindowWidth);
+        set => _config.CurrentConfig.GeneralSettings.PhraseEditorWindowWidth = value;
+    }
+
+    public double WindowHeight
+    {
+        get => Math.Max(660, _config.CurrentConfig.GeneralSettings.PhraseEditorWindowHeight);
+        set => _config.CurrentConfig.GeneralSettings.PhraseEditorWindowHeight = value;
+    }
+
     // ── Voice / category lists ────────────────────────────────────────────────
     public ObservableCollection<VoiceInfo> KokoroVoices      { get; } = new();
     public ObservableCollection<VoiceInfo> ElevenLabsVoices  { get; } = new();
@@ -527,7 +540,8 @@ public sealed class PhraseEditorViewModel : ViewModelBase
         }
         else
         {
-            _phraseService.Update(phrase);
+            // skipCacheRegen=true: we manage cache ourselves below to avoid a race.
+            _phraseService.Update(phrase, skipCacheRegen: true);
             // Invalidate stale cache before regenerating
             _phraseCache.DeleteCache(phrase.Id);
         }

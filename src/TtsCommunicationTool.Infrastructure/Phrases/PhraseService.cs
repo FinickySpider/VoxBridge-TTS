@@ -50,7 +50,7 @@ public sealed class PhraseService : IPhraseService
         return OperationResult.Ok();
     }
 
-    public OperationResult Update(PhraseItem phrase)
+    public OperationResult Update(PhraseItem phrase, bool skipCacheRegen = false)
     {
         var (valid, error) = PhraseValidation.Validate(phrase);
         if (!valid) return OperationResult.Fail(error!);
@@ -60,17 +60,27 @@ public sealed class PhraseService : IPhraseService
 
         var textChanged = existing.Text != phrase.Text;
 
-        existing.Name = phrase.Name;
-        existing.Text = phrase.Text;
-        existing.Hotkey = phrase.Hotkey;
-        existing.SortOrder = phrase.SortOrder;
-        existing.UpdatedUtc = DateTime.UtcNow;
+        // Copy ALL phrase fields — missing fields caused silent data loss on every phrase-editor save.
+        existing.Name              = phrase.Name;
+        existing.Text              = phrase.Text;
+        existing.Category          = phrase.Category;
+        existing.IsFavorite        = phrase.IsFavorite;
+        existing.IsPinned          = phrase.IsPinned;
+        existing.Hotkey            = phrase.Hotkey;
+        existing.SortOrder         = phrase.SortOrder;
+        existing.OverrideEngine    = phrase.OverrideEngine;
+        existing.UseVoiceOverride  = phrase.UseVoiceOverride;
+        existing.OverrideVoiceId   = phrase.OverrideVoiceId;
+        existing.OverrideVoiceName = phrase.OverrideVoiceName;
+        existing.OverridePitch     = phrase.OverridePitch;
+        existing.UpdatedUtc        = DateTime.UtcNow;
 
         _ = _configService.SaveAsync(_configService.CurrentConfig);
         _log.Info($"Updated phrase '{phrase.Name}'");
 
-        // Regenerate cache if text changed
-        if (textChanged && _phraseCache is not null)
+        // Regenerate cache only when text changed AND the caller hasn't taken ownership of regen.
+        // Pass skipCacheRegen=true from PhraseEditorViewModel to prevent a race with its own regen.
+        if (textChanged && !skipCacheRegen && _phraseCache is not null)
             _ = _phraseCache.GenerateCacheAsync(existing);
 
         return OperationResult.Ok();
