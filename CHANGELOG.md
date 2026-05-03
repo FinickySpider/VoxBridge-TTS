@@ -8,6 +8,21 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.11.1] -- 2026-05-03
+
+### Bug Fixes
+
+- **Live overlay preview**: Appearance tab sliders (transparency, font) now take effect immediately on the overlay even when it is opened *after* the change, before hitting Save. `OverlayCoordinator` now stores the last previewed opacity and font family; `ShowOverlay()` uses those values in preference to the saved config.
+- **Voice engine test routing**: Switching from ElevenLabs to Kokoro in the Voice tab and clicking "Test Voice" now routes to the correct engine. `VoiceSettingsViewModel.ApplyToConfig()` was missing a write to `VoiceSettings.Engine`; `TtsRouter` therefore still routed test calls to ElevenLabs.
+
+### Improvements
+
+- **Phrases tab**: Replaced the misaligned ListBox + manually-sized header `Grid` with a native WPF `ListView + GridView`. Columns are now pixel-perfect, drag-to-resize, and auto-fill the Name column to available width. Separate ★ (sortable, col 0) and 📌 (col 1) columns.
+- **Font dropdown preview**: Increased preview font size from 13 → 17 pt so individual typefaces are clearly legible in the Appearance dropdown.
+- **Replacements ELI5**: Added "Settings used in this example" context block showing which rule flags are active in the omw/w example, making the prerequisite assumptions explicit.
+
+---
 ## [v0.11.0] -- 2026-05-03
 
 ### Features

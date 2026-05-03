@@ -282,9 +282,12 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         ApplyToConfig();
     }
 
-    /// <summary>Persists ElevenLabs settings into live config without a full save.</summary>
+    /// <summary>Persists voice engine selection and ElevenLabs settings into live config without a full save.</summary>
     private void ApplyToConfig()
     {
+        // Must write the selected engine first so TtsRouter routes to the correct provider during test playback.
+        _config.CurrentConfig.VoiceSettings.Engine = _engine;
+
         var el = _config.CurrentConfig.ElevenLabs;
         el.ApiKey = ElevenLabsApiKey;
         el.ModelId = ElevenLabsModelId;

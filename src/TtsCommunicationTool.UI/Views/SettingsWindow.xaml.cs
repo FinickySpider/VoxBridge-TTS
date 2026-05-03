@@ -518,8 +518,20 @@ public partial class SettingsWindow : Window
 
     private void PhraseSort_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button btn) return;
-        var column = btn.Tag as string ?? string.Empty;
+        if (e.OriginalSource is not GridViewColumnHeader header) return;
+        if (header.Role == GridViewColumnHeaderRole.Padding) return;
+        if (PhraseListView.View is not GridView gv) return;
+
+        // Identify column by index: 0=★(IsFavorite), 1=📌(skip), 2=Name, 3=Category, 4=Hotkey(skip)
+        var idx = gv.Columns.IndexOf(header.Column);
+        var column = idx switch
+        {
+            0 => "IsFavorite",
+            2 => "Name",
+            3 => "Category",
+            _ => string.Empty
+        };
+        if (string.IsNullOrEmpty(column)) return;
 
         if (_phrasesSortColumn == column)
             _phrasesSortAscending = !_phrasesSortAscending;
@@ -529,39 +541,39 @@ public partial class SettingsWindow : Window
             _phrasesSortAscending = true;
         }
 
-        // Update sort indicator on all header buttons
-        UpdatePhraseSortIndicators();
-
-        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(PhraseListBox.ItemsSource);
+        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(PhraseListView.ItemsSource);
         if (view is null) return;
         view.SortDescriptions.Clear();
-        if (!string.IsNullOrEmpty(column))
+        try
         {
-            try
-            {
-                view.SortDescriptions.Add(new System.ComponentModel.SortDescription(
-                    column,
-                    _phrasesSortAscending
-                        ? System.ComponentModel.ListSortDirection.Ascending
-                        : System.ComponentModel.ListSortDirection.Descending));
-            }
-            catch
-            {
-                // Property not comparable — clear sort gracefully
-                view.SortDescriptions.Clear();
-            }
+            view.SortDescriptions.Add(new System.ComponentModel.SortDescription(
+                column,
+                _phrasesSortAscending
+                    ? System.ComponentModel.ListSortDirection.Ascending
+                    : System.ComponentModel.ListSortDirection.Descending));
+        }
+        catch
+        {
+            view.SortDescriptions.Clear();
         }
     }
 
     private void UpdatePhraseSortIndicators()
     {
-        // Walk visual tree to find the header buttons and append/remove sort arrows
-        if (PhraseListBox is null) return;
-        var parent = VisualTreeHelper.GetParent(PhraseListBox);
-        // The sort indicators are in the header Border which is a sibling above PhraseListBox.
-        // We update them by finding named buttons via their Tag.
-        // Since they're not named we'll rely on the current column/direction being reflected
-        // on the next render cycle — WPF binding updates suffice for the arrow style.
+        // Sort indicators are shown by the column header text (↕ suffix).
+        // No action needed — GridViewColumnHeader click is sufficient visual feedback.
+    }
+
+    private void PhraseListView_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is not ListView lv) return;
+        if (lv.View is not GridView gv) return;
+        // Auto-fill the Name column (index 2) with the remaining horizontal space.
+        // Fixed columns: ★(28) + 📌(28) + Category(120) + Hotkey(130) + scrollbar(18) + border(4)
+        const double fixedTotal = 28 + 28 + 120 + 130 + 18 + 4;
+        var available = lv.ActualWidth - fixedTotal;
+        if (available > 80 && gv.Columns.Count > 2)
+            gv.Columns[2].Width = Math.Max(80, available);
     }
 }
 

@@ -18,6 +18,12 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
     private OverlayWindow? _overlayWindow;
     private bool _isOpening; // Absolute guard against concurrent opens
 
+    // Pending live appearance values — set by the settings window BEFORE the user hits Save.
+    // Applied when the overlay opens so unsaved slider/font changes are immediately visible.
+    // Updated by SetLiveOpacity / SetLiveFont; -1 / null means "use saved config value".
+    private double _pendingOpacity = -1;
+    private string? _pendingFontFamily;
+
     public OverlayCoordinator(
         IServiceProvider serviceProvider,
         ILoggingService log,
@@ -70,8 +76,8 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
             _overlayWindow.Width = overlaySettings.Width;
             _overlayWindow.Height = overlaySettings.Height;
             _overlayWindow.SetFontSize(overlaySettings.FontSize);
-            _overlayWindow.SetOverlayOpacity(overlaySettings.OverlayOpacity);
-            _overlayWindow.SetFontFamily(overlaySettings.OverlayFontFamily);
+            _overlayWindow.SetOverlayOpacity(_pendingOpacity >= 0 ? _pendingOpacity : overlaySettings.OverlayOpacity);
+            _overlayWindow.SetFontFamily(_pendingFontFamily ?? overlaySettings.OverlayFontFamily);
 
             // Restore last position if saved and on-screen; otherwise center
             if (overlaySettings.Left.HasValue && overlaySettings.Top.HasValue &&
@@ -156,11 +162,13 @@ public sealed class OverlayCoordinator : IOverlayCoordinator
 
     public void SetLiveOpacity(double opacity)
     {
+        _pendingOpacity = opacity;
         _overlayWindow?.SetOverlayOpacity(opacity);
     }
 
     public void SetLiveFont(string fontFamily)
     {
+        _pendingFontFamily = fontFamily;
         _overlayWindow?.SetFontFamily(fontFamily);
     }
 
