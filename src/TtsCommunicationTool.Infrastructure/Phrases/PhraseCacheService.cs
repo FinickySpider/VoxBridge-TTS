@@ -87,15 +87,36 @@ public sealed class PhraseCacheService : IPhraseCacheService
                 return;
             }
 
-            // For ElevenLabs pass empty string — ElevenLabsTtsService uses its own configured
-            // voice ID internally. For Kokoro pass the selected Kokoro voice.
-            var voiceId = _config.CurrentConfig.VoiceSettings.Engine == VoiceEngine.ElevenLabs
-                ? string.Empty
-                : _config.CurrentConfig.VoiceSettings.SelectedVoiceId;
+            // Resolve effective engine and voice from phrase-level overrides, falling back to global config.
+            var globalCfg = _config.CurrentConfig;
+            var effectiveEngine = phrase.OverrideEngine ?? globalCfg.VoiceSettings.Engine;
+
+            string voiceId;
+            if (effectiveEngine == VoiceEngine.ElevenLabs)
+            {
+                // For ElevenLabs: if this phrase specifies an override voice, pass it; otherwise
+                // pass empty and ElevenLabsTtsService will use its own configured default.
+                voiceId = (phrase.UseVoiceOverride && !string.IsNullOrEmpty(phrase.OverrideVoiceId))
+                    ? phrase.OverrideVoiceId
+                    : string.Empty;
+            }
+            else
+            {
+                // For Kokoro: if this phrase specifies an override voice, use it; otherwise use global selected.
+                voiceId = (phrase.UseVoiceOverride && !string.IsNullOrEmpty(phrase.OverrideVoiceId))
+                    ? phrase.OverrideVoiceId
+                    : globalCfg.VoiceSettings.SelectedVoiceId;
+            }
+
+            // Per-phrase pitch; phrases default to 1.0 (pitch-neutral).
+            var pitch = Math.Clamp(phrase.OverridePitch ?? 1.0f, 0.5f, 2.0f);
+
             var result = await _tts.SynthesizeAsync(new TtsRequest
             {
-                Text = phrase.Text,
-                VoiceId = voiceId
+                Text          = phrase.Text,
+                VoiceId       = voiceId,
+                Pitch         = pitch,
+                EngineOverride = phrase.OverrideEngine
             });
 
             if (!result.Success || result.AudioData is null)

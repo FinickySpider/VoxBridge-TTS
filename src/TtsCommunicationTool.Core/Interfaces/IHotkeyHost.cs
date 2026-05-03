@@ -16,4 +16,12 @@ public interface IHotkeyHost
     /// Call after settings save to pick up changed overlay/stop/phrase hotkeys.
     /// </summary>
     void RefreshAllHotkeys();
+
+    /// <summary>
+    /// When true, phrase hotkeys and the overlay hotkey are silently ignored.
+    /// Set when the Phrase Editor window is open to prevent accidental phrase playback
+    /// or overlay activation while the user is editing.
+    /// The emergency Stop hotkey remains active regardless of this flag.
+    /// </summary>
+    bool SuppressPhraseAndOverlayHotkeys { get; set; }
 }

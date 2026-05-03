@@ -7,6 +7,24 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.14.0] -- 2026-05-03
+
+### Features
+
+- **Phrase Editor window**: Full-screen modal editor (`PhraseEditorWindow`) for creating and editing phrases. Opens via "✦ New Phrase" button, "✏ Edit" button, context-menu → Edit, double-click on a phrase row, or pressing Enter on a selected row.
+- **Per-phrase voice override**: Each phrase can override the TTS engine (Kokoro / ElevenLabs), select a specific voice, and set a custom pitch independently from global voice settings. Overrides are stored on `PhraseItem` with five new fields: `OverrideEngine`, `UseVoiceOverride`, `OverrideVoiceId`, `OverrideVoiceName`, `OverridePitch`.
+- **Preview in Phrase Editor**: Play a live TTS preview (monitor output only, not secondary VRChat cable) directly from the editor with the current settings before committing. Stop, and Regen Cache buttons allow fine-grained control.
+- **Hotkey suppression during editor**: Global phrase and overlay hotkeys are suppressed while the Phrase Editor is open to prevent accidental triggers.
+
+### Improvements
+
+- **Phrases tab bottom panel replaced**: The inline Name / Text / Category text boxes and Add / Update buttons have been replaced with a cleaner action bar: `✦ New Phrase`, `✏ Edit`, `▶ Play`, Delete.
+- **Context menu "Edit" item**: Right-clicking a phrase now shows "Edit" as the first menu item, opening the Phrase Editor for that phrase.
+- **Session tracking for Phrase Editor**: New phrases or cache-regenerated phrases created via the editor are tracked for rollback so Settings → Cancel correctly undoes all session changes.
+- **`TtsRouter` engine override**: A new `EngineOverride` field on `TtsRequest` allows per-request engine routing without changing the global config, used by the editor preview and `PhraseCacheService`.
+
+---
 ## [v0.13.3] -- 2026-05-03
 
 ### Bug Fixes

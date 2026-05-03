@@ -1,0 +1,496 @@
+<Window x:Class="TtsCommunicationTool.UI.Views.PhraseEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="clr-namespace:TtsCommunicationTool.UI.Converters"
+        Title="Phrase Editor"
+        Width="560" Height="760"
+        MinWidth="480" MinHeight="660"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="CanResizeWithGrip"
+        Background="#1E1E2E"
+        Foreground="#CDD6F4">
+
+    <Window.Resources>
+        <conv:EmptyStringToVisibilityConverter    x:Key="EmptyToVisibleConverter"/>
+        <conv:NonEmptyStringToVisibilityConverter x:Key="NonEmptyToVisibleConverter"/>
+        <BooleanToVisibilityConverter             x:Key="BoolToVisConverter"/>
+        <conv:NullToCollapsedConverter            x:Key="NullToCollapsedConverter"/>
+
+        <!-- ── Typography ── -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#89B4FA"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#A6ADC8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+
+        <!-- ── Panels ── -->
+        <Style x:Key="SectionPanel" TargetType="Border">
+            <Setter Property="Background" Value="#2B2B3D"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="14,12"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <!-- ── Inputs ── -->
+        <Style x:Key="EditorTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="#1E1E2E"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="CaretBrush" Value="#89B4FA"/>
+        </Style>
+
+        <Style x:Key="EditorComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="#1E1E2E"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Background" Value="#2B2B3D"/>
+                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                        <Setter Property="Padding" Value="8,6"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter Property="Background" Value="#45475A"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="EditorCheckBox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+
+        <Style x:Key="EditorRadioButton" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,2,16,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <!-- ── Buttons ── -->
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Background" Value="#89B4FA"/>
+            <Setter Property="Foreground" Value="#1E1E2E"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="20,9"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#B4D0FB"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#45475A"/>
+            <Setter Property="Foreground" Value="#CDD6F4"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="16,9"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#585B70"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button">
+            <Setter Property="Background" Value="#F38BA8"/>
+            <Setter Property="Foreground" Value="#1E1E2E"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="16,9"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#F5A0B5"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GhostButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#89B4FA"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#45475A"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#2B2B3D"/>
+                                <Setter TargetName="Bg" Property="BorderBrush" Value="#89B4FA"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ── Scrollable body ── -->
+        <ScrollViewer Grid.Row="0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="16,14,16,4">
+
+            <StackPanel>
+
+                <!-- ── Phrase Info ── -->
+                <Border Style="{StaticResource SectionPanel}">
+                    <StackPanel>
+                        <TextBlock Text="Phrase Info" Style="{StaticResource SectionHeader}"/>
+
+                        <!-- Name -->
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Name" Style="{StaticResource FieldLabel}"/>
+                            <Grid Grid.Column="1">
+                                <TextBox x:Name="NameBox"
+                                         Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource EditorTextBox}"/>
+                                <TextBlock Text="Display name for this phrase..."
+                                           Foreground="#6C7086" FontSize="12"
+                                           IsHitTestVisible="False" Margin="10,7,0,0"
+                                           Visibility="{Binding Name, Converter={StaticResource EmptyToVisibleConverter}}"/>
+                            </Grid>
+                        </Grid>
+
+                        <!-- Category -->
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Category" Style="{StaticResource FieldLabel}"/>
+                            <Grid Grid.Column="1">
+                                <ComboBox IsEditable="True"
+                                          Text="{Binding Category, UpdateSourceTrigger=PropertyChanged}"
+                                          ItemsSource="{Binding Categories}"
+                                          Style="{StaticResource EditorComboBox}"/>
+                            </Grid>
+                        </Grid>
+
+                        <!-- Flags -->
+                        <StackPanel Orientation="Horizontal" Margin="80,0,0,0">
+                            <CheckBox Content="★  Favorite"
+                                      IsChecked="{Binding IsFavorite}"
+                                      Style="{StaticResource EditorCheckBox}"
+                                      Margin="0,0,20,0"/>
+                            <CheckBox Content="📌  Pinned"
+                                      IsChecked="{Binding IsPinned}"
+                                      Style="{StaticResource EditorCheckBox}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Phrase Text ── -->
+                <Border Style="{StaticResource SectionPanel}">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,8">
+                            <TextBlock Text="Phrase Text" Style="{StaticResource SectionHeader}" DockPanel.Dock="Left"/>
+                            <TextBlock DockPanel.Dock="Right"
+                                       VerticalAlignment="Bottom"
+                                       Margin="0,0,0,1"
+                                       FontSize="11" Foreground="#6C7086">
+                                <Run Text="{Binding TextLength, Mode=OneWay}"/>
+                                <Run Text=" chars"/>
+                            </TextBlock>
+                        </DockPanel>
+                        <Grid>
+                            <TextBox x:Name="TextBox"
+                                     Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource EditorTextBox}"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     Height="90"
+                                     VerticalScrollBarVisibility="Auto"
+                                     VerticalContentAlignment="Top"/>
+                            <TextBlock Text="What should be spoken aloud..."
+                                       Foreground="#6C7086" FontSize="12"
+                                       IsHitTestVisible="False" Margin="10,8,0,0"
+                                       VerticalAlignment="Top"
+                                       Visibility="{Binding Text, Converter={StaticResource EmptyToVisibleConverter}}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Voice Settings ── -->
+                <Border Style="{StaticResource SectionPanel}">
+                    <StackPanel>
+                        <TextBlock Text="Voice Override" Style="{StaticResource SectionHeader}"/>
+
+                        <!-- Engine radio buttons -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Engine" Style="{StaticResource FieldLabel}"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <RadioButton Content="Kokoro (local)"
+                                             IsChecked="{Binding IsKokoro, Mode=TwoWay}"
+                                             Style="{StaticResource EditorRadioButton}"/>
+                                <RadioButton Content="ElevenLabs"
+                                             IsChecked="{Binding IsElevenLabs, Mode=TwoWay}"
+                                             Style="{StaticResource EditorRadioButton}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Voice selection mode -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Voice" Style="{StaticResource FieldLabel}"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <RadioButton Content="Use default"
+                                             IsChecked="{Binding UseDefaultVoice, Mode=TwoWay}"
+                                             Style="{StaticResource EditorRadioButton}"/>
+                                <RadioButton Content="Override:"
+                                             IsChecked="{Binding UseVoiceOverride, Mode=TwoWay}"
+                                             Style="{StaticResource EditorRadioButton}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Kokoro voice ComboBox -->
+                        <Grid Margin="80,0,0,8"
+                              Visibility="{Binding IsKokoro, Converter={StaticResource BoolToVisConverter}}">
+                            <ComboBox ItemsSource="{Binding KokoroVoices}"
+                                      SelectedValue="{Binding OverrideVoiceId, Mode=TwoWay}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="DisplayName"
+                                      IsEnabled="{Binding IsOverrideVoiceEnabled}"
+                                      Style="{StaticResource EditorComboBox}"/>
+                        </Grid>
+
+                        <!-- ElevenLabs voice ComboBox -->
+                        <Grid Margin="80,0,0,8"
+                              Visibility="{Binding IsElevenLabs, Converter={StaticResource BoolToVisConverter}}">
+                            <ComboBox ItemsSource="{Binding ElevenLabsVoices}"
+                                      SelectedValue="{Binding OverrideVoiceId, Mode=TwoWay}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="DisplayName"
+                                      IsEnabled="{Binding IsOverrideVoiceEnabled}"
+                                      Style="{StaticResource EditorComboBox}"/>
+                        </Grid>
+
+                        <!-- Pitch slider -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="50"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Pitch" Style="{StaticResource FieldLabel}"/>
+                            <Slider Grid.Column="1"
+                                    Minimum="0.5" Maximum="2.0"
+                                    Value="{Binding Pitch, Mode=TwoWay}"
+                                    SmallChange="0.05" LargeChange="0.1"
+                                    TickFrequency="0.1"
+                                    IsSnapToTickEnabled="False"
+                                    Foreground="#89B4FA"
+                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding PitchDisplay}"
+                                       Foreground="#89B4FA" FontSize="12"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- ElevenLabs cost estimate -->
+                        <TextBlock Margin="80,8,0,0"
+                                   Foreground="#F9E2AF" FontSize="11"
+                                   Text="{Binding CostEstimate}"
+                                   Visibility="{Binding CostEstimate, Converter={StaticResource NonEmptyToVisibleConverter}}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Hotkey ── -->
+                <Border Style="{StaticResource SectionPanel}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Hotkey" Style="{StaticResource FieldLabel}" FontSize="13"/>
+                        <TextBox x:Name="HotkeyBox"
+                                 Grid.Column="1"
+                                 Text="{Binding HotkeyDisplay, Mode=OneWay}"
+                                 Style="{StaticResource EditorTextBox}"
+                                 IsReadOnly="True"
+                                 Cursor="Hand"
+                                 Margin="0,0,8,0"
+                                 PreviewKeyDown="HotkeyBox_PreviewKeyDown"
+                                 GotFocus="HotkeyBox_GotFocus"
+                                 LostFocus="HotkeyBox_LostFocus"
+                                 ToolTip="Click then press a key combination to set a hotkey"/>
+                        <Button Grid.Column="2"
+                                Content="Clear"
+                                Command="{Binding ClearHotkeyCommand}"
+                                Style="{StaticResource SecondaryButton}"
+                                Padding="12,6"/>
+                    </Grid>
+                </Border>
+
+                <!-- ── Preview & Cache ── -->
+                <Border Style="{StaticResource SectionPanel}">
+                    <StackPanel>
+                        <TextBlock Text="Preview" Style="{StaticResource SectionHeader}"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="▶  Play Preview"
+                                    Command="{Binding PlayPreviewCommand}"
+                                    Style="{StaticResource GhostButton}"
+                                    Margin="0,0,8,0"/>
+                            <Button Content="■  Stop"
+                                    Command="{Binding StopCommand}"
+                                    Style="{StaticResource GhostButton}"
+                                    Margin="0,0,8,0"/>
+                            <Button Content="⟳  Regen Cache"
+                                    Command="{Binding RegenVoiceCommand}"
+                                    Style="{StaticResource GhostButton}"
+                                    ToolTip="Synthesise with current settings and write to the phrase cache (used for playback in main window)"/>
+                        </StackPanel>
+
+                        <!-- Progress bar (visible while generating) -->
+                        <ProgressBar Height="3"
+                                     IsIndeterminate="True"
+                                     Margin="0,0,0,6"
+                                     Foreground="#89B4FA" Background="#45475A" BorderThickness="0"
+                                     Visibility="{Binding IsGenerating, Converter={StaticResource BoolToVisConverter}}"/>
+
+                        <TextBlock Text="{Binding StatusText}"
+                                   FontSize="12" Foreground="#A6ADC8"
+                                   TextWrapping="Wrap"/>
+
+                        <TextBlock Margin="0,4,0,0"
+                                   FontSize="11" Foreground="#6C7086"
+                                   Text="{Binding CacheStatus}"
+                                   Visibility="{Binding CacheStatus, Converter={StaticResource NonEmptyToVisibleConverter}}"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ── Footer ── -->
+        <Border Grid.Row="1"
+                Background="#2B2B3D"
+                BorderBrush="#45475A"
+                BorderThickness="0,1,0,0"
+                Padding="16,12">
+            <DockPanel>
+                <!-- Delete — left side, only shown for existing phrases -->
+                <Button Content="Delete Phrase"
+                        Command="{Binding DeleteCommand}"
+                        Style="{StaticResource DangerButton}"
+                        DockPanel.Dock="Left"
+                        Visibility="{Binding IsExistingPhrase, Converter={StaticResource BoolToVisConverter}}"/>
+
+                <!-- Cancel + Save — right side -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Cancel"
+                            Command="{Binding CancelCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="Save"
+                            Command="{Binding SaveCommand}"
+                            Style="{StaticResource ActionButton}"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

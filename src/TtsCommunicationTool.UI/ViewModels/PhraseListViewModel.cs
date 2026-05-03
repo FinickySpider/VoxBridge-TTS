@@ -104,6 +104,15 @@ public sealed class PhraseListViewModel : ViewModelBase
     /// Called with the phrase name before deletion. Return false to cancel.
     /// </summary>
     public Func<string, bool>? ConfirmDelete { get; set; }
+
+    /// <summary>Raised when the view should open the Phrase Editor. Null item = new phrase.</summary>
+    public event EventHandler<PhraseItem?>? EditorRequested;
+
+    /// <summary>Opens editor for a new phrase (bound to the New Phrase button).</summary>
+    public ICommand OpenEditorForNewCommand { get; }
+
+    /// <summary>Opens editor for the currently selected phrase (bound to Edit button / double-click / Enter).</summary>
+    public ICommand OpenEditorForSelectedCommand { get; }
     public ICommand RefreshCommand { get; }
     public ICommand ClearHotkeyCommand { get; }
     public ICommand ImportCommand { get; }
@@ -216,6 +225,10 @@ public sealed class PhraseListViewModel : ViewModelBase
         {
             if (param is PhraseItem item) TogglePinnedForItem(item);
         });
+        OpenEditorForNewCommand = new RelayCommand(() => EditorRequested?.Invoke(this, null));
+        OpenEditorForSelectedCommand = new RelayCommand(
+            () => EditorRequested?.Invoke(this, SelectedPhrase),
+            () => SelectedPhrase is not null);
 
         Refresh();
         TakeSnapshot(); // baseline for cancel/rollback
@@ -273,6 +286,35 @@ public sealed class PhraseListViewModel : ViewModelBase
         FilteredPhrases.Clear();
         foreach (var p in results)
             FilteredPhrases.Add(p);
+    }
+
+    /// <summary>
+    /// Called by SettingsWindow after the Phrase Editor closes with a Save or Delete result.
+    /// Marks the session dirty and refreshes the list.
+    /// </summary>
+    public void OnEditorCommit()
+    {
+        MarkDirty();
+        Refresh();
+    }
+
+    /// <summary>
+    /// Records a phrase added via the Phrase Editor so it can be cleaned up on rollback.
+    /// </summary>
+    public void TrackSessionAdd(string phraseId)
+    {
+        _sessionAddedIds.Add(phraseId);
+        _sessionCacheModifiedIds.Add(phraseId);
+        MarkDirty();
+    }
+
+    /// <summary>
+    /// Records that the cache for an existing phrase was regenerated via the Phrase Editor.
+    /// </summary>
+    public void TrackSessionCacheModify(string phraseId)
+    {
+        _sessionCacheModifiedIds.Add(phraseId);
+        MarkDirty();
     }
 
     private void AddPhrase()
@@ -480,7 +522,7 @@ public sealed class PhraseListViewModel : ViewModelBase
         Refresh();
     }
 
-    /// <summary>Creates a deep copy of a <see cref="PhraseItem"/>, including its optional hotkey binding.</summary>
+    /// <summary>Creates a deep copy of a <see cref="PhraseItem"/>, including its optional hotkey binding and voice overrides.</summary>
     private static PhraseItem DeepClone(PhraseItem p) => new()
     {
         Id = p.Id,
@@ -499,7 +541,12 @@ public sealed class PhraseListViewModel : ViewModelBase
         UpdatedUtc = p.UpdatedUtc,
         Category = p.Category,
         IsFavorite = p.IsFavorite,
-        IsPinned = p.IsPinned
+        IsPinned = p.IsPinned,
+        OverrideEngine = p.OverrideEngine,
+        UseVoiceOverride = p.UseVoiceOverride,
+        OverrideVoiceId = p.OverrideVoiceId,
+        OverrideVoiceName = p.OverrideVoiceName,
+        OverridePitch = p.OverridePitch,
     };
 
     private async Task PlaySelectedAsync()

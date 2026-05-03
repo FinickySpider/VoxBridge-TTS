@@ -165,7 +165,7 @@ public partial class App : System.Windows.Application
         vm.Appearance.LiveOpacityPreview = coordinator.SetLiveOpacity;
         vm.Appearance.LiveFontPreview = coordinator.SetLiveFont;
 
-        _settingsWindow = new SettingsWindow(vm);
+        _settingsWindow = new SettingsWindow(vm, _serviceProvider);
         _settingsWindow.Closed += (_, _) =>
         {
             vm.Appearance.LiveOpacityPreview = null;

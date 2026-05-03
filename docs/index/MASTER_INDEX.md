@@ -69,6 +69,7 @@ TTS Communication Tool
 - [FEAT-034: Global pitch control](../features/FEAT-034-global-pitch-control.md) — complete (SPRINT-09)
 - [FEAT-035: Overlay playback-aware send](../features/FEAT-035-overlay-playback-aware-send.md) — complete (SPRINT-09)
 - [FEAT-036: Settings UX — save toast and debounce](../features/FEAT-036-settings-save-toast.md) — complete (SPRINT-09)
+- [FEAT-037: Phrase Editor window + per-phrase voice override](../features/FEAT-037-phrase-editor.md) — complete (v0.14.0)
 
 ## Refactors
 - [REFACTOR-001: Config recovery](../refactors/REFACTOR-001-config-recovery.md) — complete (SPRINT-03)

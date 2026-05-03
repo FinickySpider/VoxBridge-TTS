@@ -12,4 +12,10 @@ public sealed class TtsRequest
     /// Phrases always pass 1.0 (pitch-neutral); only standard TTS uses the global pitch setting.
     /// </summary>
     public float Pitch { get; init; } = 1.0f;
+
+    /// <summary>
+    /// When non-null, overrides the active TTS engine configured in VoiceSettings.
+    /// Used by the phrase cache service and preview synthesis to honour per-phrase engine overrides.
+    /// </summary>
+    public VoiceEngine? EngineOverride { get; init; }
 }

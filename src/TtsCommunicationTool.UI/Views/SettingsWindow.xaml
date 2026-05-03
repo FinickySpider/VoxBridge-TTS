@@ -1559,6 +1559,8 @@
                               SizeChanged="PhraseListView_SizeChanged"
                               Loaded="PhraseListView_Loaded"
                               PreviewMouseDown="PhraseListView_PreviewMouseDown"
+                              MouseDoubleClick="PhraseListView_MouseDoubleClick"
+                              KeyDown="PhraseListView_KeyDown"
                               ItemsSource="{Binding Phrases.FilteredPhrases}"
                               SelectedItem="{Binding Phrases.SelectedPhrase}"
                               Background="#2B2B3D"
@@ -1664,6 +1666,10 @@
                                                 </Style>
                                             </ContextMenu.Resources>
                                             <!-- PlacementTarget = the ListBoxItem; Tag on it = window DataContext; DataContext on it = PhraseItem -->
+                                            <MenuItem Header="Edit"
+                                                      Command="{Binding Path=PlacementTarget.Tag.Phrases.OpenEditorForSelectedCommand,
+                                                                        RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                            <Separator Background="#45475A"/>
                                             <MenuItem Header="Toggle Favorite"
                                                       Command="{Binding Path=PlacementTarget.Tag.Phrases.ToggleFavoriteByItemCommand,
                                                                         RelativeSource={RelativeSource AncestorType=ContextMenu}}"
@@ -1923,72 +1929,29 @@
                         </ListView.View>
                     </ListView>
 
-                    <!-- Add/Delete/Play controls -->
-                    <StackPanel Grid.Row="3" Margin="8,12,8,0">
-                        <!-- Input row: name, text, category -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid Margin="0,0,4,0">
-                                <TextBox x:Name="PhraseNameBox"
-                                         Text="{Binding Phrases.EditName, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource SettingsTextBox}"/>
-                                <TextBlock Text="Phrase name..."
-                                           Foreground="#6C7086" FontSize="13"
-                                           IsHitTestVisible="False"
-                                           Margin="10,7,0,0"
-                                           Visibility="{Binding Phrases.EditName, Converter={StaticResource EmptyToVisibleConverter}}"/>
-                            </Grid>
-                            <Grid Grid.Column="1" Margin="4,0,4,0">
-                                <TextBox x:Name="PhraseTextBox"
-                                         Text="{Binding Phrases.EditText, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource SettingsTextBox}"/>
-                                <TextBlock Text="Phrase text..."
-                                           Foreground="#6C7086" FontSize="13"
-                                           IsHitTestVisible="False"
-                                           Margin="10,7,0,0"
-                                           Visibility="{Binding Phrases.EditText, Converter={StaticResource EmptyToVisibleConverter}}"/>
-                            </Grid>
-                            <Grid Grid.Column="2" Margin="0,0,0,0">
-                                <TextBox Text="{Binding Phrases.EditCategory, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource SettingsTextBox}"/>
-                                <TextBlock Text="Category..."
-                                           Foreground="#6C7086" FontSize="13"
-                                           IsHitTestVisible="False"
-                                           Margin="10,7,0,0"
-                                           Visibility="{Binding Phrases.EditCategory, Converter={StaticResource EmptyToVisibleConverter}}"/>
-                            </Grid>
-                        </Grid>
-                        <!-- Primary actions row -->
+                    <!-- Phrase controls: buttons + status + hotkey (all in a StackPanel to auto-stack vertically) -->
+                    <StackPanel Grid.Row="3" Margin="8,10,8,6">
+                        <!-- Action buttons row -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <Button Content="Add" Command="{Binding Phrases.AddCommand}"
-                                    Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
-                            <Button Content="Update" Command="{Binding Phrases.UpdateCommand}"
+                            <Button Content="&#x2736; New Phrase" Command="{Binding Phrases.OpenEditorForNewCommand}"
+                                    Style="{StaticResource ActionButton}" Margin="0,0,8,0"
+                                    ToolTip="Create a new phrase"/>
+                            <Button Content="&#x270F; Edit" Command="{Binding Phrases.OpenEditorForSelectedCommand}"
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
-                                    ToolTip="Save changes to the selected phrase"/>
+                                    ToolTip="Edit the selected phrase (double-click or Enter also works)"/>
+                            <Button Content="&#x25B6; Play" Command="{Binding Phrases.PlayCommand}"
+                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
+                                    ToolTip="Play the selected phrase"/>
                             <Button Content="Delete" Command="{Binding Phrases.DeleteCommand}"
-                                    Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
-                            <Button Content="▶ Play" Command="{Binding Phrases.PlayCommand}"
-                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
-                            <!--
-                            <Button Content="★ Fav" Command="{Binding Phrases.ToggleFavoriteCommand}"
-                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
-                                    ToolTip="Toggle favorite on selected phrase"/>
-                            <Button Content="📌 Pin" Command="{Binding Phrases.TogglePinnedCommand}"
-                                    Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"
-                                    ToolTip="Toggle pin on selected phrase"/>
-                            -->
+                                    Style="{StaticResource DangerButton}"
+                                    ToolTip="Delete the selected phrase"/>
                         </StackPanel>
-                        <!-- Import / Export on their own row so the button bar stays uncluttered -->
-                        <!-- NOTE: Import and Export are now in the bottom bar (visible on Phrases and Replacements tabs) -->
 
+                        <!-- Status message -->
                         <TextBlock Text="{Binding Phrases.PhraseStatusMessage}"
                                    Foreground="#A6E3A1" FontSize="12"
                                    Visibility="{Binding Phrases.PhraseStatusMessage, Converter={StaticResource NonEmptyToVisibleConverter}}"
-                                   Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                   Margin="0,2,0,0" TextWrapping="Wrap"/>
 
                         <!-- Hotkey assignment for selected phrase -->
                         <Grid Margin="0,8,0,0"

@@ -25,13 +25,22 @@ public sealed class TtsRouter : ITtsService
             ? _elevenLabs
             : _kokoro;
 
+    /// <summary>Selects the service to use, respecting a per-request engine override.</summary>
+    private ITtsService Resolve(TtsRequest request) =>
+        request.EngineOverride switch
+        {
+            VoiceEngine.ElevenLabs => _elevenLabs,
+            VoiceEngine.Kokoro     => _kokoro,
+            _                      => Active
+        };
+
     public bool IsInitialized => Active.IsInitialized;
 
     /// <summary>Always initialises Kokoro (offline model). ElevenLabs needs no local init.</summary>
     public Task InitializeAsync(CancellationToken ct = default) => _kokoro.InitializeAsync(ct);
 
     public Task<TtsResult> SynthesizeAsync(TtsRequest request, CancellationToken ct = default)
-        => Active.SynthesizeAsync(request, ct);
+        => Resolve(request).SynthesizeAsync(request, ct);
 
     public IReadOnlyList<VoiceInfo> GetAvailableVoices() => Active.GetAvailableVoices();
 

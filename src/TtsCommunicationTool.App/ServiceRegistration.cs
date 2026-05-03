@@ -55,6 +55,7 @@ public static class ServiceRegistration
         services.AddTransient<VoiceSettingsViewModel>();
         services.AddTransient<AppearanceSettingsViewModel>();
         services.AddTransient<PhraseListViewModel>();
+        services.AddTransient<PhraseEditorViewModel>();
         services.AddTransient<TextReplacementSettingsViewModel>();
         services.AddTransient<SettingsViewModel>();
     }

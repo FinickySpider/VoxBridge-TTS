@@ -14,14 +14,18 @@ public partial class SettingsWindow : Window
     private bool _importDialogOpen;
     // Set to true after Save or an explicit Cancel so the Closing handler doesn't double-rollback.
     private bool _committed;
+    private IServiceProvider? _services;
 
     public SettingsWindow()
     {
         InitializeComponent();
     }
 
-    public SettingsWindow(SettingsViewModel vm) : this()
+    public SettingsWindow(SettingsViewModel vm) : this(vm, null) { }
+
+    public SettingsWindow(SettingsViewModel vm, IServiceProvider? services) : this()
     {
+        _services = services;
         DataContext = vm;
 
         // Show current assembly version in the title bar so the taskbar always reflects it.
@@ -33,6 +37,9 @@ public partial class SettingsWindow : Window
         // _committed prevents the Closing handler from triggering a rollback after a save.
         vm.Saved += (_, _) => _committed = true;
         vm.Phrases.ImportCompleted += OnImportCompleted;
+
+        // Wire the Phrase Editor
+        vm.Phrases.EditorRequested += (_, phrase) => OpenPhraseEditor(vm.Phrases, phrase);
 
         // Show a Yes/No confirmation before a phrase is deleted.
         vm.Phrases.ConfirmDelete = name =>
@@ -106,7 +113,62 @@ public partial class SettingsWindow : Window
         };
     }
 
-    // ── ElevenLabs API key PasswordBox bridge ────────────────────────────────
+    // ── Phrase Editor ─────────────────────────────────────────────────────────
+
+    private void PhraseListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        // Only open editor when a row was double-clicked, not the header or empty space
+        var item = FindVisualParent<ListViewItem>(e.OriginalSource as DependencyObject);
+        if (item is null) return;
+        if (DataContext is SettingsViewModel vm)
+            vm.Phrases.OpenEditorForSelectedCommand.Execute(null);
+    }
+
+    private void PhraseListView_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && DataContext is SettingsViewModel vm)
+        {
+            vm.Phrases.OpenEditorForSelectedCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    private void OpenPhraseEditor(PhraseListViewModel phrases, PhraseItem? phrase)
+    {
+        if (_services is null) return;
+
+        var editorVm = _services.GetService(typeof(PhraseEditorViewModel)) as PhraseEditorViewModel;
+        if (editorVm is null) return;
+
+        // Supply existing category list for autocomplete
+        var categories = phrases.FilteredPhrases
+            .Select(p => p.Category)
+            .Where(c => !string.IsNullOrEmpty(c))
+            .Distinct()
+            .OrderBy(c => c)!
+            .Cast<string>();
+
+        editorVm.Initialize(phrase, categories);
+
+        var window = new PhraseEditorWindow(editorVm)
+        {
+            Owner = this
+        };
+        window.ShowDialog();
+
+        if (editorVm.Result == PhraseEditorResult.None) return;
+
+        // Track the change for rollback support
+        if (editorVm.Result == PhraseEditorResult.Saved && editorVm.IsNewPhrase)
+            phrases.TrackSessionAdd(editorVm.PhraseId);
+        else
+            phrases.TrackSessionCacheModify(editorVm.PhraseId);
+
+        // Refresh the list to show the new/updated phrase
+        phrases.OnEditorCommit();
+    }
+
+    // ── ElevenLabs API key PasswordBox bridge ─────────────────────────────────
 
     /// <summary>
     /// PasswordBox cannot data-bind its Password property, so we push the value

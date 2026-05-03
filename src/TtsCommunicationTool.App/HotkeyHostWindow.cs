@@ -61,6 +61,9 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
         Loaded += OnLoaded;
     }
 
+    /// <inheritdoc />
+    public bool SuppressPhraseAndOverlayHotkeys { get; set; }
+
     public event EventHandler? SettingsRequested;
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -163,7 +166,8 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
         switch (id)
         {
             case "overlay":
-                Dispatcher.Invoke(() => _overlay.ToggleOverlay());
+                if (!SuppressPhraseAndOverlayHotkeys)
+                    Dispatcher.Invoke(() => _overlay.ToggleOverlay());
                 break;
             case "stop":
                 _audioRouter.StopAll();
@@ -180,6 +184,7 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
             default:
                 if (id.StartsWith("phrase:"))
                 {
+                    if (SuppressPhraseAndOverlayHotkeys) break;
                     var phraseId = id["phrase:".Length..];
                     _ = PlayPhraseAsync(phraseId);
                 }
