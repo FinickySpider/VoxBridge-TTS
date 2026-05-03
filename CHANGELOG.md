@@ -11,6 +11,25 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.12.0] -- 2026-05-03
+
+### Features
+
+- **ElevenLabs subscription credits display**: The Voice tab now shows characters remaining and total quota (e.g. `5,000 / 100,000 characters remaining`) fetched live from the ElevenLabs `/v1/user/subscription` endpoint.
+- **Cross-session character usage tracking**: Every successful ElevenLabs synthesis increments a persistent `TotalCharactersUsed` counter written to config. Displayed below the credits line as `X chars sent lifetime`.
+- **Auto-fetch voices on API key entry**: Typing an ElevenLabs API key triggers a debounced (800 ms) automatic voice + subscription fetch — no need to click "Fetch Voices" manually. Selecting the ElevenLabs engine also triggers an auto-fetch if a key is already stored.
+- **Custom voice highlighting**: Cloned and AI-generated ElevenLabs voices are tagged `IsCustomVoice` and shown in **red** in the Voice dropdown. A persistent info panel below the dropdown explains that red voices require a Creator plan or higher.
+- **Model dropdown**: The ElevenLabs Model field is now a dropdown instead of a free-text box. Options: `Flash v2.5`, `Turbo v2.5`, `v3 Multilingual`, `Multilingual v2` with pricing info in each entry. Defaults to `eleven_multilingual_v2`.
+- **Overlay credit estimate**: While typing in the overlay with ElevenLabs active, a live `≈N` character estimate is displayed in the status bar (e.g. `≈107`) so you can judge quota usage before sending.
+
+### Improvements
+
+- `ElevenLabsSettings` model extended with `SubscriptionCharacterCount`, `SubscriptionCharacterLimit`, and `TotalCharactersUsed` fields (all persisted in config).
+- `VoiceInfo` model extended with `IsCustomVoice` bool, set from the `category` field in the ElevenLabs voices API response.
+- `ElevenLabsTtsService` now exposes `FetchUserSubscriptionAsync()` and increments `TotalCharactersUsed` after every successful synthesis.
+
+---
 ## [v0.11.3] -- 2026-05-03
 
 ### Bug Fixes
