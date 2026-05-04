@@ -8,6 +8,16 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.15.2] -- 2026-05-03
+
+### Bug Fixes
+
+- **CRITICAL — ElevenLabs credits consumed on every Play Preview despite showing "✓ Cached"**: The v0.15.1 fix used `PhraseCacheService.GetCachedAudio` (disk I/O + WAV parsing) as the cache gate. If the WAV parse returned `null` for any reason, execution fell through to synthesis. Replaced with a **private in-memory `PlaybackRequest? _previewCache` field** in the ViewModel. The audio bytes are stored in RAM after the first synthesis; all subsequent Play Preview clicks use this in-memory copy directly — no disk read, no WAV parsing, no TTS call, zero ambiguity. Credits are spent **only** on: first Play Preview with no cache, or Regen Cache.
+- **Cache status indicator not updating live**: Previously `RefreshCacheStatus` checked `PhraseCacheService.HasCache` (file exists on disk) — so it never turned amber when text/voice/engine/pitch changed. Now a `_previewCacheValid` bool flag governs the indicator. `InvalidatePreviewCache()` clears both `_previewCache` and `_previewCacheValid` (and calls `RefreshCacheStatus`) whenever any setting that affects synthesis changes. Indicator turns amber immediately on change, green when cached audio is in memory.
+- **Phrase Editor window size not persisting across sessions**: `SizeChanged` was writing dimensions to the config object in memory but `SaveAsync` was never called when the editor closed. `OnClosed` in the code-behind now calls `vm.SaveWindowSize()` which fires `_config.SaveAsync(_config.CurrentConfig)`, persisting the dimensions to `config.json` immediately on close.
+
+---
 ## [v0.15.1] -- 2026-05-03
 
 ### Features

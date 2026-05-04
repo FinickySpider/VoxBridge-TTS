@@ -33,6 +33,15 @@ public sealed class PhraseEditorViewModel : ViewModelBase
     private bool   _isGenerating;
     private bool   _isPlaying;
 
+    // ── In-memory preview cache ───────────────────────────────────────────────
+    // Stores the last synthesized audio for the CURRENT settings (text + engine +
+    // voice + pitch). Set on first Play Preview or Regen Cache. Cleared whenever
+    // any setting that affects synthesis is changed. This guarantees that Play
+    // Preview never calls a TTS engine a second time — ElevenLabs credits are
+    // spent only on the first preview (or an explicit Regen Cache).
+    private PlaybackRequest? _previewCache;
+    private bool             _previewCacheValid;   // true = _previewCache matches current settings
+
     // ── Phrase core fields ────────────────────────────────────────────────────
     private string _name     = string.Empty;
     private string _text     = string.Empty;
@@ -107,7 +116,7 @@ public sealed class PhraseEditorViewModel : ViewModelBase
                 OnPropertyChanged(nameof(CostEstimate));
                 OnPropertyChanged(nameof(CanSave));
                 OnPropertyChanged(nameof(CanPreview));
-                RefreshCacheStatus();
+                InvalidatePreviewCache();
             }
         }
     }
@@ -163,7 +172,7 @@ public sealed class PhraseEditorViewModel : ViewModelBase
             OnPropertyChanged(nameof(IsKokoro));
             OnPropertyChanged(nameof(IsElevenLabs));
             OnPropertyChanged(nameof(CostEstimate));
-            RefreshCacheStatus();
+            InvalidatePreviewCache();
         }
     }
 
@@ -188,6 +197,7 @@ public sealed class PhraseEditorViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(UseDefaultVoice));
                 OnPropertyChanged(nameof(IsOverrideVoiceEnabled));
+                InvalidatePreviewCache();
             }
         }
     }
@@ -213,7 +223,7 @@ public sealed class PhraseEditorViewModel : ViewModelBase
                     : KokoroVoices;
                 var match = voices.FirstOrDefault(v => v.Id == value);
                 if (match is not null) OverrideVoiceName = match.DisplayName;
-                RefreshCacheStatus();
+                InvalidatePreviewCache();
             }
         }
     }
@@ -234,7 +244,7 @@ public sealed class PhraseEditorViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(PitchDisplay));
                 OnPropertyChanged(nameof(PitchPercent));
-                RefreshCacheStatus();
+                InvalidatePreviewCache();
             }
         }
     }
@@ -374,7 +384,9 @@ public sealed class PhraseEditorViewModel : ViewModelBase
             _useVoiceOverride  = false;
             _overrideVoiceId   = string.Empty;
             _overrideVoiceName = string.Empty;
-            _pitch = 1.0f;
+            _pitch             = 1.0f;
+            _previewCache      = null;
+            _previewCacheValid = false;
         }
         else
         {
@@ -389,7 +401,12 @@ public sealed class PhraseEditorViewModel : ViewModelBase
             _useVoiceOverride  = phrase.UseVoiceOverride;
             _overrideVoiceId   = phrase.OverrideVoiceId   ?? string.Empty;
             _overrideVoiceName = phrase.OverrideVoiceName ?? string.Empty;
-            _pitch = phrase.OverridePitch ?? 1.0f;
+            _pitch             = phrase.OverridePitch ?? 1.0f;
+
+            // Pre-load the on-disk cache into memory so the first Play Preview
+            // is instant and costs zero credits — no synthesis needed.
+            _previewCache      = _phraseCache.GetCachedAudio(_phraseId);
+            _previewCacheValid = _previewCache is not null;
         }
 
         // Notify all derived properties after bulk set
@@ -674,23 +691,39 @@ public sealed class PhraseEditorViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// True when a cache file exists for the current phrase ID.
-    /// Bound by the XAML cache status panel to tint the indicator green vs yellow.
+    /// True when the in-memory preview cache is valid for the current settings.
+    /// Bound by XAML to colour the cache status indicator green vs amber.
     /// </summary>
-    public bool HasEditorCache => !_isNewPhrase && _phraseCache.HasCache(_phraseId);
+    public bool HasEditorCache => _previewCacheValid;
+
+    /// <summary>
+    /// Clears the in-memory preview cache and updates the cache status indicator.
+    /// Called whenever any setting that affects synthesis is changed.
+    /// </summary>
+    private void InvalidatePreviewCache()
+    {
+        _previewCache      = null;
+        _previewCacheValid = false;
+        RefreshCacheStatus();
+    }
 
     private void RefreshCacheStatus()
     {
         OnPropertyChanged(nameof(HasEditorCache));
         if (_isNewPhrase)
         {
-            CacheStatus = "New phrase — first Play Preview or Save will generate and store audio.";
+            CacheStatus = _previewCacheValid
+                ? "\u2713 Cached \u2014 Play Preview will use stored audio (no re-synthesis)."
+                : "New phrase \u2014 Play Preview will synthesize and cache on first run.";
             return;
         }
-        CacheStatus = _phraseCache.HasCache(_phraseId)
-            ? "✓ Cached — Play Preview will use stored audio (no re-synthesis)."
-            : "✗ No cache — Play Preview will synthesize and cache on first run.";
+        CacheStatus = _previewCacheValid
+            ? "\u2713 Cached \u2014 Play Preview will use stored audio (no re-synthesis)."
+            : "\u2717 No cache for current settings \u2014 Play Preview will synthesize once, then cache.";
     }
+
+    /// <summary>Persists the current window dimensions to the config file.</summary>
+    public void SaveWindowSize() => _ = _config.SaveAsync(_config.CurrentConfig);
 
     private void NotifyPlaybackStateChanged()
     {

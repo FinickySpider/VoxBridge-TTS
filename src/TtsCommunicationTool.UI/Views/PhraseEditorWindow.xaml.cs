@@ -68,7 +68,10 @@ public partial class PhraseEditorWindow : Window
         base.OnClosed(e);
 
         if (DataContext is PhraseEditorViewModel vm)
+        {
             vm.EndEditing();
+            vm.SaveWindowSize();   // persist window dimensions to config.json
+        }
     }
 
     // ─── Hotkey capture ───────────────────────────────────────────────────────
