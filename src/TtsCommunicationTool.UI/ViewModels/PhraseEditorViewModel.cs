@@ -786,7 +786,11 @@ public sealed class PhraseEditorViewModel : ViewModelBase
     /// </summary>
     public void SaveWindowSize()
     {
-        try { _config.SaveAsync(_config.CurrentConfig).GetAwaiter().GetResult(); }
+        // Must NOT call SaveAsync directly with .GetAwaiter().GetResult() from the UI thread —
+        // that deadlocks because the async continuation tries to resume on the UI thread, which
+        // is already blocked waiting. Task.Run offloads to the thread pool so continuations
+        // complete there, not on the UI thread.
+        try { Task.Run(() => _config.SaveAsync(_config.CurrentConfig)).GetAwaiter().GetResult(); }
         catch (Exception ex) { _log.Warn($"PhraseEditor: failed to save window size: {ex.Message}"); }
     }
 

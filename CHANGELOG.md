@@ -10,6 +10,15 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.15.4] -- 2026-05-03
+
+### Bug Fixes
+
+- **Entire program hangs after closing Phrase Editor**: `SaveWindowSize()` called `.GetAwaiter().GetResult()` directly on the UI thread. `JsonConfigService.SaveAsync` uses `await File.WriteAllTextAsync(...)` whose continuation is scheduled back onto the WPF `SynchronizationContext` (the UI thread). Since the UI thread was blocked waiting for the task, and the task was waiting for the UI thread to resume it — classic deadlock. Fixed: wrapped in `Task.Run(...)` so the async work runs on the thread pool, continuations complete there, and the UI thread is never asked to resume a task it's blocking on.
+
+
+---
 ## [v0.15.3] -- 2026-05-03
 
 ### Bug Fixes
