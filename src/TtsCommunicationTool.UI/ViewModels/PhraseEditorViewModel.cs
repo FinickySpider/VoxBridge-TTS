@@ -548,7 +548,9 @@ public sealed class PhraseEditorViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(_text)) return;
 
         IsGenerating = true;
-        StatusText   = "Generating audio cache…";
+        StatusText   = _editorEngine == VoiceEngine.ElevenLabs
+            ? "Regenerating via ElevenLabs (credits will be used)…"
+            : "Generating audio cache…";
 
         try
         {
@@ -562,9 +564,19 @@ public sealed class PhraseEditorViewModel : ViewModelBase
                 return;
             }
 
+            // Update in-memory cache — next Play Preview is free.
+            _previewCache = new PlaybackRequest
+            {
+                AudioData     = result.AudioData,
+                SampleRate    = result.SampleRate,
+                Channels      = result.Channels,
+                BitsPerSample = result.BitsPerSample
+            };
+            _previewCacheValid = true;
+
             WriteWavCache(_phraseId, result);
             RefreshCacheStatus();
-            StatusText  = "Cache updated.";
+            StatusText = "Cache updated.";
             _log.Info($"PhraseEditor: voice cache regenerated for phrase '{_name}'.");
         }
         catch (Exception ex)
@@ -600,14 +612,59 @@ public sealed class PhraseEditorViewModel : ViewModelBase
         }
         else
         {
-            // skipCacheRegen=true: we manage cache ourselves below to avoid a race.
+            // skipCacheRegen=true: we manage the disk cache ourselves below.
             _phraseService.Update(phrase, skipCacheRegen: true);
-            // Invalidate stale cache before regenerating
-            _phraseCache.DeleteCache(phrase.Id);
         }
 
-        StatusText = "Generating audio cache…";
-        await _phraseCache.GenerateCacheAsync(phrase);
+        // ── Cache handling ────────────────────────────────────────────────────
+        // If we already have a valid in-memory preview for the current settings,
+        // write that audio directly to disk. This preserves EXACTLY the audio the
+        // user just previewed and approved — especially important for ElevenLabs
+        // where re-generating would cost credits and produce different output than
+        // what the user heard.
+        // Only call GenerateCacheAsync when there is no in-memory preview yet
+        // (e.g. the user pressed Save without having previewed first).
+        if (_previewCacheValid && _previewCache is not null)
+        {
+            // In-memory preview exists — flush it to disk (zero TTS calls).
+            StatusText = "Saving…";
+            var cacheDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "TtsCommunicationTool", "phrase_cache");
+            Directory.CreateDirectory(cacheDir);
+            var wavPath = Path.Combine(cacheDir, $"{phrase.Id}.wav");
+
+            // Build WAV from the in-memory PlaybackRequest
+            var pr        = _previewCache;
+            int byteRate  = pr.SampleRate * pr.Channels * (pr.BitsPerSample / 8);
+            int blockAlign = pr.Channels * (pr.BitsPerSample / 8);
+            using var ms  = new System.IO.MemoryStream();
+            using var bw  = new System.IO.BinaryWriter(ms);
+            bw.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));
+            bw.Write(36 + pr.AudioData!.Length);
+            bw.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"));
+            bw.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
+            bw.Write(16);
+            bw.Write((short)1);
+            bw.Write((short)pr.Channels);
+            bw.Write(pr.SampleRate);
+            bw.Write(byteRate);
+            bw.Write((short)blockAlign);
+            bw.Write((short)pr.BitsPerSample);
+            bw.Write(System.Text.Encoding.ASCII.GetBytes("data"));
+            bw.Write(pr.AudioData.Length);
+            bw.Write(pr.AudioData);
+            bw.Flush();
+            await File.WriteAllBytesAsync(wavPath, ms.ToArray());
+        }
+        else
+        {
+            // No preview yet — generate now (only time credits are spent on Save).
+            StatusText = _editorEngine == VoiceEngine.ElevenLabs
+                ? "Generating audio via ElevenLabs (credits will be used)…"
+                : "Generating audio cache…";
+            await _phraseCache.GenerateCacheAsync(phrase);
+        }
 
         Result = PhraseEditorResult.Saved;
         CloseRequested?.Invoke(this, EventArgs.Empty);
@@ -722,8 +779,16 @@ public sealed class PhraseEditorViewModel : ViewModelBase
             : "\u2717 No cache for current settings \u2014 Play Preview will synthesize once, then cache.";
     }
 
-    /// <summary>Persists the current window dimensions to the config file.</summary>
-    public void SaveWindowSize() => _ = _config.SaveAsync(_config.CurrentConfig);
+    /// <summary>
+    /// Persists the current window dimensions to the config file.
+    /// Called from OnClosed (UI thread) — blocks synchronously so the file is
+    /// guaranteed to be written before the window is fully destroyed.
+    /// </summary>
+    public void SaveWindowSize()
+    {
+        try { _config.SaveAsync(_config.CurrentConfig).GetAwaiter().GetResult(); }
+        catch (Exception ex) { _log.Warn($"PhraseEditor: failed to save window size: {ex.Message}"); }
+    }
 
     private void NotifyPlaybackStateChanged()
     {

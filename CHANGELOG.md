@@ -9,6 +9,18 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.15.3] -- 2026-05-03
+
+### Bug Fixes
+
+- **CRITICAL — ElevenLabs credits still charged on every Play Preview (real root cause)**: The `_previewCache`/`_previewCacheValid` fields added in v0.15.2 were never checked in `PlayPreviewAsync`. The method still called `_phraseCache.GetCachedAudio` (disk I/O + WAV parse) as its cache gate. If that returned null for any reason execution fell through to a fresh ElevenLabs call. Fixed: `PlayPreviewAsync` now checks `_previewCacheValid && _previewCache is not null` as the SOLE gate — disk is never touched during playback, there is no fallback path to synthesis.
+- **Cache-miss path never populated `_previewCache`**: When synthesis succeeded in the old miss path, a local `playback` variable was created and played but `_previewCache` and `_previewCacheValid` were never set. So the second Play Preview always found `_previewCacheValid = false` and synthesized again. Fixed: after synthesis, audio is stored in `_previewCache` and `_previewCacheValid = true` before playback.
+- **`RegenVoiceAsync` never populated `_previewCache`**: After Regen Cache, the in-memory field was empty, so next Play Preview fell through to synthesis instead of using the just-generated audio. Fixed: Regen now sets `_previewCache` and `_previewCacheValid = true` after a successful synthesize.
+- **`SaveAsync` always deletes cache and regenerates via TTS on Save**: `_phraseCache.DeleteCache` + `GenerateCacheAsync` was unconditional — every Save called ElevenLabs at full cost and produced different audio than what the user heard in preview. Fixed: if `_previewCacheValid` is true, Save writes the in-memory preview audio directly to the disk cache WAV file (zero TTS calls, exact same audio the user approved). `GenerateCacheAsync` is only called when the user presses Save without having previewed at all.
+- **Window size not persisting across sessions**: `SaveWindowSize()` used `_ = _config.SaveAsync(...)` (fire-and-forget). If the async task didn't complete before the window was destroyed the size was silently lost. Fixed: `SaveWindowSize` now blocks synchronously via `.GetAwaiter().GetResult()` — the file is guaranteed written before `OnClosed` returns.
+
+---
 ## [v0.15.2] -- 2026-05-03
 
 ### Bug Fixes
