@@ -6,6 +6,31 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+
+## [v0.15.1] -- 2026-05-03
+
+### Features
+
+- (add features here)
+
+### Bug Fixes
+
+- (add bug fixes here)
+
+### Improvements
+
+- (add improvements here)
+
+---
+## [v0.15.0] -- 2026-05-03
+
+### Bug Fixes
+
+- **CRITICAL** — Phrase Editor category and voice ComboBoxes completely non-functional (items never appeared, dropdown never opened on click). Root cause: `EditorComboBox` ControlTemplate had **no `ToggleButton`**. Without one, clicking the arrow area does nothing because every other element in the template is either `IsHitTestVisible="False"` (ContentPresenter, arrow Path) or a TextBox that handles focus but not dropdown-open. The `SettingsComboBox` (which works) uses a `ToggleButton` bound `TwoWay` to `IsDropDownOpen` — that is the correct WPF ComboBox pattern. Rewrote `EditorComboBox` template to match: ToggleButton + `StackPanel IsItemsHost="True"` (reverting the incorrect v0.14.4 `ItemsPresenter` change; `SettingsComboBox` always used `StackPanel IsItemsHost` and works).
+- Fixed `PhraseListViewModel.PlaySelectedAsync` fallback path (cache miss): previously synthesised using the global Kokoro voice regardless of per-phrase engine/voice overrides. Now delegates to `PhraseCacheService.GenerateCacheAsync` (which already contains the full override logic) and plays from the resulting cache file, so phrases with ElevenLabs or per-voice overrides are played correctly even on a cold cache.
+
+---
 ## [v0.14.4] -- 2026-05-03
 
 ### Bug Fixes

@@ -570,31 +570,17 @@ public sealed class PhraseListViewModel : ViewModelBase
             return;
         }
 
-        // Fallback: generate on-the-fly and cache it
-        var ttsResult = await _tts.SynthesizeAsync(new TtsRequest
+        // Fallback: generate and cache using per-phrase voice/engine settings (same logic as
+        // PhraseCacheService: respects OverrideEngine, UseVoiceOverride, OverrideVoiceId).
+        await _phraseCache.GenerateCacheAsync(SelectedPhrase);
+        var generated = _phraseCache.GetCachedAudio(SelectedPhrase.Id);
+        if (generated is null)
         {
-            Text = SelectedPhrase.Text,
-            VoiceId = cfg.VoiceSettings.SelectedVoiceId
-        });
-
-        if (!ttsResult.Success || ttsResult.AudioData is null)
-        {
-            _log.Warn($"Phrase playback failed: {ttsResult.ErrorMessage}");
+            _log.Warn($"Phrase playback failed: cache generation produced no audio for '{SelectedPhrase.Name}'.");
             return;
         }
 
-        // Cache for next time
-        _ = _phraseCache.GenerateCacheAsync(SelectedPhrase);
-
-        var playback = new PlaybackRequest
-        {
-            AudioData = ttsResult.AudioData,
-            SampleRate = ttsResult.SampleRate,
-            Channels = ttsResult.Channels,
-            BitsPerSample = ttsResult.BitsPerSample
-        };
-
-        await _audioRouter.PlayAsync(playback,
+        await _audioRouter.PlayAsync(generated,
             cfg.AudioSettings.MonitorOutputDeviceId,
             cfg.AudioSettings.SecondaryOutputDeviceId,
             cfg.AudioSettings.MonitorVolume,

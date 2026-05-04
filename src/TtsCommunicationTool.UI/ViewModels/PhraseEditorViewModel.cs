@@ -425,12 +425,52 @@ public sealed class PhraseEditorViewModel : ViewModelBase
         _audioRouter.StopAll();
         IsGenerating = true;
         IsPlaying    = false;
-        StatusText   = "Generating preview…";
+
+        var cfg = _config.CurrentConfig;
+
+        // ── Check cache first ─────────────────────────────────────────────────
+        // Using cached audio avoids re-synthesizing on every click, which is
+        // critical for ElevenLabs (each synthesis consumes credits). Cache is
+        // written on the first preview and reused until explicitly regenerated
+        // via "Regen Cache" or until the phrase is saved with changed settings.
+        var cached = _phraseCache.GetCachedAudio(_phraseId);
+        if (cached is not null)
+        {
+            IsGenerating = false;
+            IsPlaying    = true;
+            StatusText   = "Playing preview (cached)…";
+            try
+            {
+                await _audioRouter.PlayAsync(
+                    cached,
+                    cfg.AudioSettings.MonitorOutputDeviceId,
+                    null,
+                    cfg.AudioSettings.MonitorVolume,
+                    0);
+                StatusText = "Ready to preview.";
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Playback error: {ex.Message}";
+                _log.Error("PhraseEditor cached playback exception", ex);
+            }
+            finally
+            {
+                IsGenerating = false;
+                IsPlaying    = false;
+            }
+            return;
+        }
+
+        // ── No cache — synthesize, write cache, then play ─────────────────────
+        StatusText = _editorEngine == VoiceEngine.ElevenLabs
+            ? "Synthesizing via ElevenLabs (credits will be used)…"
+            : "Generating preview…";
 
         try
         {
             var request = BuildPreviewRequest();
-            var svc = GetActiveService();
+            var svc     = GetActiveService();
 
             var result = await svc.SynthesizeAsync(request);
             if (!result.Success || result.AudioData is null)
@@ -439,6 +479,10 @@ public sealed class PhraseEditorViewModel : ViewModelBase
                 _log.Warn($"PhraseEditor preview failed: {result.ErrorMessage}");
                 return;
             }
+
+            // Write to cache so all subsequent previews are free.
+            WriteWavCache(_phraseId, result);
+            RefreshCacheStatus();
 
             IsGenerating = false;
             IsPlaying    = true;
@@ -453,7 +497,6 @@ public sealed class PhraseEditorViewModel : ViewModelBase
             };
 
             // Preview → monitor (headphones) only; no secondary output.
-            var cfg = _config.CurrentConfig;
             await _audioRouter.PlayAsync(
                 playback,
                 cfg.AudioSettings.MonitorOutputDeviceId,
@@ -503,7 +546,7 @@ public sealed class PhraseEditorViewModel : ViewModelBase
             }
 
             WriteWavCache(_phraseId, result);
-            CacheStatus = "Generated for current settings";
+            RefreshCacheStatus();
             StatusText  = "Cache updated.";
             _log.Info($"PhraseEditor: voice cache regenerated for phrase '{_name}'.");
         }
@@ -630,16 +673,23 @@ public sealed class PhraseEditorViewModel : ViewModelBase
         };
     }
 
+    /// <summary>
+    /// True when a cache file exists for the current phrase ID.
+    /// Bound by the XAML cache status panel to tint the indicator green vs yellow.
+    /// </summary>
+    public bool HasEditorCache => !_isNewPhrase && _phraseCache.HasCache(_phraseId);
+
     private void RefreshCacheStatus()
     {
+        OnPropertyChanged(nameof(HasEditorCache));
         if (_isNewPhrase)
         {
-            CacheStatus = string.Empty;
+            CacheStatus = "New phrase — first Play Preview or Save will generate and store audio.";
             return;
         }
         CacheStatus = _phraseCache.HasCache(_phraseId)
-            ? "Generated for current settings"
-            : "No cache — will generate on save.";
+            ? "✓ Cached — Play Preview will use stored audio (no re-synthesis)."
+            : "✗ No cache — Play Preview will synthesize and cache on first run.";
     }
 
     private void NotifyPlaybackStateChanged()

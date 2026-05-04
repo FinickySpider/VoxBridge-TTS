@@ -65,52 +65,78 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Grid x:Name="Root">
-                            <!-- Background chrome -->
-                            <Border x:Name="Bd"
-                                    Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="4"/>
-                            <!-- Layout: content column + arrow column -->
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="22"/>
-                                </Grid.ColumnDefinitions>
-                                <!-- Selected item display (non-editable mode) -->
-                                <ContentPresenter x:Name="ContentSite"
-                                                  Grid.Column="0"
-                                                  Margin="8,6,0,6"
-                                                  Content="{TemplateBinding SelectionBoxItem}"
-                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                                  IsHitTestVisible="False"
-                                                  VerticalAlignment="Center"
-                                                  HorizontalAlignment="Left"
-                                                  TextBlock.Foreground="#CDD6F4"
-                                                  TextBlock.FontSize="{TemplateBinding FontSize}"/>
-                                <!-- Editable TextBox (visible when IsEditable=True) -->
-                                <TextBox x:Name="PART_EditableTextBox"
-                                         Grid.Column="0"
-                                         Style="{x:Null}"
-                                         Background="Transparent"
-                                         Foreground="#CDD6F4"
-                                         CaretBrush="#89B4FA"
-                                         SelectionBrush="#89B4FA"
-                                         BorderThickness="0"
-                                         Padding="8,6"
-                                         VerticalAlignment="Center"
-                                         Visibility="Collapsed"
-                                         Focusable="True"
-                                         IsReadOnly="{TemplateBinding IsReadOnly}"/>
-                                <!-- Arrow glyph (visual only, not hit-testable) -->
-                                <Path x:Name="Arrow"
-                                      Grid.Column="1"
-                                      Data="M0,0 L4,4 L8,0 Z"
-                                      Fill="#8B9CC8"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"
-                                      IsHitTestVisible="False"/>
-                            </Grid>
+                            <!-- ToggleButton covers entire control — essential for click-to-open/close.
+                                 Without this, clicking the arrow area does nothing because all other
+                                 child elements are either IsHitTestVisible=False or the editable TextBox. -->
+                            <ToggleButton x:Name="ToggleButton"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          Focusable="False"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Bd"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="4">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="22"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Path x:Name="Arrow"
+                                                      Grid.Column="1"
+                                                      Data="M0,0 L4,4 L8,0 Z"
+                                                      Fill="#8B9CC8"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Bd"    Property="BorderBrush" Value="#89B4FA"/>
+                                                <Setter TargetName="Arrow" Property="Fill"        Value="#89B4FA"/>
+                                                <Setter TargetName="Arrow" Property="Data"        Value="M0,4 L4,0 L8,4 Z"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="#6C7086"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <!-- Selected item display (non-editable mode, sits on top of ToggleButton) -->
+                            <ContentPresenter x:Name="ContentSite"
+                                              Margin="8,6,24,6"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              IsHitTestVisible="False"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left">
+                                <ContentPresenter.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#CDD6F4"/>
+                                        <Setter Property="FontSize"   Value="13"/>
+                                    </Style>
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
+                            <!-- Editable TextBox (visible when IsEditable=True) -->
+                            <TextBox x:Name="PART_EditableTextBox"
+                                     Margin="6,0,24,0"
+                                     Style="{x:Null}"
+                                     Background="Transparent"
+                                     Foreground="#CDD6F4"
+                                     CaretBrush="#89B4FA"
+                                     SelectionBrush="#89B4FA"
+                                     BorderThickness="0"
+                                     Padding="2,6"
+                                     VerticalAlignment="Center"
+                                     Visibility="Collapsed"
+                                     Focusable="True"
+                                     IsReadOnly="{TemplateBinding IsReadOnly}"/>
                             <!-- Dropdown popup -->
                             <Popup x:Name="PART_Popup"
                                    Placement="Bottom"
@@ -122,13 +148,12 @@
                                 <Border Background="#2B2B3D"
                                         BorderBrush="#45475A"
                                         BorderThickness="1"
-                                        MaxHeight="200">
-                                    <ScrollViewer CanContentScroll="True"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <ScrollViewer SnapsToDevicePixels="True"
                                                   VerticalScrollBarVisibility="Auto"
-                                                  HorizontalScrollBarVisibility="Disabled"
-                                                  SnapsToDevicePixels="True">
-                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"
-                                                        SnapsToDevicePixels="True"/>
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <StackPanel IsItemsHost="True"
+                                                    KeyboardNavigation.DirectionalNavigation="Contained"/>
                                     </ScrollViewer>
                                 </Border>
                             </Popup>
@@ -137,14 +162,6 @@
                             <Trigger Property="IsEditable" Value="True">
                                 <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
                                 <Setter TargetName="ContentSite"          Property="Visibility" Value="Collapsed"/>
-                            </Trigger>
-                            <Trigger Property="IsDropDownOpen" Value="True">
-                                <Setter TargetName="Bd"    Property="BorderBrush" Value="#89B4FA"/>
-                                <Setter TargetName="Arrow" Property="Fill"        Value="#89B4FA"/>
-                                <Setter TargetName="Arrow" Property="Data"        Value="M0,4 L4,0 L8,4 Z"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#6C7086"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Root" Property="Opacity" Value="0.45"/>
@@ -164,6 +181,7 @@
                         <Style.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
                                 <Setter Property="Background" Value="#45475A"/>
+                                <Setter Property="Foreground" Value="#CDD6F4"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="Background" Value="#313244"/>
@@ -460,10 +478,45 @@
                             <ComboBox ItemsSource="{Binding ElevenLabsVoices}"
                                       SelectedValue="{Binding OverrideVoiceId, Mode=TwoWay}"
                                       SelectedValuePath="Id"
-                                      DisplayMemberPath="DisplayName"
                                       IsEnabled="{Binding IsOverrideVoiceEnabled}"
-                                      Style="{StaticResource EditorComboBox}"/>
+                                      Style="{StaticResource EditorComboBox}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DisplayName}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#CDD6F4"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCustomVoice}" Value="True">
+                                                            <Setter Property="Foreground" Value="#F38BA8"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                         </Grid>
+
+                        <!-- Cloned voice warning (ElevenLabs only) -->
+                        <Border Margin="80,4,0,4" Padding="10,8"
+                                Background="#181825" CornerRadius="4"
+                                BorderBrush="#313244" BorderThickness="1"
+                                Visibility="{Binding IsElevenLabs, Converter={StaticResource BoolToVisConverter}}">
+                            <StackPanel>
+                                <TextBlock Foreground="#F38BA8" FontSize="11"
+                                           FontWeight="SemiBold" Margin="0,0,0,3"
+                                           Text="About highlighted voices"/>
+                                <TextBlock TextWrapping="Wrap" FontSize="11">
+                                    <Run Foreground="#A6ADC8">Voices shown in </Run>
+                                    <Run Foreground="#F38BA8" FontWeight="SemiBold">red</Run>
+                                    <Run Foreground="#A6ADC8"> are cloned or AI-generated voices stored on your ElevenLabs account. They require a </Run>
+                                    <Run Foreground="#CDD6F4" FontWeight="SemiBold">Creator plan or higher</Run>
+                                    <Run Foreground="#A6ADC8"> to use. Standard voices (shown in white) are available on all plans including Free and Starter.</Run>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
 
                         <!-- Pitch slider -->
                         <Grid>
@@ -555,10 +608,22 @@
                                    FontSize="12" Foreground="#A6ADC8"
                                    TextWrapping="Wrap"/>
 
-                        <TextBlock Margin="0,4,0,0"
-                                   FontSize="11" Foreground="#6C7086"
+                        <TextBlock Margin="0,4,0,0" FontSize="11"
                                    Text="{Binding CacheStatus}"
-                                   Visibility="{Binding CacheStatus, Converter={StaticResource NonEmptyToVisibleConverter}}"/>
+                                   Visibility="{Binding CacheStatus, Converter={StaticResource NonEmptyToVisibleConverter}}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <!-- Default: yellow = no cache or new phrase -->
+                                    <Setter Property="Foreground" Value="#F9E2AF"/>
+                                    <Style.Triggers>
+                                        <!-- Green when a cache file is confirmed present -->
+                                        <DataTrigger Binding="{Binding HasEditorCache}" Value="True">
+                                            <Setter Property="Foreground" Value="#A6E3A1"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
                 </Border>
 
