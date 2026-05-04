@@ -12,15 +12,14 @@ All notable changes to TTS Communication Tool are documented here.
 
 ### Features
 
-- (add features here)
-
-### Bug Fixes
-
-- (add bug fixes here)
+- **Phrase Editor cache-first preview**: "Play Preview" now checks for a cached audio file before synthesizing. On the first press it synthesizes and writes the result to the phrase cache, then plays it. Every subsequent press plays directly from cache — no TTS engine is invoked again, meaning **ElevenLabs credits are only consumed once** per phrase (or after an explicit "Regen Cache"). The status message also updates to note when synthesis is about to spend ElevenLabs credits (`"Synthesizing via ElevenLabs (credits will be used)…"` vs `"Generating preview…"` for Kokoro).
+- **Cache status indicator**: The cache indicator in the Preview panel is now always shown on editor open and uses color to communicate state — **green** (`✓ Cached — Play Preview will use stored audio (no re-synthesis).`) when a cache file exists for this phrase, **amber** when no cache is present or the phrase is new.
+- **Cloned voice red highlighting in Phrase Editor**: The ElevenLabs voice dropdown in the Voice Override section now renders cloned and AI-generated voices in **red** (matching the Voice tab in Settings). A persistent info panel below the dropdown explains that red-highlighted voices require a Creator plan or higher.
 
 ### Improvements
 
-- (add improvements here)
+- `RegenVoiceAsync` now calls `RefreshCacheStatus()` after writing the cache (consistent with `PlayPreviewAsync`).
+- `RefreshCacheStatus()` now always notifies `HasEditorCache` so the indicator color updates reactively.
 
 ---
 ## [v0.15.0] -- 2026-05-03
