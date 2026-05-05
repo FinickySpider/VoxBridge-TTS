@@ -116,7 +116,7 @@ All notable changes to TTS Communication Tool are documented here.
 
 - **Phrase Editor window size persistence** — The Phrase Editor now remembers its size between sessions. Stored in `GeneralSettings.PhraseEditorWindowWidth/Height`, persisted to disk on next global save.
 - **Three new columns in phrase list** — Engine (Kokoro / ElevenLabs / (Inherited)), V.Ovr (✓ / –), and Voice name columns inserted between "Name & Text" and "Category". Computed as read-only display properties on `PhraseItem`.
-- **Dark-theme `ComboBox` control template** — Phrase Editor dropdowns (Category and Voice) now use a proper `ControlTemplate` that renders consistently in the dark VoxBridge theme regardless of Windows system theme. Arrow glyph, dropdown popup, and selected-item text are all styled correctly.
+- **Dark-theme `ComboBox` control template** — Phrase Editor dropdowns (Category and Voice) now use a proper `ControlTemplate` that renders consistently in the dark The Traveling Star Swirlotl theme regardless of Windows system theme. Arrow glyph, dropdown popup, and selected-item text are all styled correctly.
 
 ---
 
@@ -233,7 +233,7 @@ All notable changes to TTS Communication Tool are documented here.
 ### Improvements
 
 - **Column reordering disabled**: Phrases ListView columns can no longer be dragged over each other; `GridView.AllowsColumnReorder="False"` prevents accidental column swaps.
-- **Window title shows version**: The Settings window title bar and taskbar button now dynamically display the current assembly version (e.g. `Settings — VoxBridge v0.11.3`) instead of a hardcoded stale version string.
+- **Window title shows version**: The Settings window title bar and taskbar button now dynamically display the current assembly version (e.g. `Settings — The Traveling Star Swirlotl v0.11.3`) instead of a hardcoded stale version string.
 
 ---
 ## [v0.11.2] -- 2026-05-03
