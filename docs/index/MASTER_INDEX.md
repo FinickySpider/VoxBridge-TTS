@@ -19,7 +19,8 @@ TTS Communication Tool
 - [PHASE-01: Foundation & Core Loop](../phases/PHASE-01-foundation-and-core-loop.md) — complete
 - [PHASE-02: Usability Hardening](../phases/PHASE-02-usability-hardening.md) — complete
 - [PHASE-03: Comfort & Expression](../phases/PHASE-03-comfort-and-expression.md) — complete
-- [PHASE-04: Advanced & Deferred](../phases/PHASE-04-advanced-and-deferred.md) — planned
+- [PHASE-04: Dynamic Theming MVP](../phases/PHASE-04-dynamic-theming-mvp.md) — planned
+- [PHASE-05: Theme Polish & Advanced](../phases/PHASE-05-theme-polish-and-advanced.md) — planned
 
 ## Sprints
 - [SPRINT-01](../sprints/SPRINT-01.md) — complete (PHASE-01)
@@ -31,6 +32,10 @@ TTS Communication Tool
 - [SPRINT-07](../sprints/SPRINT-07.md) — complete (PHASE-03)
 - [SPRINT-08](../sprints/SPRINT-08.md) — complete (PHASE-03)
 - [SPRINT-09](../sprints/SPRINT-09.md) — complete (v0.9.4 QoL pass)
+- [SPRINT-10](../sprints/SPRINT-10.md) — planned (PHASE-04)
+- [SPRINT-11](../sprints/SPRINT-11.md) — planned (PHASE-04)
+- [SPRINT-12](../sprints/SPRINT-12.md) — planned (PHASE-05)
+- [SPRINT-13](../sprints/SPRINT-13.md) — planned (PHASE-05)
 
 ## Features
 - [FEAT-001: Solution scaffold](../features/FEAT-001-solution-scaffold.md) — complete (SPRINT-01)
@@ -70,6 +75,16 @@ TTS Communication Tool
 - [FEAT-035: Overlay playback-aware send](../features/FEAT-035-overlay-playback-aware-send.md) — complete (SPRINT-09)
 - [FEAT-036: Settings UX — save toast and debounce](../features/FEAT-036-settings-save-toast.md) — complete (SPRINT-09)
 - [FEAT-037: Phrase Editor window + per-phrase voice override](../features/FEAT-037-phrase-editor.md) — complete (v0.14.0)
+- [FEAT-038: ThemeSettings Model + ThemeDefaults](../features/FEAT-038-theme-settings-model.md) — planned (SPRINT-10)
+- [FEAT-039: Themes/Default.xaml ResourceDictionary + App.xaml Wiring](../features/FEAT-039-theme-resource-dictionary.md) — planned (SPRINT-10)
+- [FEAT-040: Full XAML DynamicResource Refactor](../features/FEAT-040-xaml-dynamic-resource-refactor.md) — planned (SPRINT-10)
+- [FEAT-041: IThemeService + ThemeService](../features/FEAT-041-theme-service.md) — planned (SPRINT-10)
+- [FEAT-042: ThemeSettingsViewModel + Theme Tab UI](../features/FEAT-042-theme-settings-viewmodel-and-tab.md) — planned (SPRINT-11)
+- [FEAT-043: Tray Icon Reset Theme to Default](../features/FEAT-043-tray-reset-theme.md) — planned (SPRINT-11)
+- [FEAT-044: Typography Controls in Theme Tab](../features/FEAT-044-typography-controls.md) — planned (SPRINT-12)
+- [FEAT-045: Shape & Density Controls in Theme Tab](../features/FEAT-045-shape-and-density-controls.md) — planned (SPRINT-12)
+- [FEAT-046: WCAG 2.1 AA Contrast Checker](../features/FEAT-046-wcag-contrast-checker.md) — planned (SPRINT-13)
+- [FEAT-047: Theme Import / Export](../features/FEAT-047-theme-import-export.md) — planned (SPRINT-13)
 
 ## Refactors
 - [REFACTOR-001: Config recovery](../refactors/REFACTOR-001-config-recovery.md) — complete (SPRINT-03)
