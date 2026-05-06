@@ -5,6 +5,24 @@ All notable changes to TTS Communication Tool are documented here.
 ---
 
 
+
+## [v0.17.2] -- 2026-05-05
+
+### Bug Fixes
+
+- **Theme edits no longer mutate the live UI until saved**: Removed `ThemeService.Apply()` calls from `SetColor`, `SetTypography`, `SetShape`, and `ApplyPreset`. The running application now only reflects a theme change when the user explicitly clicks **Save** (inner tab button) or the global **Save** button. Cancel / Reset still correctly restore the previously applied state.
+
+### Features
+
+- **Duplicate auto-switches to the copy**: After clicking **Duplicate**, the editor immediately loads the new copy as the active working theme so you can start editing it right away without manually selecting it from the dropdown.
+
+### Improvements
+
+- **Live preview uses direct VM bindings**: All colour, text, and overlay elements in the right-hand preview panel now bind directly to the `ThemeSettingsViewModel` properties (via `HexToBrushConverter`) instead of `DynamicResource`. This means the preview reflects every colour change as you type, while the real application windows remain unchanged until you save.
+- **Settings window widened**: Default width increased 680 → 880 px (MinWidth 700) to give the two-column Theme tab more working space.
+- **Preview column widened**: Right preview panel increased from 260 px to 320 px; left colour editor now stretches to fill remaining width instead of being capped at 600 px.
+
+---
 ## [v0.17.1] -- 2026-05-05
 
 ### Features

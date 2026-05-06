@@ -300,6 +300,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             _originalSnapshot = _savedSnapshot.Clone();
             RefreshPresetList();
             _hasColourEdits = false;
+            _themeService.Apply(_workingCopy);
             IsDirty = false;
             OnPropertyChanged(nameof(IsEditingBuiltIn));
             _log.Info($"Built-in theme forked as new user theme '{forkName}'.");
@@ -319,6 +320,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             _originalSnapshot = _savedSnapshot.Clone();
             RefreshPresetList();
             _hasColourEdits = false;
+            _themeService.Apply(_workingCopy);
             IsDirty = false;
             _log.Info($"User theme '{_workingCopy.Name}' saved.");
         }
@@ -328,6 +330,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             // without changing any colours.  ActiveThemeName is already written above;
             // no file I/O needed — just reset state.
             _hasColourEdits = false;
+            _themeService.Apply(_workingCopy);
             IsDirty = false;
         }
     }
@@ -352,6 +355,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             _pendingNews.Clear();
             _hasColourEdits = false;
             RefreshPresetList();
+            _themeService.Apply(_workingCopy);
             IsDirty = false;
             OnPropertyChanged(nameof(IsEditingBuiltIn));
             _log.Info($"New theme '{forkName}' created from built-in.");
@@ -371,6 +375,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             _pendingNews.Clear();
             _hasColourEdits = false;
             RefreshPresetList();
+            _themeService.Apply(_workingCopy);
             IsDirty = false;
             _log.Info($"Theme '{_workingCopy.Name}' saved.");
         }
@@ -379,6 +384,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             // IsEditingBuiltIn && !_hasColourEdits: user just selected a built-in preset.
             // No file I/O needed — just reset state.
             _hasColourEdits = false;
+            _themeService.Apply(_workingCopy);
             IsDirty = false;
         }
     }
@@ -401,6 +407,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         _savedSnapshot.IsBuiltIn = false;
         _originalSnapshot = _savedSnapshot.Clone();
         RefreshPresetList();
+        _themeService.Apply(_workingCopy);
         IsDirty = false;
         OnPropertyChanged(nameof(IsEditingBuiltIn));
         _log.Info($"Theme saved as '{safeName}' (pending session commit).");
@@ -419,6 +426,23 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         _pendingNews.Add(name);
         RefreshPresetList();
         _log.Info($"Theme duplicated as '{name}' (pending session commit).");
+
+        // Auto-switch to the new duplicate so the user can begin editing it immediately.
+        var dupeInList = AvailableThemes.FirstOrDefault(t =>
+            string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (dupeInList is not null)
+        {
+            _workingCopy = dupe.Clone();
+            _savedSnapshot = dupe.Clone();
+            _savedSnapshot.IsBuiltIn = false;
+            _selectedPreset = dupeInList;
+            OnPropertyChanged(nameof(SelectedPreset));
+            RaiseAllColourProperties();
+            OnPropertyChanged(nameof(ThemeName));
+            OnPropertyChanged(nameof(IsEditingBuiltIn));
+        }
+        _hasColourEdits = false;
+        IsDirty = false;
     }
 
     private void RevertToSaved()
@@ -472,7 +496,6 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         _savedSnapshot = preset.Clone();
         _savedSnapshot.IsBuiltIn = preset.IsBuiltIn;
         _workingCopy = preset.Clone();
-        _themeService.Apply(_workingCopy);
         RaiseAllColourProperties();
         OnPropertyChanged(nameof(ThemeName));
         OnPropertyChanged(nameof(IsEditingBuiltIn));
@@ -509,7 +532,6 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     {
         if (!IsValidHex(value)) return;
         setter(value);
-        _themeService.Apply(_workingCopy);
         if (propName is not null) OnPropertyChanged(propName);
         RaiseContrastProperties();
         _hasColourEdits = true;
@@ -519,7 +541,6 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     private void SetTypography(Action setter, [CallerMemberName] string? propName = null)
     {
         setter();
-        _themeService.Apply(_workingCopy);
         if (propName is not null) OnPropertyChanged(propName);
         _hasColourEdits = true;
         MarkDirty();
@@ -528,7 +549,6 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     private void SetShape(Action setter, [CallerMemberName] string? propName = null)
     {
         setter();
-        _themeService.Apply(_workingCopy);
         if (propName is not null) OnPropertyChanged(propName);
         _hasColourEdits = true;
         MarkDirty();
