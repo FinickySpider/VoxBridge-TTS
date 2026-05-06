@@ -12,6 +12,106 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+
+
+
+
+
+## [v0.16.5] -- 2026-05-05
+
+### Bug Fixes
+- **CRITICAL: Theme changes now actually apply to the UI** — `ThemeService.Apply()` was attempting to mutate frozen `SolidColorBrush` objects in-place (all XAML-defined brushes are frozen by WPF). The mutation threw `InvalidOperationException` which was silently swallowed by the surrounding try-catch, leaving every colour unchanged. Fixed by replacing the resource dictionary entry with a new `SolidColorBrush`; `{DynamicResource}` bindings re-resolve automatically on key replacement.
+- **Tray "Reset Theme to Default" now syncs the open settings window** — added `ThemeResetToDefault` event to `IThemeService`/`ThemeService`. App.xaml.cs stores the active `SettingsViewModel` and reloads the theme tab when the tray reset fires, so the preset combobox, colour rows, and theme name all reflect the change immediately.
+- **Dirty-flag bug: reverting theme no longer marks settings as dirty** — `SettingsViewModel` was subscribed to ALL `Theme.PropertyChanged` events. When `ThemeSettingsViewModel.IsDirty` changed to `false` (revert, preset switch, load), the parent subscription fired `IsDirty = true` immediately, making it impossible to clear the dirty state from the theme side. Fixed by filtering the subscription to skip `IsDirty`, `SelectedPreset`, and `IsEditingBuiltIn` notifications.
+
+### Features
+- **Save button added to Theme tab** — the theme preset toolbar now has a "Save" button (bound to the existing `Theme.SaveCommand`) so user themes can be overwritten in-place without going through "Save As…". For built-in themes the existing fork behaviour applies (banner explains this).
+
+### Features
+
+- (add features here)
+
+### Bug Fixes
+
+- (add bug fixes here)
+
+### Improvements
+
+- (add improvements here)
+
+---
+## [v0.16.4] -- 2026-05-05
+
+### Features
+- **Screen eyedropper colour picker** — replaced the WinForms `ColorDialog` menu with a full-screen overlay eyedropper. All app windows are briefly hidden, a live desktop screenshot fills the screen, and a 17×17 zoomed magnifier HUD tracks the cursor with a crosshair and hex preview. Click to pick; Escape to cancel.
+- **Improved Theme tab labels** — all 18 colour rows now have descriptive labels (e.g. "Deep Panel / Input Background", "Row Surface (Alternating)", "Border / Divider", "Raised Surface (Cards)", "Accent Hover / Pressed", "Muted / Disabled Text", "Muted Icon Tint", "Error / Danger", "Success / Confirmed").
+- **Comprehensive tooltips** — every row's label, hex text box ("Type a hex colour code, e.g. …"), Eyedrop button ("Open screen eyedropper…"), and Reset button ("Reset to the default value for this colour") now carries a descriptive tooltip.
+- **Pick button renamed** — "Pick…" button relabelled to "Eyedrop" to better communicate the new interaction.
+
+### Features
+
+- (add features here)
+
+### Bug Fixes
+
+- (add bug fixes here)
+
+### Improvements
+
+- (add improvements here)
+
+---
+## [v0.16.3] -- 2026-05-05
+
+### Bug Fixes
+
+- Moved Theme tab to last position (General → Hotkeys → Audio → Voice → Appearance → Replacements → Phrases → Theme)
+- Restored Import/Export buttons on Replacements and Phrases tabs — they were appearing on wrong tabs due to misaligned tab indices
+- Fixed SettingsViewModel `ShowImportExport` and `ImportCommand`/`ExportCommand` to use correct indices (5=Replacements, 6=Phrases)
+
+### Improvements
+
+- Redesigned Theme tab colour editor: colour rows grouped into labeled card sections (BACKGROUND, ACCENT, TEXT, STATUS) with rounded bordered containers matching mockup grouping style
+
+---
+## [v0.16.2] -- 2026-05-05
+
+### Bug Fixes
+
+- Fixed `XamlParseException: Cannot find resource named 'BoolToVisibility'` crash when opening Settings — Theme tab built-in banner used wrong converter key; corrected to `BoolToVisConverter`
+
+---
+## [v0.16.1] -- 2026-05-05
+
+### Bug Fixes
+
+- **Theme tab crash on open**: Save button in Theme tab used `{StaticResource PrimaryButton}` which does not exist — the correct key is `ActionButton`. Fixed; SettingsWindow now opens without throwing `XamlParseException`.
+
+---
+## [v0.16.0] -- 2026-05-05
+
+### Features
+
+- **PHASE-04: Full theme system** — all UI colours are now driven by a live `ResourceDictionary`; no hardcoded hex literals remain in any XAML file (FEAT-040).
+- **ThemeSettings model** — 18 semantic colour properties (backgrounds, surfaces, accent, text, status) stored as hex strings and persisted to `config.json` via `ActiveThemeName` (FEAT-038).
+- **Default.xaml ResourceDictionary** — Catppuccin Mocha palette wired as the built-in `Default Dark` theme; all brushes use `DynamicResource` so live-switching works without a restart (FEAT-039).
+- **IThemeService / ThemeService** — singleton service that loads built-in + user themes from `%AppData%\TtsCommunicationTool\themes\*.ttstheme`, applies any theme by mutating existing `SolidColorBrush` objects in-place (DynamicResource targets reflect changes immediately), and persists the active name to config (FEAT-041).
+- **Theme settings tab** — new "Theme" tab in Settings (index 5, pushing Replacements to 6 and Phrases to 7). Includes preset dropdown, Save / Save As / Duplicate / Revert / Delete toolbar, built-in-fork banner, and 18 colour rows with hex TextBox, live swatch border, Pick (native color picker dialog), and Reset-to-default per row (FEAT-042).
+- **Tray: Reset Theme to Default** — new tray menu item between Settings and the separator; calls `IThemeService.ResetToDefault()` immediately (FEAT-043).
+- **IColorPickerService** — decouples the native `System.Windows.Forms.ColorDialog` from the UI ViewModel layer; `WinFormsColorPickerService` lives in the App project which already references WinForms.
+- **Startup theme application** — active theme is loaded and applied before any window opens in `App.OnStartup`.
+
+### Bug Fixes
+
+- **Infrastructure csproj**: added `<UseWPF>true</UseWPF>` (required by ThemeService) and `GlobalUsings.cs` restoring `System.IO` implicit using which the WPF SDK omits from class libraries.
+
+### Improvements
+
+- Theme tab participates fully in SettingsViewModel's IsDirty / Save / Cancel flow — reverting via Cancel re-applies the saved theme to live resources.
+- All existing XAML windows (`SettingsWindow`, `OverlayWindow`, `PhraseEditorWindow`) migrated to `{DynamicResource}` bindings — verified 0 remaining hardcoded hex values.
+
+---
 ## [v0.15.5] -- 2026-05-03
 
 ### Features
