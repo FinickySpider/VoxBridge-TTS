@@ -196,7 +196,16 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     /// </summary>
     public async Task CommitAsync(IConfigService config)
     {
-        if (!IsDirty) return;
+        // Always persist the currently-active theme name to config — even if no colour
+        // edits are dirty.  The inner Save button clears IsDirty, but the outer OK/Save
+        // still needs to record which theme is selected.
+        config.CurrentConfig.ActiveThemeName = _workingCopy.Name;
+
+        if (!IsDirty)
+        {
+            // Nothing else to flush or save — name is already written above.
+            return;
+        }
 
         // Flush pending deletes first
         await FlushPendingDeletesAsync();
@@ -222,9 +231,6 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             await _themeService.SaveAsUserThemeAsync(_workingCopy, _workingCopy.Name);
             _log.Info($"User theme '{_workingCopy.Name}' saved.");
         }
-
-        // Persist active theme name to config
-        config.CurrentConfig.ActiveThemeName = _workingCopy.Name;
 
         // All changes are committed — clear the pending-news set (keep files on disk).
         _pendingNews.Clear();
