@@ -21,9 +21,11 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     private readonly ILoggingService _log;
     private readonly IColorPickerService _colorPicker;
 
-    // Working copy — mutated live; _savedSnapshot is what was last committed to disk.
+    // Working copy — mutated live; _savedSnapshot is what was last committed to disk;
+    // _originalSnapshot is what was active when Settings opened (used by Cancel).
     private ThemeSettings _workingCopy = ThemeDefaults.CreateDefault();
     private ThemeSettings _savedSnapshot = ThemeDefaults.CreateDefault();
+    private ThemeSettings _originalSnapshot = ThemeDefaults.CreateDefault();
     private bool _isDirty;
     private ThemeSettings? _selectedPreset;
 
@@ -130,7 +132,10 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
 
         _savedSnapshot = active.Clone();
         _savedSnapshot.IsBuiltIn = active.IsBuiltIn;
+        _originalSnapshot = active.Clone();
+        _originalSnapshot.IsBuiltIn = active.IsBuiltIn;
         _workingCopy   = active.Clone();
+        _themeService.Apply(_workingCopy);   // ensure live brushes match what we loaded
         _selectedPreset = active;
         OnPropertyChanged(nameof(SelectedPreset));
         RaiseAllColourProperties();
@@ -145,10 +150,17 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     /// </summary>
     public void RevertChanges()
     {
-        _workingCopy = _savedSnapshot.Clone();
+        // Restore to whatever was active when Settings was opened — not just the last Save.
+        _workingCopy    = _originalSnapshot.Clone();
+        _savedSnapshot  = _originalSnapshot.Clone();
         _themeService.Apply(_workingCopy);
+        // Restore the preset combobox to the original selection
+        _selectedPreset = AvailableThemes.FirstOrDefault(t =>
+            string.Equals(t.Name, _originalSnapshot.Name, StringComparison.OrdinalIgnoreCase));
+        OnPropertyChanged(nameof(SelectedPreset));
         RaiseAllColourProperties();
         OnPropertyChanged(nameof(ThemeName));
+        OnPropertyChanged(nameof(IsEditingBuiltIn));
         IsDirty = false;
     }
 
@@ -162,9 +174,12 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
 
         if (IsEditingBuiltIn)
         {
-            // Save as a new user theme; name may have been edited in ThemeName TextBox
-            await _themeService.SaveAsUserThemeAsync(_workingCopy, _workingCopy.Name);
-            _log.Info($"Built-in theme forked as new user theme '{_workingCopy.Name}'.");
+            // Fork: generate a unique name so we never collide with the built-in.
+            var forkName = GenerateUniqueName(_workingCopy.Name);
+            _workingCopy.Name = forkName;
+            OnPropertyChanged(nameof(ThemeName));
+            await _themeService.SaveAsUserThemeAsync(_workingCopy, forkName);
+            _log.Info($"Built-in theme forked as new user theme '{forkName}'.");
         }
         else
         {
@@ -175,9 +190,10 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         // Persist active theme name to config
         config.CurrentConfig.ActiveThemeName = _workingCopy.Name;
 
-        // Update snapshot and preset list
+        // Update snapshots and preset list
         _savedSnapshot = _workingCopy.Clone();
         _savedSnapshot.IsBuiltIn = false;
+        _originalSnapshot = _savedSnapshot.Clone();
         RefreshPresetList();
         IsDirty = false;
         OnPropertyChanged(nameof(IsEditingBuiltIn));
@@ -189,19 +205,24 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     {
         if (IsEditingBuiltIn)
         {
-            // Saving a built-in always creates a fork — ensure user knows by the banner in UI.
-            await _themeService.SaveAsUserThemeAsync(_workingCopy, _workingCopy.Name);
+            // Fork: generate a unique name so we never collide with the built-in.
+            var forkName = GenerateUniqueName(_workingCopy.Name);
+            _workingCopy.Name = forkName;
+            OnPropertyChanged(nameof(ThemeName));
+            await _themeService.SaveAsUserThemeAsync(_workingCopy, forkName);
             _savedSnapshot = _workingCopy.Clone();
             _savedSnapshot.IsBuiltIn = false;
+            _originalSnapshot = _savedSnapshot.Clone();
             RefreshPresetList();
             IsDirty = false;
             OnPropertyChanged(nameof(IsEditingBuiltIn));
-            _log.Info($"New theme '{_workingCopy.Name}' created from built-in.");
+            _log.Info($"New theme '{forkName}' created from built-in.");
         }
         else
         {
             await _themeService.SaveAsUserThemeAsync(_workingCopy, _workingCopy.Name);
             _savedSnapshot = _workingCopy.Clone();
+            _originalSnapshot = _savedSnapshot.Clone();
             IsDirty = false;
             _log.Info($"Theme '{_workingCopy.Name}' saved.");
         }
@@ -209,17 +230,23 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
 
     private async Task SaveAsPromptAsync()
     {
-        var name = PromptName("Save Theme As", _workingCopy.Name + " Copy");
+        var defaultName = GenerateUniqueName(_workingCopy.Name);
+        var name = PromptName("Save Theme As", defaultName);
         if (name is null) return;
-        _workingCopy.Name = name;
+        // If the chosen name collides with an existing theme, make it unique.
+        var safeName = string.Equals(name, _workingCopy.Name, StringComparison.OrdinalIgnoreCase)
+            ? GenerateUniqueName(name)
+            : name;
+        _workingCopy.Name = safeName;
         OnPropertyChanged(nameof(ThemeName));
-        await _themeService.SaveAsUserThemeAsync(_workingCopy, name);
+        await _themeService.SaveAsUserThemeAsync(_workingCopy, safeName);
         _savedSnapshot = _workingCopy.Clone();
         _savedSnapshot.IsBuiltIn = false;
+        _originalSnapshot = _savedSnapshot.Clone();
         RefreshPresetList();
         IsDirty = false;
         OnPropertyChanged(nameof(IsEditingBuiltIn));
-        _log.Info($"Theme saved as '{name}'.");
+        _log.Info($"Theme saved as '{safeName}'.");
     }
 
     private async Task DuplicateAsync()
@@ -242,15 +269,17 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     private async Task DeleteAsync()
     {
         if (IsEditingBuiltIn) return;
-        await _themeService.DeleteUserThemeAsync(_savedSnapshot.Name);
-        // Fall back to Default Dark
+        var deletedName = _savedSnapshot.Name;
+        await _themeService.DeleteUserThemeAsync(deletedName);
+        // Fall back to Default Dark and treat it as the new original
         LoadThemes("Default Dark");
-        _themeService.Apply(_workingCopy);
-        _log.Info($"Theme '{_savedSnapshot.Name}' deleted. Reverted to Default Dark.");
+        _log.Info($"Theme '{deletedName}' deleted. Reverted to Default Dark.");
     }
 
     private void ApplyPreset(ThemeSettings preset)
     {
+        // _savedSnapshot tracks the baseline for the in-tab Reset button (undo colour edits).
+        // _originalSnapshot stays fixed at what was active when Settings opened (used by Cancel).
         _savedSnapshot = preset.Clone();
         _savedSnapshot.IsBuiltIn = preset.IsBuiltIn;
         _workingCopy = preset.Clone();
@@ -258,7 +287,9 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         RaiseAllColourProperties();
         OnPropertyChanged(nameof(ThemeName));
         OnPropertyChanged(nameof(IsEditingBuiltIn));
-        IsDirty = false;
+        // Switching to a different preset IS a change — mark dirty so Cancel knows to revert,
+        // and so the parent Save button is enabled.
+        IsDirty = !string.Equals(preset.Name, _originalSnapshot.Name, StringComparison.OrdinalIgnoreCase);
     }
 
     private void PickColor(string? propertyName)
@@ -365,13 +396,31 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
 
     private void RefreshPresetList()
     {
-        var current = SelectedPreset?.Name;
         AvailableThemes.Clear();
         foreach (var t in _themeService.LoadAll())
             AvailableThemes.Add(t);
-        _selectedPreset = AvailableThemes.FirstOrDefault(t => t.Name == _workingCopy.Name)
-                          ?? AvailableThemes.First();
+        _selectedPreset = AvailableThemes.FirstOrDefault(t =>
+            string.Equals(t.Name, _workingCopy.Name, StringComparison.OrdinalIgnoreCase))
+            ?? AvailableThemes.First();
         OnPropertyChanged(nameof(SelectedPreset));
+    }
+
+    /// <summary>
+    /// Returns a name based on <paramref name="baseName"/> that does not already exist in
+    /// <see cref="AvailableThemes"/>.  Appends " Copy", " Copy (2)", " Copy (3)", … until unique.
+    /// </summary>
+    private string GenerateUniqueName(string baseName)
+    {
+        // Strip any trailing built-in marker so we get clean fork names
+        var root = baseName.Trim();
+        var candidate = root + " Copy";
+        int n = 2;
+        while (AvailableThemes.Any(t =>
+            string.Equals(t.Name, candidate, StringComparison.OrdinalIgnoreCase)))
+        {
+            candidate = $"{root} Copy ({n++})";
+        }
+        return candidate;
     }
 
     private static bool IsValidHex(string hex)

@@ -2079,7 +2079,7 @@
                             Padding="10,6"
                             Visibility="{Binding Theme.IsEditingBuiltIn, Converter={StaticResource BoolToVisConverter}}">
                         <TextBlock Foreground="{DynamicResource AccentBrush}" FontSize="12">
-                            <Run Text="ℹ  This is a built-in theme. Saving will create a new user theme using the name above."/>
+                            <Run Text="ℹ  This is a built-in theme. Saving will create a new user theme with a unique name (e.g. &#x22;Default Dark Copy&#x22;)."/>
                         </TextBlock>
                     </Border>
 
