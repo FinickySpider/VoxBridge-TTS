@@ -43,6 +43,11 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     // Cleared (without deleting) when CommitAsync / SaveAsync succeeds.
     private readonly HashSet<string> _pendingNews = new(StringComparer.OrdinalIgnoreCase);
 
+    // Tracks whether the currently-active saved theme is a built-in.
+    // Kept as an explicit field (rather than derived from _savedSnapshot.IsBuiltIn) to prevent
+    // RefreshPresetList() → WPF binding callbacks → ApplyPreset() from resetting it after a fork.
+    private bool _isEditingBuiltIn;
+
     // True only when the user has actually edited a colour value this session.
     // Selecting a preset alone does NOT set this. Only set by SetColor().
     // Used to decide whether a built-in preset must be forked on Save.
@@ -56,7 +61,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     }
 
     /// <summary>True when the currently selected (saved) theme is a built-in seed.</summary>
-    public bool IsEditingBuiltIn => _savedSnapshot.IsBuiltIn;
+    public bool IsEditingBuiltIn => _isEditingBuiltIn;
 
     // ── Theme name (always editable — becomes the name when saving) ──────────
     public string ThemeName
@@ -264,6 +269,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         _savedSnapshot.IsBuiltIn = active.IsBuiltIn;
         _originalSnapshot = active.Clone();
         _originalSnapshot.IsBuiltIn = active.IsBuiltIn;
+        _isEditingBuiltIn = active.IsBuiltIn;
         _workingCopy   = active.Clone();
         _themeService.Apply(_workingCopy);   // ensure live brushes match what we loaded
         _selectedPreset = active;
@@ -296,6 +302,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         // Restore to whatever was active when Settings was opened — not just the last Save.
         _workingCopy    = _originalSnapshot.Clone();
         _savedSnapshot  = _originalSnapshot.Clone();
+        _isEditingBuiltIn = _originalSnapshot.IsBuiltIn;
         _themeService.Apply(_workingCopy);
         // Restore the preset combobox to the original selection
         _selectedPreset = AvailableThemes.FirstOrDefault(t =>
@@ -304,7 +311,6 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         RaiseAllColourProperties();
         OnPropertyChanged(nameof(ThemeName));
         OnPropertyChanged(nameof(IsEditingBuiltIn));
-        _hasColourEdits = false;
         _hasColourEdits = false;
         IsDirty = false;
     }
@@ -334,11 +340,13 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             // User actually edited colours on a built-in — fork to a new user theme.
             var forkName = GenerateUniqueName(_workingCopy.Name);
             _workingCopy.Name = forkName;
+            _workingCopy.IsBuiltIn = false;
             OnPropertyChanged(nameof(ThemeName));
             await _themeService.SaveAsUserThemeAsync(_workingCopy, forkName);
             _pendingNews.Clear();
             _savedSnapshot = _workingCopy.Clone();
             _savedSnapshot.IsBuiltIn = false;
+            _isEditingBuiltIn = false;
             _originalSnapshot = _savedSnapshot.Clone();
             RefreshPresetList();
             _hasColourEdits = false;
@@ -389,15 +397,17 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             // User actually edited colours on a built-in — fork to a new user theme.
             var forkName = GenerateUniqueName(_workingCopy.Name);
             _workingCopy.Name = forkName;
+            _workingCopy.IsBuiltIn = false;
             OnPropertyChanged(nameof(ThemeName));
             await _themeService.SaveAsUserThemeAsync(_workingCopy, forkName);
             _savedSnapshot = _workingCopy.Clone();
             _savedSnapshot.IsBuiltIn = false;
+            _isEditingBuiltIn = false;       // prevents re-fork on next inner Save
             _originalSnapshot = _savedSnapshot.Clone();
             _pendingNews.Clear();
             _hasColourEdits = false;
             RefreshPresetList();
-            _themeService.Apply(_workingCopy);
+            // NOTE: inner Save does NOT apply the theme live; that only happens on global CommitAsync.
             IsDirty = false;
             OnPropertyChanged(nameof(IsEditingBuiltIn));
             _log.Info($"New theme '{forkName}' created from built-in.");
@@ -417,16 +427,13 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             _pendingNews.Clear();
             _hasColourEdits = false;
             RefreshPresetList();
-            _themeService.Apply(_workingCopy);
             IsDirty = false;
             _log.Info($"Theme '{_workingCopy.Name}' saved.");
         }
         else
         {
-            // IsEditingBuiltIn && !_hasColourEdits: user just selected a built-in preset.
-            // No file I/O needed — just reset state.
+            // IsEditingBuiltIn && !_hasColourEdits: just selected a built-in preset.
             _hasColourEdits = false;
-            _themeService.Apply(_workingCopy);
             IsDirty = false;
         }
     }
@@ -447,6 +454,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         _pendingNews.Add(safeName);
         _savedSnapshot = _workingCopy.Clone();
         _savedSnapshot.IsBuiltIn = false;
+        _isEditingBuiltIn = false;
         _originalSnapshot = _savedSnapshot.Clone();
         RefreshPresetList();
         _themeService.Apply(_workingCopy);
@@ -477,6 +485,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             _workingCopy = dupe.Clone();
             _savedSnapshot = dupe.Clone();
             _savedSnapshot.IsBuiltIn = false;
+            _isEditingBuiltIn = false;
             _selectedPreset = dupeInList;
             OnPropertyChanged(nameof(SelectedPreset));
             RaiseAllColourProperties();
@@ -545,6 +554,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         // _originalSnapshot stays fixed at what was active when Settings opened (used by Cancel).
         _savedSnapshot = preset.Clone();
         _savedSnapshot.IsBuiltIn = preset.IsBuiltIn;
+        _isEditingBuiltIn = preset.IsBuiltIn;
         _workingCopy = preset.Clone();
         RaiseAllColourProperties();
         OnPropertyChanged(nameof(ThemeName));

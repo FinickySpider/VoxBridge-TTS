@@ -16,6 +16,9 @@ public sealed class GeneralSettings
     public double SettingsWindowWidth { get; set; } = 680;
     public double SettingsWindowHeight { get; set; } = 540;
 
+    /// <summary>Persisted width of the Theme preview column in the Settings Theme tab.</summary>
+    public double ThemePreviewColumnWidth { get; set; } = 300;
+
     /// <summary>Persisted size of the Phrase Editor window.</summary>
     public double PhraseEditorWindowWidth  { get; set; } = 560;
     public double PhraseEditorWindowHeight { get; set; } = 760;

@@ -1,9 +1,9 @@
-﻿<Window x:Class="TtsCommunicationTool.UI.Views.SettingsWindow"
+<Window x:Class="TtsCommunicationTool.UI.Views.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:TtsCommunicationTool.UI.ViewModels"
         xmlns:conv="clr-namespace:TtsCommunicationTool.UI.Converters"
-        Title="Settings — The Traveling Star Swirlotl"
+        Title="Settings � The Traveling Star Swirlotl"
         Width="880" Height="580"
         MinWidth="700" MinHeight="480"
         WindowStartupLocation="CenterScreen"
@@ -21,6 +21,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
         <conv:HexColorToBrushConverter x:Key="HexToBrushConverter"/>
         <conv:ContrastStatusToBrushConverter x:Key="ContrastStatusToBrushConverter"/>
+        <conv:DoubleToCornerRadiusConverter x:Key="DoubleToCornerRadius"/>
 
         <!-- Shared styles for dark-themed controls -->
         <Style x:Key="SectionHeader" TargetType="TextBlock">
@@ -216,6 +217,11 @@
             </Setter>
         </Style>
 
+        <Style x:Key="ThemeRowButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+            <Setter Property="Padding" Value="5,2"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+
         <Style x:Key="DangerButton" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource WindowBackgroundBrush}"/>
@@ -240,7 +246,7 @@
             </Setter>
         </Style>
 
-        <!-- Clickable colour swatch — used in Theme editor colour rows -->
+        <!-- Clickable colour swatch � used in Theme editor colour rows -->
         <Style x:Key="ColorSwatchButton" TargetType="Button">
             <Setter Property="Width" Value="20"/>
             <Setter Property="Height" Value="20"/>
@@ -383,9 +389,9 @@
                         <TextBlock Text="Controls the character limit displayed on the overlay input field. When off, only character count is shown."
                                    Foreground="{DynamicResource MutedTextBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,8"/>
 
-                        <!-- ═══════════════════════════════════════════════════════════════ -->
-                        <!-- Diagnostics / Debug Logging                                    -->
-                        <!-- ═══════════════════════════════════════════════════════════════ -->
+                        <!-- ═══════════════════════════════════════════════════ -->
+                        <!-- Diagnostics / Debug Logging                       -->
+                        <!-- ═══════════════════════════════════════════════════ -->
                         <Separator Background="{DynamicResource BorderBrush}" Margin="0,12,0,12"/>
 
                         <Border Background="#1C0F0F"
@@ -398,7 +404,7 @@
 
                                 <!-- Header -->
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <TextBlock Text="⚠" Foreground="{DynamicResource ErrorBrush}" FontSize="16"
+                                    <TextBlock Text="?" Foreground="{DynamicResource ErrorBrush}" FontSize="16"
                                                VerticalAlignment="Center" Margin="0,0,6,0"/>
                                     <TextBlock Text="Diagnostics / Debug Logging"
                                                Foreground="{DynamicResource ErrorBrush}" FontSize="15" FontWeight="SemiBold"
@@ -426,7 +432,7 @@
                                           Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" Margin="0,2"/>
 
                                 <!-- Trace logging -->
-                                <CheckBox Content="Trace logging (TRACE and above — very chatty)"
+                                <CheckBox Content="Trace logging (TRACE and above � very chatty)"
                                           IsChecked="{Binding General.TraceLogging}"
                                           IsEnabled="{Binding General.EnableDiagnosticLogging}"
                                           Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" Margin="0,2"/>
@@ -437,8 +443,8 @@
                                           IsEnabled="{Binding General.EnableDiagnosticLogging}"
                                           Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" Margin="0,2"/>
 
-                                <!-- Raw text — extra warning -->
-                                <CheckBox Content="⚠  Log raw spoken text  (UNSAFE)"
+                                <!-- Raw text � extra warning -->
+                                <CheckBox Content="?  Log raw spoken text  (UNSAFE)"
                                           IsChecked="{Binding General.LogRawText}"
                                           IsEnabled="{Binding General.EnableDiagnosticLogging}"
                                           Foreground="{DynamicResource ErrorBrush}" FontWeight="SemiBold"
@@ -531,7 +537,7 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Stop Playback:" Style="{StaticResource FieldLabel}"
-                                       ToolTip="Global hotkey to immediately stop any audio currently playing — TTS, phrase, or resend."/>
+                                       ToolTip="Global hotkey to immediately stop any audio currently playing � TTS, phrase, or resend."/>
                             <TextBox Grid.Column="1"
                                      x:Name="StopHotkeyBox"
                                      Text="{Binding Hotkeys.StopHotkeyDisplay, Mode=OneWay}"
@@ -660,7 +666,7 @@
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
                             <Button Content="Test Both" Command="{Binding Audio.TestBothCommand}"
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
-                            <Button Content="↻ Refresh" Command="{Binding Audio.RefreshDevicesCommand}"
+                            <Button Content="? Refresh" Command="{Binding Audio.RefreshDevicesCommand}"
                                     Style="{StaticResource SecondaryButton}"/>
                         </StackPanel>
 
@@ -732,7 +738,7 @@
                         <Border Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                                 CornerRadius="4" Padding="12,10" Margin="0,8,0,0">
                             <StackPanel>
-                                <TextBlock Text="ℹ Audio Routing" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" FontSize="12" Margin="0,0,0,4"/>
+                                <TextBlock Text="? Audio Routing" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" FontSize="12" Margin="0,0,0,4"/>
                                 <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"
                                            Text="Only TTS speech and phrase audio are sent to the secondary (app) device. Any non-voice sounds such as UI feedback or error tones play on the monitor device only and will not be heard in Discord or VRChat."/>
                             </StackPanel>
@@ -745,7 +751,7 @@
                         <Border Background="#1C1200" BorderBrush="{DynamicResource InfoBrush}" BorderThickness="1"
                                 CornerRadius="4" Padding="12,10" Margin="0,0,0,10">
                             <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource InfoBrush}" FontSize="12"
-                                       Text="⚠  Trimming too aggressively may clip the last word of a sentence. Start with a high retention value (80–95%) and reduce gradually."/>
+                                       Text="?  Trimming too aggressively may clip the last word of a sentence. Start with a high retention value (80�95%) and reduce gradually."/>
                         </Border>
 
                         <CheckBox Content="Trim trailing silence from generated audio"
@@ -797,7 +803,7 @@
                                          ToolTip="ElevenLabs is a cloud TTS engine. Requires an internet connection and a valid ElevenLabs API key."/>
                         </StackPanel>
 
-                        <!-- ── Kokoro section ───────────────── -->
+                        <!-- Kokoro section -->
                         <StackPanel Visibility="{Binding Voice.IsKokoro, Converter={StaticResource BoolToVisConverter}}">
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions>
@@ -816,13 +822,13 @@
                             </Grid>
                         </StackPanel>
 
-                        <!-- ── ElevenLabs section ───────────── -->
+                        <!-- ElevenLabs section -->
                         <StackPanel Visibility="{Binding Voice.IsElevenLabs, Converter={StaticResource BoolToVisConverter}}">
 
                             <!-- API Key label row -->
                             <TextBlock Text="API Key" Style="{StaticResource SectionHeader}" Margin="0,0,0,8"/>
 
-                            <!-- ░░ SAVED state — show masked tail + action buttons ░░ -->
+                            <!-- �� SAVED state � show masked tail + action buttons �� -->
                             <StackPanel Margin="0,0,0,8"
                                         Visibility="{Binding Voice.IsApiKeySaved, Converter={StaticResource BoolToVisConverter}}">
                                 <TextBlock Text="{Binding Voice.ApiKeyMaskedDisplay}"
@@ -847,21 +853,21 @@
                                 </StackPanel>
                             </StackPanel>
 
-                            <!-- ░░ INPUT state — PasswordBox for entry (Empty or Editing) ░░ -->
+                            <!-- �� INPUT state � PasswordBox for entry (Empty or Editing) �� -->
                             <StackPanel Margin="0,0,0,8"
                                         Visibility="{Binding Voice.IsApiKeyInputShown, Converter={StaticResource BoolToVisConverter}}">
                                 <TextBlock Foreground="{DynamicResource MutedTextBrush}" FontSize="11" Margin="0,0,0,4"
-                                           Text="No API key stored — paste your key below."
+                                           Text="No API key stored � paste your key below."
                                            Visibility="{Binding Voice.IsApiKeyEmpty, Converter={StaticResource BoolToVisConverter}}"/>
                                 <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="11" Margin="0,0,0,4"
-                                           Text="⚠ Unsaved — click Save to encrypt and store."
+                                           Text="? Unsaved � click Save to encrypt and store."
                                            Visibility="{Binding Voice.IsApiKeyEditing, Converter={StaticResource BoolToVisConverter}}"/>
                                 <PasswordBox x:Name="ApiKeyPasswordBox"
                                              PasswordChanged="ApiKeyPasswordBox_PasswordChanged"
                                              Style="{StaticResource SettingsPasswordBox}"
                                              MaxLength="512"
                                              Margin="0,0,0,6"
-                                             ToolTip="Paste your ElevenLabs API key. It will be encrypted with Windows DPAPI before saving — never shown in plain text again."/>
+                                             ToolTip="Paste your ElevenLabs API key. It will be encrypted with Windows DPAPI before saving � never shown in plain text again."/>
                                 <StackPanel Orientation="Horizontal">
                                     <Button Content="Save"
                                             Command="{Binding Voice.SaveApiKeyCommand}"
@@ -883,13 +889,13 @@
                                 </StackPanel>
                             </StackPanel>
 
-                            <!-- ░░ CLEARING state — confirmation prompt ░░ -->
+                            <!-- �� CLEARING state � confirmation prompt �� -->
                             <StackPanel Margin="0,0,0,8"
                                         Visibility="{Binding Voice.IsApiKeyClearing, Converter={StaticResource BoolToVisConverter}}">
                                 <Border Background="#302030" CornerRadius="4" BorderBrush="{DynamicResource ErrorBrush}"
                                         BorderThickness="1" Padding="12,10" Margin="0,0,0,8">
                                     <TextBlock Foreground="{DynamicResource ErrorBrush}" FontSize="12" TextWrapping="Wrap"
-                                               Text="⚠ This will permanently remove the stored API key. ElevenLabs voices will be unavailable until a new key is entered. Confirm?"/>
+                                               Text="? This will permanently remove the stored API key. ElevenLabs voices will be unavailable until a new key is entered. Confirm?"/>
                                 </Border>
                                 <StackPanel Orientation="Horizontal">
                                     <Button Content="Confirm Clear"
@@ -1201,8 +1207,8 @@
                         <DataGrid.Columns>
                             <DataGridCheckBoxColumn Header="On" Binding="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}" Width="36"/>
 
-                            <!-- Trigger column — filled rows blend in as plain text; empty (new) rows show input border -->
-                            <DataGridTemplateColumn Header="Trigger  ✎" Width="*">
+                            <!-- Trigger column � filled rows blend in as plain text; empty (new) rows show input border -->
+                            <DataGridTemplateColumn Header="Trigger  ?" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border x:Name="CellBorder"
@@ -1231,8 +1237,8 @@
                                 </DataGridTemplateColumn.CellEditingTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Replacement column — same treatment -->
-                            <DataGridTemplateColumn Header="Replacement  ✎" Width="*">
+                            <!-- Replacement column � same treatment -->
+                            <DataGridTemplateColumn Header="Replacement  ?" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border x:Name="CellBorder"
@@ -1272,9 +1278,9 @@
                                 Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
                         <Button Content="Delete" Command="{Binding TextReplacements.DeleteCommand}"
                                 Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
-                        <Button Content="▲ Up" Command="{Binding TextReplacements.MoveUpCommand}"
+                        <Button Content="? Up" Command="{Binding TextReplacements.MoveUpCommand}"
                                 Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
-                        <Button Content="▼ Down" Command="{Binding TextReplacements.MoveDownCommand}"
+                        <Button Content="? Down" Command="{Binding TextReplacements.MoveDownCommand}"
                                 Style="{StaticResource SecondaryButton}"/>
                     </StackPanel>
                     <TextBlock Grid.Row="4" Text="{Binding TextReplacements.StatusMessage}"
@@ -1282,7 +1288,7 @@
                                Visibility="{Binding TextReplacements.StatusMessage, Converter={StaticResource NonEmptyToVisibleConverter}}"
                                Margin="8,2,8,2" TextWrapping="Wrap"/>
 
-                    <!-- How it works — 2-column reference panel -->
+                    <!-- How it works � 2-column reference panel -->
                     <Border Grid.Row="5"
                             Background="{DynamicResource WindowBackgroundBrush}"
                             BorderBrush="{DynamicResource BorderBrush}"
@@ -1599,7 +1605,7 @@
                                     <Setter.Value>
                                         <ContextMenu Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                             <ContextMenu.Resources>
-                                                <!-- ControlTemplate on ContextMenu itself — WPF default popup chrome renders white otherwise -->
+                                                <!-- ControlTemplate on ContextMenu itself � WPF default popup chrome renders white otherwise -->
                                                 <Style TargetType="ContextMenu">
                                                     <Setter Property="Template">
                                                         <Setter.Value>
@@ -1616,7 +1622,7 @@
                                                         </Setter.Value>
                                                     </Setter>
                                                 </Style>
-                                                <!-- Full ControlTemplate required — WPF defaults ignore Background without it -->
+                                                <!-- Full ControlTemplate required � WPF defaults ignore Background without it -->
                                                 <Style TargetType="MenuItem">
                                                     <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}"/>
                                                     <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
@@ -1743,7 +1749,7 @@
                                     </Style>
                                 </GridView.ColumnHeaderContainerStyle>
 
-                                <!-- col 0: 📌 Pin — not sortable (pinned items always float to top via primary sort) -->
+                                <!-- col 0: ?? Pin � not sortable (pinned items always float to top via primary sort) -->
                                 <GridViewColumn Header="&#x1F4CC;" Width="28">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -1788,7 +1794,7 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
 
-                                <!-- col 1: ★ Favorite — width-locked, no resize gripper -->
+                                <!-- col 1: ? Favorite � width-locked, no resize gripper -->
                                 <GridViewColumn Header="&#x2605;" Width="28">
                                     <!-- Override shared style: remove gripper and lock width so this column cannot be resized -->
                                     <GridViewColumn.HeaderContainerStyle>
@@ -1880,7 +1886,7 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
 
-                                <!-- col 2: Name &amp; Text — sortable, auto-fill width -->
+                                <!-- col 2: Name &amp; Text � sortable, auto-fill width -->
                                 <GridViewColumn Header="Name &amp; Text  &#x21C5;" Width="185">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -1893,7 +1899,7 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
 
-                                <!-- col 3: Engine — sortable -->
+                                <!-- col 3: Engine � sortable -->
                                 <GridViewColumn Header="Engine  &#x21C5;" Width="75">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -1917,7 +1923,7 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
 
-                                <!-- col 5: Category — sortable -->
+                                <!-- col 5: Category � sortable -->
                                 <GridViewColumn Header="Category  &#x21C5;" Width="95">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -1929,7 +1935,7 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
 
-                                <!-- col 6: Hotkey — not sortable -->
+                                <!-- col 6: Hotkey � not sortable -->
                                 <GridViewColumn Header="Hotkey" Width="110">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -2033,7 +2039,7 @@
                                         Style="{StaticResource ActionButton}"
                                         Margin="0,0,6,0"
                                         ToolTip="Save changes to this theme (built-in themes will be saved as a new user theme)"/>
-                                <Button Content="Save As…"
+                                <Button Content="Save As�"
                                         Command="{Binding Theme.SaveAsCommand}"
                                         Style="{StaticResource SecondaryButton}"
                                         Margin="0,0,6,0"
@@ -2068,26 +2074,26 @@
                             Padding="10,6"
                             Visibility="{Binding Theme.IsEditingBuiltIn, Converter={StaticResource BoolToVisConverter}}">
                         <TextBlock Foreground="{DynamicResource AccentBrush}" FontSize="12">
-                            <Run Text="ℹ  This is a built-in theme. Saving will create a new user theme with a unique name (e.g. &#x22;Default Dark Copy&#x22;)."/>
+                            <Run Text="?  This is a built-in theme. Saving will create a new user theme with a unique name (e.g. &#x22;Default Dark Copy&#x22;)."/>
                         </TextBlock>
                     </Border>
 
                     <!-- Colour editor + Live preview -->
                     <Grid Grid.Row="3">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" MinWidth="300"/>
+                            <ColumnDefinition Width="2*" MinWidth="180"/>
                             <ColumnDefinition Width="4"/>
-                            <ColumnDefinition Width="320" MinWidth="180" MaxWidth="500"/>
+                            <ColumnDefinition x:Name="ThemePreviewColumn" Width="300" MinWidth="120" MaxWidth="700"/>
                         </Grid.ColumnDefinitions>
                         <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch"
                                       VerticalAlignment="Stretch" Background="{DynamicResource BorderBrush}"
                                       Cursor="SizeWE" Margin="0,2"/>
 
-                        <!-- LEFT: Colour editor — grouped cards -->
+                        <!-- LEFT: Colour editor � grouped cards -->
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10,12,10,16">
                         <StackPanel HorizontalAlignment="Stretch">
 
-                            <!-- ── A. Background ───────────────────────── -->
+                            <!-- A. Background -->
                             <Border Margin="0,0,0,10"
                                     Background="{DynamicResource PanelBackgroundBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
@@ -2103,9 +2109,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.WindowBackground, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #1E1E2E"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="WindowBackground"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="WindowBackground"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="WindowBackground"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="WindowBackground"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="WindowBackground"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Panel Background -->
@@ -2116,9 +2122,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.PanelBackground, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #2B2B3D"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.PanelBackground, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="PanelBackground"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="PanelBackground"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="PanelBackground"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="PanelBackground"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="PanelBackground"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Deep Panel / Input Background -->
@@ -2129,9 +2135,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.DeepPanelBackground, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #181825"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.DeepPanelBackground, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="DeepPanelBackground"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="DeepPanelBackground"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="DeepPanelBackground"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="DeepPanelBackground"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="DeepPanelBackground"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Phrase History Background -->
@@ -2142,9 +2148,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.HistoryBackground, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #14141E"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.HistoryBackground, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="HistoryBackground"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="HistoryBackground"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="HistoryBackground"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="HistoryBackground"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="HistoryBackground"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Row Surface (Alternating) -->
@@ -2155,9 +2161,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.Surface0, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #313244"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.Surface0, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="Surface0"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="Surface0"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="Surface0"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="Surface0"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="Surface0"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Border / Divider -->
@@ -2168,9 +2174,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.BorderColor, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #45475A"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.BorderColor, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="BorderColor"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="BorderColor"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="BorderColor"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="BorderColor"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="BorderColor"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Raised Surface (Cards) -->
@@ -2181,15 +2187,15 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.Surface2, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #585B70"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.Surface2, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="Surface2"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="Surface2"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="Surface2"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="Surface2"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="Surface2"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
 
-                            <!-- ── B. Accent ──────────────────────────────── -->
+                            <!-- B. Accent -->
                             <Border Margin="0,0,0,10"
                                     Background="{DynamicResource PanelBackgroundBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
@@ -2205,28 +2211,28 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.Accent, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #89B4FA"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.Accent, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="Accent"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="Accent"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="Accent"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="Accent"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="Accent"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Accent Hover / Pressed -->
                                     <Grid Margin="0,2">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Accent Hover / Pressed" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
-                                                   ToolTip="Accent colour shown when a button or interactive element is hovered or pressed — usually slightly lighter or darker than the base accent"/>
+                                                   ToolTip="Accent colour shown when a button or interactive element is hovered or pressed � usually slightly lighter or darker than the base accent"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.AccentHover, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #B4D0FB"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.AccentHover, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="AccentHover"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="AccentHover"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="AccentHover"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="AccentHover"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="AccentHover"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
 
-                            <!-- ── C. Text ────────────────────────────────── -->
+                            <!-- C. Text -->
                             <Border Margin="0,0,0,10"
                                     Background="{DynamicResource PanelBackgroundBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
@@ -2242,9 +2248,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.PrimaryText, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #CDD6F4"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.PrimaryText, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="PrimaryText"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="PrimaryText"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="PrimaryText"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="PrimaryText"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="PrimaryText"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Secondary Text -->
@@ -2255,9 +2261,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.SecondaryText, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #A6ADC8"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.SecondaryText, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="SecondaryText"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="SecondaryText"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="SecondaryText"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="SecondaryText"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="SecondaryText"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Muted / Disabled Text -->
@@ -2268,9 +2274,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.MutedText, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #6C7086"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.MutedText, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="MutedText"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="MutedText"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="MutedText"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="MutedText"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="MutedText"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Muted Icon Tint -->
@@ -2281,15 +2287,15 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.MutedIcon, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #888CC8"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.MutedIcon, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="MutedIcon"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="MutedIcon"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="MutedIcon"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="MutedIcon"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="MutedIcon"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
 
-                            <!-- ── D. Status ──────────────────────────────── -->
+                            <!-- D. Status -->
                             <Border Margin="0,0,0,10"
                                     Background="{DynamicResource PanelBackgroundBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
@@ -2305,9 +2311,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.InfoColor, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #FAB387"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.InfoColor, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="InfoColor"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="InfoColor"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="InfoColor"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="InfoColor"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="InfoColor"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Warning -->
@@ -2318,9 +2324,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.Warning, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #F9E2AF"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.Warning, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="Warning"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="Warning"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="Warning"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="Warning"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="Warning"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Error / Danger -->
@@ -2331,9 +2337,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.ErrorColor, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #F38BA8"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.ErrorColor, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="ErrorColor"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="ErrorColor"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="ErrorColor"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="ErrorColor"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="ErrorColor"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Error Hover / Pressed -->
@@ -2344,9 +2350,9 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.ErrorHover, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #F5A0B5"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.ErrorHover, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="ErrorHover"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="ErrorHover"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="ErrorHover"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="ErrorHover"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="ErrorHover"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Success / Confirmed -->
@@ -2357,15 +2363,15 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.Success, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
                                                  ToolTip="Type a hex colour code, e.g. #A6E3A1"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.Success, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="Success"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="Success"
-                                                ToolTip="Open screen eyedropper — hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="Success"
+                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="Success"
+                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
+                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="Success"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
 
-                            <!-- ── E. Typography ───────────────────────────── -->
+                            <!-- E. Typography -->
                             <Border Margin="0,0,0,10"
                                     Background="{DynamicResource PanelBackgroundBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
@@ -2428,7 +2434,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- ── F. Shape &amp; Density ──────────────────────── -->
+                            <!-- F. Shape &amp; Density -->
                             <Border Margin="0,0,0,10"
                                     Background="{DynamicResource PanelBackgroundBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
@@ -2476,7 +2482,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- ── G. Overlay (independent from main window) ──── -->
+                            <!-- G. Overlay (independent from main window) -->
                             <Border Margin="0,0,0,10"
                                     Background="{DynamicResource PanelBackgroundBrush}"
                                     BorderBrush="{DynamicResource AccentBrush}"
@@ -2512,18 +2518,6 @@
                                         <Button Grid.Column="3" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}"
                                                 Command="{Binding Theme.ResetColorCommand}" CommandParameter="OverlayBorderHex"/>
                                     </Grid>
-                                    <!-- Overlay Opacity -->
-                                    <Grid Margin="0,4">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/><ColumnDefinition Width="40"/></Grid.ColumnDefinitions>
-                                        <TextBlock Text="Opacity:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
-                                                   ToolTip="0.05 = nearly transparent, 1.0 = fully opaque."/>
-                                        <Slider Grid.Column="1" Minimum="0.05" Maximum="1.0" TickFrequency="0.05" IsSnapToTickEnabled="True"
-                                                Value="{Binding Theme.OverlayOpacity, UpdateSourceTrigger=PropertyChanged}"
-                                                VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding Theme.OverlayOpacity, StringFormat={}{0:F2}}"
-                                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                                   FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="4,0,0,0"/>
-                                    </Grid>
                                     <!-- Overlay Corner Radius -->
                                     <Grid Margin="0,4">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/><ColumnDefinition Width="40"/></Grid.ColumnDefinitions>
@@ -2539,7 +2533,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- ── H. Contrast Checker ────────────────────── -->
+                            <!-- H. Contrast Checker -->
                             <Border Margin="0,0,0,10"
                                     Background="{DynamicResource PanelBackgroundBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
@@ -2547,7 +2541,7 @@
                                 <StackPanel>
                                     <TextBlock Text="CONTRAST (WCAG 2.1)" FontSize="10" FontWeight="Bold"
                                                Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
-                                    <TextBlock Text="Requires ≥4.5:1 for normal text (AA). Ratios below 3.0 may be difficult to read."
+                                    <TextBlock Text="Requires =4.5:1 for normal text (AA). Ratios below 3.0 may be difficult to read."
                                                FontSize="11" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,8" TextWrapping="Wrap"/>
                                     <!-- Primary on Window -->
                                     <Grid Margin="0,3">
@@ -2651,58 +2645,148 @@
                                                     <!-- Input field -->
                                                     <Border Background="{Binding Theme.DeepPanelBackground, Converter={StaticResource HexToBrushConverter}}"
                                                             BorderBrush="{Binding Theme.BorderColor, Converter={StaticResource HexToBrushConverter}}"
-                                                            BorderThickness="1" CornerRadius="4" Padding="8,5" Margin="0,0,0,8">
+                                                            BorderThickness="1"
+                                                            CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                            Padding="8,5" Margin="0,0,0,8">
                                                         <TextBlock Text="Text input&#x2026;"
                                                                    FontFamily="{Binding Theme.UiFontFamily}"
                                                                    FontSize="{Binding Theme.BaseFontSize}"
                                                                    Foreground="{Binding Theme.MutedText, Converter={StaticResource HexToBrushConverter}}"/>
                                                     </Border>
-                                                    <!-- Buttons -->
-                                                    <WrapPanel Margin="0,0,0,8">
-                                                        <Border Background="{Binding Theme.Accent, Converter={StaticResource HexToBrushConverter}}"
-                                                                CornerRadius="4" Padding="10,4" Margin="0,0,4,4">
-                                                            <TextBlock Text="Primary"
-                                                                       FontFamily="{Binding Theme.UiFontFamily}"
-                                                                       FontSize="{Binding Theme.BaseFontSize}"
-                                                                       FontWeight="SemiBold"
+                                                    <!-- Controls — shows Normal / Hover / Disabled states -->
+                                                    <TextBlock Text="CONTROLS" FontSize="9" FontWeight="Bold"
+                                                               Foreground="{Binding Theme.MutedText, Converter={StaticResource HexToBrushConverter}}"
+                                                               Margin="0,0,0,4"/>
+                                                    <!-- Column headers -->
+                                                    <Grid Margin="0,0,0,3">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" MinWidth="52"/>
+                                                            <ColumnDefinition Width="8"/>
+                                                            <ColumnDefinition Width="Auto" MinWidth="52"/>
+                                                            <ColumnDefinition Width="8"/>
+                                                            <ColumnDefinition Width="Auto" MinWidth="52"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="Normal" FontSize="9" HorizontalAlignment="Center" Foreground="{Binding Theme.MutedText, Converter={StaticResource HexToBrushConverter}}"/>
+                                                        <TextBlock Grid.Column="2" Text="Hover"  FontSize="9" HorizontalAlignment="Center" Foreground="{Binding Theme.MutedText, Converter={StaticResource HexToBrushConverter}}"/>
+                                                        <TextBlock Grid.Column="4" Text="Disabled" FontSize="9" HorizontalAlignment="Center" Foreground="{Binding Theme.MutedText, Converter={StaticResource HexToBrushConverter}}"/>
+                                                    </Grid>
+                                                    <!-- Primary button states -->
+                                                    <Grid Margin="0,0,0,4">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="4"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="4"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Border Grid.Column="0" Background="{Binding Theme.Accent, Converter={StaticResource HexToBrushConverter}}"
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                            <TextBlock Text="Primary" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
-                                                        <Border Background="{Binding Theme.Surface0, Converter={StaticResource HexToBrushConverter}}"
+                                                        <Border Grid.Column="2" Background="{Binding Theme.AccentHover, Converter={StaticResource HexToBrushConverter}}"
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                            <TextBlock Text="Primary" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                                                       Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
+                                                        </Border>
+                                                        <Border Grid.Column="4" Background="{Binding Theme.Accent, Converter={StaticResource HexToBrushConverter}}"
+                                                                Opacity="0.35"
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                            <TextBlock Text="Primary" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                                                       Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
+                                                        </Border>
+                                                    </Grid>
+                                                    <!-- Secondary button states -->
+                                                    <Grid Margin="0,0,0,4">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="4"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="4"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Border Grid.Column="0" Background="{Binding Theme.Surface0, Converter={StaticResource HexToBrushConverter}}"
                                                                 BorderBrush="{Binding Theme.BorderColor, Converter={StaticResource HexToBrushConverter}}"
-                                                                BorderThickness="1" CornerRadius="4" Padding="10,4" Margin="0,0,4,4">
-                                                            <TextBlock Text="Secondary"
-                                                                       FontFamily="{Binding Theme.UiFontFamily}"
-                                                                       FontSize="{Binding Theme.BaseFontSize}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                            <TextBlock Text="Secondary" FontSize="10" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.PrimaryText, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
-                                                        <Border Background="{Binding Theme.ErrorColor, Converter={StaticResource HexToBrushConverter}}"
-                                                                CornerRadius="4" Padding="10,4" Margin="0,0,0,4">
-                                                            <TextBlock Text="Delete"
-                                                                       FontFamily="{Binding Theme.UiFontFamily}"
-                                                                       FontSize="{Binding Theme.BaseFontSize}"
-                                                                       FontWeight="SemiBold"
+                                                        <Border Grid.Column="2" Background="{Binding Theme.Surface2, Converter={StaticResource HexToBrushConverter}}"
+                                                                BorderBrush="{Binding Theme.BorderColor, Converter={StaticResource HexToBrushConverter}}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                            <TextBlock Text="Secondary" FontSize="10" HorizontalAlignment="Center"
+                                                                       Foreground="{Binding Theme.PrimaryText, Converter={StaticResource HexToBrushConverter}}"/>
+                                                        </Border>
+                                                        <Border Grid.Column="4" Background="{Binding Theme.Surface0, Converter={StaticResource HexToBrushConverter}}"
+                                                                Opacity="0.4"
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                            <TextBlock Text="Secondary" FontSize="10" HorizontalAlignment="Center"
+                                                                       Foreground="{Binding Theme.PrimaryText, Converter={StaticResource HexToBrushConverter}}"/>
+                                                        </Border>
+                                                    </Grid>
+                                                    <!-- Danger button states -->
+                                                    <Grid Margin="0,0,0,8">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="4"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="4"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Border Grid.Column="0" Background="{Binding Theme.ErrorColor, Converter={StaticResource HexToBrushConverter}}"
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                            <TextBlock Text="Danger" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
-                                                    </WrapPanel>
+                                                        <Border Grid.Column="2" Background="{Binding Theme.ErrorHover, Converter={StaticResource HexToBrushConverter}}"
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                            <TextBlock Text="Danger" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                                                       Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
+                                                        </Border>
+                                                        <Border Grid.Column="4" Background="{Binding Theme.ErrorColor, Converter={StaticResource HexToBrushConverter}}"
+                                                                Opacity="0.35"
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                            <TextBlock Text="Danger" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                                                       Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
+                                                        </Border>
+                                                    </Grid>
                                                     <!-- Status chips -->
+                                                    <TextBlock Text="STATUS BADGES" FontSize="9" FontWeight="Bold"
+                                                               Foreground="{Binding Theme.MutedText, Converter={StaticResource HexToBrushConverter}}"
+                                                               Margin="0,0,0,4"/>
                                                     <WrapPanel>
                                                         <Border Background="{Binding Theme.Success, Converter={StaticResource HexToBrushConverter}}"
-                                                                CornerRadius="3" Padding="6,2" Margin="0,0,4,4">
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,2" Margin="0,0,4,4">
                                                             <TextBlock Text="Success" FontSize="11" FontWeight="SemiBold"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
                                                         <Border Background="{Binding Theme.Warning, Converter={StaticResource HexToBrushConverter}}"
-                                                                CornerRadius="3" Padding="6,2" Margin="0,0,4,4">
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,2" Margin="0,0,4,4">
                                                             <TextBlock Text="Warning" FontSize="11" FontWeight="SemiBold"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
                                                         <Border Background="{Binding Theme.ErrorColor, Converter={StaticResource HexToBrushConverter}}"
-                                                                CornerRadius="3" Padding="6,2" Margin="0,0,4,4">
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,2" Margin="0,0,4,4">
                                                             <TextBlock Text="Error" FontSize="11" FontWeight="SemiBold"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
                                                         <Border Background="{Binding Theme.InfoColor, Converter={StaticResource HexToBrushConverter}}"
-                                                                CornerRadius="3" Padding="6,2" Margin="0,0,0,4">
+                                                                CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,2" Margin="0,0,0,4">
                                                             <TextBlock Text="Info" FontSize="11" FontWeight="SemiBold"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
@@ -2732,7 +2816,7 @@
                                                             <TextBlock Text="Send" FontSize="10" FontWeight="SemiBold"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
-                                                        <TextBlock Text="Say something…"
+                                                        <TextBlock Text="Say something�"
                                                                    FontFamily="{Binding Theme.OverlayFontFamily}"
                                                                    FontSize="{Binding Theme.OverlayFontSize}"
                                                                    Foreground="{Binding Theme.MutedText, Converter={StaticResource HexToBrushConverter}}"
@@ -2744,10 +2828,10 @@
                                                         CornerRadius="0,0,5,5" Padding="8,4">
                                                     <DockPanel>
                                                         <TextBlock DockPanel.Dock="Right"
-                                                                   Text="↺  ⚙" Margin="4,0,0,0"
+                                                                   Text="?  ?" Margin="4,0,0,0"
                                                                    FontSize="10"
                                                                    Foreground="{Binding Theme.MutedText, Converter={StaticResource HexToBrushConverter}}"/>
-                                                        <TextBlock Text="Ready  · 0 chars"
+                                                        <TextBlock Text="Ready  � 0 chars"
                                                                    FontSize="10"
                                                                    Foreground="{Binding Theme.SecondaryText, Converter={StaticResource HexToBrushConverter}}"/>
                                                     </DockPanel>
@@ -2808,7 +2892,7 @@
             </DockPanel>
         </Border>
 
-        <!-- Phrase regeneration overlay — blocks entire window with progress -->
+        <!-- Phrase regeneration overlay � blocks entire window with progress -->
         <Grid Grid.RowSpan="2"
               Panel.ZIndex="100"
               Visibility="{Binding IsRegenerating, Converter={StaticResource BoolToVisConverter}}">
@@ -2820,7 +2904,7 @@
                            FontSize="20" FontWeight="SemiBold"
                            Foreground="{DynamicResource AccentBrush}"
                            HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                <TextBlock Text="Voice changed — re-generating cached audio."
+                <TextBlock Text="Voice changed � re-generating cached audio."
                            FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"
                            HorizontalAlignment="Center" Margin="0,0,0,16"/>
                 <TextBlock Text="{Binding RegenerationStatus}"
@@ -2830,7 +2914,7 @@
                              Width="320" Height="4"
                              Foreground="{DynamicResource AccentBrush}" Background="{DynamicResource BorderBrush}"
                              BorderThickness="0"/>
-                <TextBlock Text="Please wait — do not close this window."
+                <TextBlock Text="Please wait � do not close this window."
                            FontSize="11" Foreground="{DynamicResource MutedTextBrush}"
                            HorizontalAlignment="Center" Margin="0,12,0,0"/>
             </StackPanel>

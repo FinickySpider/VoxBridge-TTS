@@ -40,8 +40,8 @@ public static class ThemeDefaults
         ControlHeight     = 28,
         SpacingDensity    = SpacingDensity.Comfortable,
         // Overlay overrides (empty = inherit from main colours)
-        OverlayBackgroundHex = "",
-        OverlayBorderHex     = "",
+        OverlayBackgroundHex = "#1E1E2E",
+        OverlayBorderHex     = "#45475A",
         OverlayOpacity       = 0.93,
         OverlayCornerRadius  = 12,
     };

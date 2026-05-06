@@ -71,6 +71,9 @@ public partial class SettingsWindow : Window
         Loaded += (_, _) =>
         {
             _windowSizeInitialized = true;
+            // Restore persisted theme-preview splitter position
+            if (ThemePreviewColumn is not null)
+                ThemePreviewColumn.Width = new GridLength(vm.General.ThemePreviewColumnWidth, GridUnitType.Pixel);
             // WPF TwoWay-bound ComboBoxes (audio devices, voice selection) write null back through
             // their bindings during first render if the saved ID doesn't match any item, which
             // fires PropertyChanged on child VMs and sets IsDirty=true before the user does
@@ -120,6 +123,10 @@ public partial class SettingsWindow : Window
                 _committed = true;
                 _ = vm.Phrases.RollbackAsync();
             }
+
+            // Save theme-preview splitter position
+            if (ThemePreviewColumn is not null)
+                vm.General.ThemePreviewColumnWidth = ThemePreviewColumn.ActualWidth;
 
             // Always persist the current window size (fire-and-forget, non-blocking)
             _ = vm.SaveWindowDimensionsAsync();

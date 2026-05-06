@@ -87,6 +87,7 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
     // Window dimensions are persisted independently — not tracked by IsDirty
     public double SettingsWindowWidth  { get; set; } = 680;
     public double SettingsWindowHeight { get; set; } = 540;
+    public double ThemePreviewColumnWidth { get; set; } = 300;
 
     /// <summary>True when the transcript file exists on disk.</summary>
     public bool HasTranscriptFile => File.Exists(TranscriptPath);
@@ -213,7 +214,8 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         MaxOverlayInputLength  = s.MaxOverlayInputLength > 0 ? s.MaxOverlayInputLength : 500;
         ShowPlaybackTimer      = s.ShowPlaybackTimer;
         SettingsWindowWidth    = s.SettingsWindowWidth  > 400 ? s.SettingsWindowWidth  : 680;
-        SettingsWindowHeight   = s.SettingsWindowHeight > 300 ? s.SettingsWindowHeight : 540;
+        SettingsWindowHeight        = s.SettingsWindowHeight > 300 ? s.SettingsWindowHeight : 540;
+        ThemePreviewColumnWidth     = s.ThemePreviewColumnWidth > 80 ? s.ThemePreviewColumnWidth : 300;
     }
 
     public void ApplyTo(GeneralSettings s)
@@ -227,7 +229,8 @@ public sealed class GeneralSettingsViewModel : ViewModelBase
         s.MaxOverlayInputLength  = MaxOverlayInputLength;
         s.ShowPlaybackTimer      = ShowPlaybackTimer;
         s.SettingsWindowWidth    = SettingsWindowWidth;
-        s.SettingsWindowHeight   = SettingsWindowHeight;
+        s.SettingsWindowHeight        = SettingsWindowHeight;
+        s.ThemePreviewColumnWidth     = ThemePreviewColumnWidth;
     }
 
     public void LoadDiagnosticSettings(DiagnosticLoggingSettings s)

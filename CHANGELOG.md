@@ -7,6 +7,26 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v1.0.1] - 2026-05-05
+
+### Bug Fixes
+
+- **CRITICAL**: Fixed repeated theme-fork bug — editing a forked user theme and hitting Save again would create another new theme instead of updating the existing one. Root cause was the fragile `IsEditingBuiltIn => _savedSnapshot.IsBuiltIn` derived property that could be reset by WPF binding re-entry via `RefreshPresetList() → SelectedPreset setter → ApplyPreset()`. Fixed by introducing an explicit `_isEditingBuiltIn` backing field updated only at controlled code paths.
+- Fixed inner Theme tab "Save" button incorrectly applying the theme live to the running application. Inner Save now only persists to disk; the theme is applied to the app only when the global Save (CommitAsync) is clicked.
+- Fixed overlay color swatches showing as empty on the Default Dark theme. `ThemeDefaults` now provides `#1E1E2E` (background) and `#45475A` (border) instead of empty strings.
+- Fixed preview pane showing buttons with hardcoded corner radius (`4px`) instead of reflecting the `ThemeCornerRadius` setting.
+
+### Improvements
+
+- **Preview pane redesigned**: buttons section now shows three side-by-side state columns (Normal / Hover / Disabled) for Primary, Secondary, and Danger button types. All preview borders and badges bind `CornerRadius` to `Theme.ThemeCornerRadius` via new `DoubleToCornerRadiusConverter`.
+- Removed redundant Opacity slider from the Theme tab's Overlay-Only section (opacity is already in the Appearance tab).
+- Splitter position between the colour editor and preview pane is now remembered across sessions (`GeneralSettings.ThemePreviewColumnWidth`).
+- Splitter column constraints loosened (MinWidth 300→180 left, 180→120 right, MaxWidth 500→700 right) so users have more room to resize.
+- Eyedrop and Reset buttons in colour editor rows reduced to compact size (`ThemeRowButton` style with `Padding="5,2"` / `FontSize="11"`) — they no longer fill the entire available width.
+- Added `DoubleToCornerRadiusConverter` to the UI converters library.
+
+---
 ## [v1.0.0] -- 2026-05-05
 
 ### Features
