@@ -2,7 +2,7 @@
 ---
 id: PHASE-05
 type: phase
-status: active
+status: complete
 owner: ""
 ---
 
@@ -28,10 +28,10 @@ Extend the dynamic theming system built in PHASE-04 with typography and shape co
 - [SPRINT-13](../sprints/SPRINT-13.md)
 
 ## Completion Criteria
-- [ ] UI font and base font size controls in Theme tab, applied via DynamicResource
-- [ ] Overlay font family and size migrated from Appearance tab into Theme tab
-- [ ] Corner radius, border thickness, control height, and spacing density controls functional
-- [ ] WCAG contrast check displays live Good/Warning status for primary + muted text pairs
-- [ ] Export Theme writes a valid `.ttstheme` JSON file loadable by Import
-- [ ] Import Theme loads a `.ttstheme` file, validates it, and applies it as a new user theme
-- [ ] Build: 0 errors, 0 warnings
+- [x] UI font and base font size controls in Theme tab, applied via DynamicResource
+- [x] Overlay font family and size migrated from Appearance tab into Theme tab
+- [x] Corner radius, border thickness, control height, and spacing density controls functional
+- [x] WCAG contrast check displays live Good/Warning status for primary + muted text pairs
+- [x] Export Theme writes a valid `.ttstheme` JSON file loadable by Import
+- [x] Import Theme loads a `.ttstheme` file, validates it, and applies it as a new user theme
+- [x] Build: 0 errors, 0 warnings
