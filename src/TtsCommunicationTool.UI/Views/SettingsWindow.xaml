@@ -1,4 +1,4 @@
-<Window x:Class="TtsCommunicationTool.UI.Views.SettingsWindow"
+﻿<Window x:Class="TtsCommunicationTool.UI.Views.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:TtsCommunicationTool.UI.ViewModels"
@@ -404,7 +404,7 @@
 
                                 <!-- Header -->
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <TextBlock Text="?" Foreground="{DynamicResource ErrorBrush}" FontSize="16"
+                                    <TextBlock Text="⚠" Foreground="{DynamicResource ErrorBrush}" FontSize="16"
                                                VerticalAlignment="Center" Margin="0,0,6,0"/>
                                     <TextBlock Text="Diagnostics / Debug Logging"
                                                Foreground="{DynamicResource ErrorBrush}" FontSize="15" FontWeight="SemiBold"
@@ -444,7 +444,7 @@
                                           Foreground="{DynamicResource PrimaryTextBrush}" FontSize="13" Margin="0,2"/>
 
                                 <!-- Raw text � extra warning -->
-                                <CheckBox Content="?  Log raw spoken text  (UNSAFE)"
+                                <CheckBox Content="⚠  Log raw spoken text  (UNSAFE)"
                                           IsChecked="{Binding General.LogRawText}"
                                           IsEnabled="{Binding General.EnableDiagnosticLogging}"
                                           Foreground="{DynamicResource ErrorBrush}" FontWeight="SemiBold"
@@ -666,7 +666,7 @@
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
                             <Button Content="Test Both" Command="{Binding Audio.TestBothCommand}"
                                     Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
-                            <Button Content="? Refresh" Command="{Binding Audio.RefreshDevicesCommand}"
+                            <Button Content="↻ Refresh" Command="{Binding Audio.RefreshDevicesCommand}"
                                     Style="{StaticResource SecondaryButton}"/>
                         </StackPanel>
 
@@ -738,7 +738,7 @@
                         <Border Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                                 CornerRadius="4" Padding="12,10" Margin="0,8,0,0">
                             <StackPanel>
-                                <TextBlock Text="? Audio Routing" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" FontSize="12" Margin="0,0,0,4"/>
+                                <TextBlock Text="ℹ Audio Routing" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" FontSize="12" Margin="0,0,0,4"/>
                                 <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12"
                                            Text="Only TTS speech and phrase audio are sent to the secondary (app) device. Any non-voice sounds such as UI feedback or error tones play on the monitor device only and will not be heard in Discord or VRChat."/>
                             </StackPanel>
@@ -860,7 +860,7 @@
                                            Text="No API key stored � paste your key below."
                                            Visibility="{Binding Voice.IsApiKeyEmpty, Converter={StaticResource BoolToVisConverter}}"/>
                                 <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="11" Margin="0,0,0,4"
-                                           Text="? Unsaved � click Save to encrypt and store."
+                                           Text="⚠ Unsaved � click Save to encrypt and store."
                                            Visibility="{Binding Voice.IsApiKeyEditing, Converter={StaticResource BoolToVisConverter}}"/>
                                 <PasswordBox x:Name="ApiKeyPasswordBox"
                                              PasswordChanged="ApiKeyPasswordBox_PasswordChanged"
@@ -895,7 +895,7 @@
                                 <Border Background="#302030" CornerRadius="4" BorderBrush="{DynamicResource ErrorBrush}"
                                         BorderThickness="1" Padding="12,10" Margin="0,0,0,8">
                                     <TextBlock Foreground="{DynamicResource ErrorBrush}" FontSize="12" TextWrapping="Wrap"
-                                               Text="? This will permanently remove the stored API key. ElevenLabs voices will be unavailable until a new key is entered. Confirm?"/>
+                                               Text="⚠ This will permanently remove the stored API key. ElevenLabs voices will be unavailable until a new key is entered. Confirm?"/>
                                 </Border>
                                 <StackPanel Orientation="Horizontal">
                                     <Button Content="Confirm Clear"
@@ -1278,9 +1278,9 @@
                                 Style="{StaticResource ActionButton}" Margin="0,0,8,0"/>
                         <Button Content="Delete" Command="{Binding TextReplacements.DeleteCommand}"
                                 Style="{StaticResource DangerButton}" Margin="0,0,8,0"/>
-                        <Button Content="? Up" Command="{Binding TextReplacements.MoveUpCommand}"
+                        <Button Content="▲ Up" Command="{Binding TextReplacements.MoveUpCommand}"
                                 Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
-                        <Button Content="? Down" Command="{Binding TextReplacements.MoveDownCommand}"
+                        <Button Content="▼ Down" Command="{Binding TextReplacements.MoveDownCommand}"
                                 Style="{StaticResource SecondaryButton}"/>
                     </StackPanel>
                     <TextBlock Grid.Row="4" Text="{Binding TextReplacements.StatusMessage}"
@@ -2074,7 +2074,7 @@
                             Padding="10,6"
                             Visibility="{Binding Theme.IsEditingBuiltIn, Converter={StaticResource BoolToVisConverter}}">
                         <TextBlock Foreground="{DynamicResource AccentBrush}" FontSize="12">
-                            <Run Text="?  This is a built-in theme. Saving will create a new user theme with a unique name (e.g. &#x22;Default Dark Copy&#x22;)."/>
+                            <Run Text="ℹ  This is a built-in theme. Saving will create a new user theme with a unique name (e.g. &#x22;Default Dark Copy&#x22;)."/>
                         </TextBlock>
                     </Border>
 
@@ -2103,7 +2103,7 @@
                                                Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
                                     <!-- Window Background -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Main Window Background" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Outermost background of all application windows and dialogs"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.WindowBackground, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2116,7 +2116,7 @@
                                     </Grid>
                                     <!-- Panel Background -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Panel Background" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Background of toolbars, sidebars, tab headers, and floating panels"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.PanelBackground, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2129,7 +2129,7 @@
                                     </Grid>
                                     <!-- Deep Panel / Input Background -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Deep Panel / Input Background" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Background for input fields, text boxes, dropdowns, and recessed surfaces inside panels"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.DeepPanelBackground, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2142,7 +2142,7 @@
                                     </Grid>
                                     <!-- Phrase History Background -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Phrase History Background" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Background of the spoken-phrase history list shown in the main overlay"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.HistoryBackground, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2155,7 +2155,7 @@
                                     </Grid>
                                     <!-- Row Surface (Alternating) -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Row Surface (Alternating)" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Subtle tint applied to alternating rows in phrase lists and data grids to improve readability"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.Surface0, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2168,7 +2168,7 @@
                                     </Grid>
                                     <!-- Border / Divider -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Border / Divider" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Colour of lines, dividers, separator bars, and control outlines throughout the app"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.BorderColor, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2181,7 +2181,7 @@
                                     </Grid>
                                     <!-- Raised Surface (Cards) -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Raised Surface (Cards)" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Background for elevated elements such as cards, tags, hover highlights, and context menus"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.Surface2, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2205,7 +2205,7 @@
                                                Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
                                     <!-- Accent Color -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Accent Color" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Primary highlight colour. Used for active tabs, primary buttons, focus rings, progress bars, and selected items"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.Accent, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2218,7 +2218,7 @@
                                     </Grid>
                                     <!-- Accent Hover / Pressed -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Accent Hover / Pressed" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Accent colour shown when a button or interactive element is hovered or pressed � usually slightly lighter or darker than the base accent"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.AccentHover, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2242,7 +2242,7 @@
                                                Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
                                     <!-- Primary Text -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Primary Text" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Main body text colour. Used for phrase content, headings, and all primary readable text"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.PrimaryText, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2255,7 +2255,7 @@
                                     </Grid>
                                     <!-- Secondary Text -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Secondary Text" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Subdued text for captions, metadata, field labels, timestamps, and secondary descriptions"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.SecondaryText, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2268,7 +2268,7 @@
                                     </Grid>
                                     <!-- Muted / Disabled Text -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Muted / Disabled Text" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Low-contrast text for disabled controls, input placeholders, and de-emphasised content"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.MutedText, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2281,7 +2281,7 @@
                                     </Grid>
                                     <!-- Muted Icon Tint -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Muted Icon Tint" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Colour applied to low-priority icons such as inactive tab icons, secondary action glyphs, and decorative symbols"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.MutedIcon, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2305,7 +2305,7 @@
                                                Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
                                     <!-- Info / Neutral -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Info / Neutral" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Colour for informational notices, neutral status badges, and general hint messages"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.InfoColor, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2318,7 +2318,7 @@
                                     </Grid>
                                     <!-- Warning -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Warning" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Colour for caution messages, unsaved-changes banners, and non-critical configuration alerts"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.Warning, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2331,7 +2331,7 @@
                                     </Grid>
                                     <!-- Error / Danger -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Error / Danger" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Colour for error messages, failed operations, and destructive action buttons such as Delete"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.ErrorColor, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2344,7 +2344,7 @@
                                     </Grid>
                                     <!-- Error Hover / Pressed -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Error Hover / Pressed" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Error / danger colour when a destructive button is hovered or actively pressed"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.ErrorHover, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2357,7 +2357,7 @@
                                     </Grid>
                                     <!-- Success / Confirmed -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Success / Confirmed" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Colour for confirmation messages, completed operations, active/connected status, and positive indicators"/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.Success, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
@@ -2453,22 +2453,10 @@
                                         <TextBlock Grid.Column="2" Text="{Binding Theme.ThemeCornerRadius}" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="4,0,0,0"/>
                                     </Grid>
-                                    <!-- Border Thickness -->
-                                    <Grid Margin="0,4">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
-                                        <TextBlock Text="Border Thickness:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
-                                                   ToolTip="Thickness of control borders."/>
-                                        <TextBox Grid.Column="1" Text="{Binding Theme.ThemeBorderThickness, UpdateSourceTrigger=PropertyChanged}"
-                                                 Style="{StaticResource SettingsTextBox}"/>
-                                    </Grid>
-                                    <!-- Control Height -->
-                                    <Grid Margin="0,4">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
-                                        <TextBlock Text="Control Height:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
-                                                   ToolTip="Default height of buttons and input controls."/>
-                                        <TextBox Grid.Column="1" Text="{Binding Theme.ThemeControlHeight, UpdateSourceTrigger=PropertyChanged}"
-                                                 Style="{StaticResource SettingsTextBox}"/>
-                                    </Grid>
+                                    <!-- Border Thickness / Control Height are intentionally omitted:
+                                         the ControlBorderThicknessResource and ControlHeightResource keys
+                                         are reserved for future use but are not yet consumed by any control
+                                         style, so exposing them would mislead the user. -->
                                     <!-- Spacing Density -->
                                     <Grid Margin="0,4">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -2494,7 +2482,7 @@
                                                FontSize="11" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,8" TextWrapping="Wrap"/>
                                     <!-- Overlay Background -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Overlay Background" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Background colour of the overlay window. Empty = use Main Window Background."/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.OverlayBackgroundHex, UpdateSourceTrigger=PropertyChanged}"
@@ -2507,7 +2495,7 @@
                                     </Grid>
                                     <!-- Overlay Border -->
                                     <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="Overlay Border" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
                                                    ToolTip="Border colour of the overlay window. Empty = use Border / Divider colour."/>
                                         <TextBox Grid.Column="1" Text="{Binding Theme.OverlayBorderHex, UpdateSourceTrigger=PropertyChanged}"
@@ -2681,20 +2669,20 @@
                                                         </Grid.ColumnDefinitions>
                                                         <Border Grid.Column="0" Background="{Binding Theme.Accent, Converter={StaticResource HexToBrushConverter}}"
                                                                 CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                                Padding="{DynamicResource ControlPaddingResource}" HorizontalAlignment="Stretch">
                                                             <TextBlock Text="Primary" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
                                                         <Border Grid.Column="2" Background="{Binding Theme.AccentHover, Converter={StaticResource HexToBrushConverter}}"
                                                                 CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                                Padding="{DynamicResource ControlPaddingResource}" HorizontalAlignment="Stretch">
                                                             <TextBlock Text="Primary" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
                                                         <Border Grid.Column="4" Background="{Binding Theme.Accent, Converter={StaticResource HexToBrushConverter}}"
                                                                 Opacity="0.35"
                                                                 CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                                Padding="{DynamicResource ControlPaddingResource}" HorizontalAlignment="Stretch">
                                                             <TextBlock Text="Primary" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
@@ -2712,7 +2700,7 @@
                                                                 BorderBrush="{Binding Theme.BorderColor, Converter={StaticResource HexToBrushConverter}}"
                                                                 BorderThickness="1"
                                                                 CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                                Padding="{DynamicResource ControlPaddingResource}" HorizontalAlignment="Stretch">
                                                             <TextBlock Text="Secondary" FontSize="10" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.PrimaryText, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
@@ -2720,14 +2708,14 @@
                                                                 BorderBrush="{Binding Theme.BorderColor, Converter={StaticResource HexToBrushConverter}}"
                                                                 BorderThickness="1"
                                                                 CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                                Padding="{DynamicResource ControlPaddingResource}" HorizontalAlignment="Stretch">
                                                             <TextBlock Text="Secondary" FontSize="10" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.PrimaryText, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
                                                         <Border Grid.Column="4" Background="{Binding Theme.Surface0, Converter={StaticResource HexToBrushConverter}}"
                                                                 Opacity="0.4"
                                                                 CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                                Padding="{DynamicResource ControlPaddingResource}" HorizontalAlignment="Stretch">
                                                             <TextBlock Text="Secondary" FontSize="10" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.PrimaryText, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
@@ -2743,20 +2731,20 @@
                                                         </Grid.ColumnDefinitions>
                                                         <Border Grid.Column="0" Background="{Binding Theme.ErrorColor, Converter={StaticResource HexToBrushConverter}}"
                                                                 CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                                Padding="{DynamicResource ControlPaddingResource}" HorizontalAlignment="Stretch">
                                                             <TextBlock Text="Danger" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
                                                         <Border Grid.Column="2" Background="{Binding Theme.ErrorHover, Converter={StaticResource HexToBrushConverter}}"
                                                                 CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                                Padding="{DynamicResource ControlPaddingResource}" HorizontalAlignment="Stretch">
                                                             <TextBlock Text="Danger" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
                                                         <Border Grid.Column="4" Background="{Binding Theme.ErrorColor, Converter={StaticResource HexToBrushConverter}}"
                                                                 Opacity="0.35"
                                                                 CornerRadius="{Binding Theme.ThemeCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                                                Padding="6,3" HorizontalAlignment="Stretch">
+                                                                Padding="{DynamicResource ControlPaddingResource}" HorizontalAlignment="Stretch">
                                                             <TextBlock Text="Danger" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
@@ -2798,7 +2786,9 @@
                                         <!-- Overlay snippet (reflects actual OverlayWindow structure) -->
                                         <Border Background="{Binding Theme.OverlayBackgroundHex, Converter={StaticResource HexToBrushConverter}, TargetNullValue=#1E1E2E}"
                                                 BorderBrush="{Binding Theme.OverlayBorderHex, Converter={StaticResource HexToBrushConverter}, TargetNullValue=#45475A}"
-                                                BorderThickness="1" CornerRadius="6" Padding="0"
+                                                BorderThickness="1"
+                                                CornerRadius="{Binding Theme.OverlayCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                Padding="0"
                                                 Margin="0,0,0,8">
                                             <StackPanel>
                                                 <TextBlock Text="OVERLAY" Padding="8,6,8,0"
@@ -2808,11 +2798,14 @@
                                                 <Border Margin="8,0,8,6"
                                                         Background="{Binding Theme.DeepPanelBackground, Converter={StaticResource HexToBrushConverter}}"
                                                         BorderBrush="{Binding Theme.BorderColor, Converter={StaticResource HexToBrushConverter}}"
-                                                        BorderThickness="1" CornerRadius="4" Padding="6,4">
+                                                        BorderThickness="1"
+                                                        CornerRadius="{Binding Theme.OverlayCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                        Padding="6,4">
                                                     <DockPanel>
                                                         <Border DockPanel.Dock="Right" Margin="6,0,0,0"
                                                                 Background="{Binding Theme.Accent, Converter={StaticResource HexToBrushConverter}}"
-                                                                CornerRadius="3" Padding="6,3">
+                                                                CornerRadius="{Binding Theme.OverlayCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                                                Padding="6,3">
                                                             <TextBlock Text="Send" FontSize="10" FontWeight="SemiBold"
                                                                        Foreground="{Binding Theme.WindowBackground, Converter={StaticResource HexToBrushConverter}}"/>
                                                         </Border>
