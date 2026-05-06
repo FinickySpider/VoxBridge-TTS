@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>TtsCommunicationTool.Infrastructure</RootNamespace>
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>

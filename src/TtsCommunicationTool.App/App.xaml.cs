@@ -15,6 +15,7 @@ public partial class App : System.Windows.Application
     private ServiceProvider? _serviceProvider;
     private TrayIconManager? _trayManager;
     private SettingsWindow? _settingsWindow;
+    private SettingsViewModel? _settingsVm;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -50,6 +51,16 @@ public partial class App : System.Windows.Application
         var config = _serviceProvider.GetRequiredService<IConfigService>();
         await config.LoadAsync();
         log.Info("Configuration loaded.");
+
+        // Apply the persisted theme before any windows open
+        var themeService = _serviceProvider.GetRequiredService<IThemeService>();
+        var allThemes = themeService.LoadAll();
+        var activeName = config.CurrentConfig.ActiveThemeName;
+        var activeTheme = allThemes.FirstOrDefault(t =>
+            string.Equals(t.Name, activeName, StringComparison.OrdinalIgnoreCase))
+            ?? allThemes.First();
+        themeService.Apply(activeTheme);
+        log.Info($"Theme '{activeTheme.Name}' applied.");
 
         // Apply persisted diagnostic logging settings now that config is loaded
         log.UpdateSettings(config.CurrentConfig.DiagnosticLogging);
@@ -115,6 +126,13 @@ public partial class App : System.Windows.Application
         _trayManager.SettingsRequested += (_, _) => OpenSettings();
         log.Info("Tray icon initialized.");
 
+        // When tray resets the theme, sync any open settings window so its colours/preset refresh.
+        var themeServiceForTray = _serviceProvider.GetRequiredService<IThemeService>();
+        themeServiceForTray.ThemeResetToDefault += (_, _) =>
+        {
+            _settingsVm?.Theme.LoadThemes("Default Dark");
+        };
+
         // Create invisible host window for hotkey messages
         var hotkeyHost = _serviceProvider.GetRequiredService<HotkeyHostWindow>();
         hotkeyHost.SettingsRequested += (_, _) => OpenSettings();
@@ -150,6 +168,7 @@ public partial class App : System.Windows.Application
         }
 
         var vm = _serviceProvider.GetRequiredService<SettingsViewModel>();
+        _settingsVm = vm;
         vm.IsFirstRun = isFirstRun;
 
         // Refresh all hotkeys after settings are saved
@@ -171,6 +190,7 @@ public partial class App : System.Windows.Application
             vm.Appearance.LiveOpacityPreview = null;
             vm.Appearance.LiveFontPreview = null;
             _settingsWindow = null;
+            _settingsVm = null;
         };
         _settingsWindow.Show();
     }

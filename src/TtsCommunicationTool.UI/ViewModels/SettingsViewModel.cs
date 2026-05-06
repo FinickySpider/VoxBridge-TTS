@@ -26,6 +26,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public AudioSettingsViewModel Audio { get; }
     public VoiceSettingsViewModel Voice { get; }
     public AppearanceSettingsViewModel Appearance { get; }
+    public ThemeSettingsViewModel Theme { get; }
     public PhraseListViewModel Phrases { get; }
     public TextReplacementSettingsViewModel TextReplacements { get; }
 
@@ -110,6 +111,7 @@ public sealed class SettingsViewModel : ViewModelBase
         AudioSettingsViewModel audio,
         VoiceSettingsViewModel voice,
         AppearanceSettingsViewModel appearance,
+        ThemeSettingsViewModel theme,
         PhraseListViewModel phrases,
         TextReplacementSettingsViewModel textReplacements)
     {
@@ -123,6 +125,7 @@ public sealed class SettingsViewModel : ViewModelBase
         Audio = audio;
         Voice = voice;
         Appearance = appearance;
+        Theme = theme;
         Phrases = phrases;
         TextReplacements = textReplacements;
 
@@ -135,6 +138,16 @@ public sealed class SettingsViewModel : ViewModelBase
         // Track dirty state across all child VMs
         foreach (var child in new System.ComponentModel.INotifyPropertyChanged[] { General, Hotkeys, Audio, Voice, Appearance, TextReplacements })
             child.PropertyChanged += (_, _) => IsDirty = true;
+        // For Theme: only mark dirty on actual colour/name edits, NOT when the VM resets
+        // its own IsDirty flag (which would immediately re-dirty the parent after a revert).
+        Theme.PropertyChanged += (_, pe) =>
+        {
+            if (pe.PropertyName is nameof(ThemeSettingsViewModel.IsDirty)
+                                 or nameof(ThemeSettingsViewModel.SelectedPreset)
+                                 or nameof(ThemeSettingsViewModel.IsEditingBuiltIn))
+                return;
+            IsDirty = true;
+        };
         // Also track phrase session changes so Cancel shows the confirmation dialog
         Phrases.PropertyChanged += (_, pe) =>
         {
@@ -153,6 +166,7 @@ public sealed class SettingsViewModel : ViewModelBase
         Audio.LoadFrom(cfg.AudioSettings);
         Voice.LoadFrom(cfg.VoiceSettings);
         Appearance.LoadFrom(cfg.OverlaySettings);
+        Theme.LoadThemes(cfg.ActiveThemeName);
         TextReplacements.LoadFrom(cfg.TextReplacements);
         IsDirty = false;
         _log.LogEvent(DiagnosticLogLevel.Info, "settings", "settings_loaded",
@@ -186,6 +200,7 @@ public sealed class SettingsViewModel : ViewModelBase
         Audio.ApplyTo(cfg.AudioSettings);
         Voice.ApplyTo(cfg.VoiceSettings);
         Appearance.ApplyTo(cfg.OverlaySettings);
+        await Theme.CommitAsync(_config);
         TextReplacements.ApplyTo(cfg.TextReplacements);
 
         await _config.SaveAsync(cfg);
@@ -243,6 +258,7 @@ public sealed class SettingsViewModel : ViewModelBase
         // Restore live pitch in memory so the overlay uses the saved value again
         _config.CurrentConfig.VoiceSettings.GlobalPitch = _savedPitch;
         await Phrases.RollbackAsync();
+        Theme.RevertChanges();   // re-applies the saved theme to live app resources
         LoadFromConfig(); // reload other tabs to last-saved config state
         IsDirty = false;
         Cancelled?.Invoke(this, EventArgs.Empty);
@@ -284,6 +300,7 @@ public sealed class SettingsViewModel : ViewModelBase
         Audio.LoadFrom(defaults.AudioSettings);
         Voice.LoadFrom(defaults.VoiceSettings);
         Appearance.LoadFrom(defaults.OverlaySettings);
+        Theme.LoadThemes("Default Dark");
         TextReplacements.LoadFrom(defaults.TextReplacements);
         _log.Info("Settings reset to defaults.");
     }

@@ -24,11 +24,11 @@
 
     <Border x:Name="OverlayBorder"
             CornerRadius="12"
-            BorderBrush="#45475A"
+            BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="1"
             Margin="8">
         <Border.Background>
-            <SolidColorBrush Color="#1E1E2E" Opacity="0.93"/>
+            <SolidColorBrush Color="{DynamicResource WindowBackgroundColor}" Opacity="0.93"/>
         </Border.Background>
         <Border.Effect>
             <DropShadowEffect Color="Black" BlurRadius="20" Opacity="0.55" ShadowDepth="3"/>
@@ -55,10 +55,10 @@
                          MaxLength="{Binding MaxLength}"
                          FontSize="18"
                          FontFamily="Segoe UI"
-                         Foreground="#CDD6F4"
+                         Foreground="{DynamicResource PrimaryTextBrush}"
                          Background="Transparent"
                          BorderThickness="0"
-                         CaretBrush="#89B4FA"
+                         CaretBrush="{DynamicResource AccentBrush}"
                          AcceptsReturn="True"
                          TextWrapping="Wrap"
                          VerticalScrollBarVisibility="Hidden"
@@ -82,18 +82,18 @@
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="Bg"
-                                    Background="#89B4FA"
+                                    Background="{DynamicResource AccentBrush}"
                                     CornerRadius="8"
                                     Padding="10,6">
                                 <TextBlock Text="&#x25B6;"
                                            FontSize="14"
-                                           Foreground="#1E1E2E"
+                                           Foreground="{DynamicResource WindowBackgroundBrush}"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Bg" Property="Background" Value="#B4D0FB"/>
+                                    <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AccentHoverBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsEnabled" Value="False">
                                     <Setter TargetName="Bg" Property="Opacity" Value="0.35"/>
@@ -106,7 +106,7 @@
 
             <!-- Seamless status bar strip -->
             <Border Grid.Row="1"
-                    Background="#14141E"
+                    Background="{DynamicResource HistoryBackgroundBrush}"
                     CornerRadius="0,0,10,10"
                     Padding="16,5,16,7">
                 <DockPanel LastChildFill="True">
@@ -128,13 +128,13 @@
                                                Text="↩ Resend"
                                                FontSize="11"
                                                FontFamily="Segoe UI"
-                                               Foreground="#6C7086"
+                                               Foreground="{DynamicResource MutedTextBrush}"
                                                VerticalAlignment="Center"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <!-- Disabled: audio is already playing — dim to match blocked-send visual -->
                                     <Trigger Property="IsEnabled" Value="False">
-                                        <Setter TargetName="ResendText" Property="Foreground" Value="#45475A"/>
+                                        <Setter TargetName="ResendText" Property="Foreground" Value="{DynamicResource BorderBrush}"/>
                                     </Trigger>
                                     <!-- Hover only when enabled -->
                                     <MultiTrigger>
@@ -142,7 +142,7 @@
                                             <Condition Property="IsMouseOver" Value="True"/>
                                             <Condition Property="IsEnabled" Value="True"/>
                                         </MultiTrigger.Conditions>
-                                        <Setter TargetName="ResendText" Property="Foreground" Value="#CDD6F4"/>
+                                        <Setter TargetName="ResendText" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
                                     </MultiTrigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
@@ -163,14 +163,14 @@
                                     <TextBlock x:Name="GearIcon"
                                                Text="&#x2699;"
                                                FontSize="14"
-                                               Foreground="#6C7086"
+                                               Foreground="{DynamicResource MutedTextBrush}"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
                                                RenderOptions.ClearTypeHint="Enabled"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="GearIcon" Property="Foreground" Value="#CDD6F4"/>
+                                        <Setter TargetName="GearIcon" Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
@@ -187,7 +187,7 @@
                     <TextBlock DockPanel.Dock="Right"
                                Text="{Binding EstimatedCreditDisplay}"
                                VerticalAlignment="Center"
-                               Foreground="#6C7086"
+                               Foreground="{DynamicResource MutedTextBrush}"
                                FontSize="11"
                                FontFamily="Segoe UI"
                                Margin="0,0,8,0"

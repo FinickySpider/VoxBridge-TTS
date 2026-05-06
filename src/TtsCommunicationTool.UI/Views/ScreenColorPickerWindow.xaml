@@ -1,0 +1,77 @@
+<Window x:Class="TtsCommunicationTool.UI.Views.ScreenColorPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Topmost="True"
+        ShowInTaskbar="False"
+        Background="Black"
+        MouseMove="OnMouseMove"
+        MouseLeftButtonDown="OnClick"
+        KeyDown="OnKeyDown">
+    <Grid ClipToBounds="True">
+
+        <!-- Desktop screenshot stretched to fill the window -->
+        <Image x:Name="ScreenImage"
+               Stretch="Fill"
+               RenderOptions.BitmapScalingMode="HighQuality"
+               IsHitTestVisible="False"/>
+
+        <!-- HUD overlay — follows cursor, no hit-test so clicks pass through to Grid -->
+        <Canvas IsHitTestVisible="False">
+            <Border x:Name="MagnifierPanel"
+                    Canvas.Left="60" Canvas.Top="60"
+                    Background="#E01E1E2E"
+                    BorderBrush="#6C7086"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="8,7"
+                    IsHitTestVisible="False">
+                <StackPanel>
+
+                    <!-- Magnified view (17×17 sampled pixels scaled to 136×136) -->
+                    <Border BorderBrush="#45475A" BorderThickness="1">
+                        <Grid>
+                            <Image x:Name="MagnifierImage"
+                                   Width="136" Height="136"
+                                   RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                   Stretch="Fill"/>
+                            <!-- Crosshair lines centred on the picked pixel -->
+                            <Line X1="68" Y1="0" X2="68" Y2="136"
+                                  Stroke="White" StrokeThickness="1" Opacity="0.5"/>
+                            <Line X1="0" Y1="68" X2="136" Y2="68"
+                                  Stroke="White" StrokeThickness="1" Opacity="0.5"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Colour swatch + hex value -->
+                    <Grid Margin="0,7,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Rectangle x:Name="ColorPreview"
+                                   Width="22" Height="22"
+                                   Stroke="#888" StrokeThickness="1"/>
+                        <TextBlock x:Name="HexLabel"
+                                   Grid.Column="1"
+                                   FontFamily="Consolas" FontSize="13"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   VerticalAlignment="Center"
+                                   Margin="6,0,0,0"
+                                   Text="#------"/>
+                    </Grid>
+
+                    <!-- Hint -->
+                    <TextBlock Text="Click to pick  ·  Esc to cancel"
+                               FontSize="10"
+                               Foreground="#8888AA"
+                               HorizontalAlignment="Center"
+                               Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+        </Canvas>
+
+    </Grid>
+</Window>

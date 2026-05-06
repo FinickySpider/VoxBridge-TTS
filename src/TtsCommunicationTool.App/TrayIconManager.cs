@@ -11,17 +11,19 @@ public sealed class TrayIconManager : IDisposable
     private readonly IOverlayCoordinator _overlay;
     private readonly ILoggingService _log;
     private readonly RecentMessagesState _recentMessages;
+    private readonly IThemeService _themeService;
     private NotifyIcon? _notifyIcon;
     private ToolStripMenuItem? _recentMenuItem;
 
     /// <summary>Raised when the user clicks "Settings" in the tray menu.</summary>
     public event EventHandler? SettingsRequested;
 
-    public TrayIconManager(IOverlayCoordinator overlay, ILoggingService log, RecentMessagesState recentMessages)
+    public TrayIconManager(IOverlayCoordinator overlay, ILoggingService log, RecentMessagesState recentMessages, IThemeService themeService)
     {
         _overlay = overlay;
         _log = log;
         _recentMessages = recentMessages;
+        _themeService = themeService;
     }
 
     public void Initialize()
@@ -67,6 +69,14 @@ public sealed class TrayIconManager : IDisposable
         var settings = new ToolStripMenuItem("Settings");
         settings.Click += (_, _) => SettingsRequested?.Invoke(this, EventArgs.Empty);
         menu.Items.Add(settings);
+
+        var resetTheme = new ToolStripMenuItem("Reset Theme to Default");
+        resetTheme.Click += (_, _) =>
+        {
+            _themeService.ResetToDefault();
+            _log.Info("Theme reset to default via tray.");
+        };
+        menu.Items.Add(resetTheme);
 
         menu.Items.Add(new ToolStripSeparator());
 

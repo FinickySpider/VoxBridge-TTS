@@ -12,4 +12,7 @@ public sealed class AppConfig
     public TextReplacementSettings TextReplacements { get; set; } = new();
     public ElevenLabsSettings ElevenLabs { get; set; } = new();
     public DiagnosticLoggingSettings DiagnosticLogging { get; set; } = new();
+
+    /// <summary>Name of the last-applied theme.  Resolved by ThemeService at startup.</summary>
+    public string ActiveThemeName { get; set; } = "Default Dark";
 }

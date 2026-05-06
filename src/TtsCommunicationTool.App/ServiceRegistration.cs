@@ -8,6 +8,7 @@ using TtsCommunicationTool.Infrastructure.Logging;
 using TtsCommunicationTool.Infrastructure.Phrases;
 using TtsCommunicationTool.Infrastructure.TextReplacement;
 using TtsCommunicationTool.Infrastructure.Transcript;
+using TtsCommunicationTool.Infrastructure.Themes;
 using TtsCommunicationTool.Infrastructure.Tts;
 using TtsCommunicationTool.UI.Services;
 using TtsCommunicationTool.UI.ViewModels;
@@ -39,6 +40,8 @@ public static class ServiceRegistration
         services.AddSingleton<INotificationService, WpfNotificationService>();
         services.AddSingleton<ITextReplacementService, TextReplacementService>();
         services.AddSingleton<ITranscriptService, TranscriptService>();
+        services.AddSingleton<IThemeService, ThemeService>();
+        services.AddSingleton<IColorPickerService, WinFormsColorPickerService>();
 
         // App-level services
         services.AddSingleton<TrayIconManager>();
@@ -54,6 +57,7 @@ public static class ServiceRegistration
         services.AddTransient<AudioSettingsViewModel>();
         services.AddTransient<VoiceSettingsViewModel>();
         services.AddTransient<AppearanceSettingsViewModel>();
+        services.AddTransient<ThemeSettingsViewModel>();
         services.AddTransient<PhraseListViewModel>();
         services.AddTransient<PhraseEditorViewModel>();
         services.AddTransient<TextReplacementSettingsViewModel>();
