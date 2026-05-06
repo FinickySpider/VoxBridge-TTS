@@ -105,7 +105,7 @@
             <!-- Seamless status bar strip -->
             <Border Grid.Row="1"
                     Background="{DynamicResource HistoryBackgroundBrush}"
-                    CornerRadius="0,0,10,10"
+                    CornerRadius="{DynamicResource OverlayStatusBarCornerRadiusResource}"
                     Padding="16,5,16,7">
                 <DockPanel LastChildFill="True">
                     <!-- Resend last message button -->

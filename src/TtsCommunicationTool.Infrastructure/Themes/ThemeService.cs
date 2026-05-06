@@ -156,7 +156,9 @@ public sealed class ThemeService : IThemeService
             res["OverlayBackgroundBrush"]    = overlayBrush;
             res["OverlayBackgroundColor"]    = overlayColor;
             res["OverlayBorderBrush"]        = new SolidColorBrush(borderColor);
-            res["OverlayCornerRadiusResource"] = new CornerRadius(Math.Clamp(theme.OverlayCornerRadius, 0, 30));
+            var _ocr = Math.Clamp(theme.OverlayCornerRadius, 0, 30);
+            res["OverlayCornerRadiusResource"]          = new CornerRadius(_ocr);
+            res["OverlayStatusBarCornerRadiusResource"] = new CornerRadius(0, 0, _ocr, _ocr);
         }
         catch (Exception ex)
         {

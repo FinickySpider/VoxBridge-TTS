@@ -2140,19 +2140,6 @@
                                         <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="DeepPanelBackground"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
-                                    <!-- Phrase History Background -->
-                                    <Grid Margin="0,2">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
-                                        <TextBlock Text="Phrase History Background" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
-                                                   ToolTip="Background of the spoken-phrase history list shown in the main overlay"/>
-                                        <TextBox Grid.Column="1" Text="{Binding Theme.HistoryBackground, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" FontSize="12" Padding="4,3"
-                                                 ToolTip="Type a hex colour code, e.g. #14141E"/>
-                                        <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}" Background="{Binding Theme.HistoryBackground, Converter={StaticResource HexToBrushConverter}}" Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="HistoryBackground"/>
-                                        <Button Grid.Column="3" Content="Eyedrop" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.PickColorCommand}" CommandParameter="HistoryBackground"
-                                                ToolTip="Open screen eyedropper � hover over anything on screen and click to pick its colour"/>
-                                        <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource ThemeRowButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="HistoryBackground"
-                                                ToolTip="Reset to the default value for this colour"/>
-                                    </Grid>
                                     <!-- Row Surface (Alternating) -->
                                     <Grid Margin="0,2">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="70"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
@@ -2505,6 +2492,21 @@
                                                 Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="OverlayBorderHex"/>
                                         <Button Grid.Column="3" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}"
                                                 Command="{Binding Theme.ResetColorCommand}" CommandParameter="OverlayBorderHex"/>
+                                    </Grid>
+                                    <!-- Status Bar Background -->
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="90"/><ColumnDefinition Width="28"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Status Bar Background" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   ToolTip="Background of the status bar strip at the bottom of the overlay window"/>
+                                        <TextBox Grid.Column="1" Text="{Binding Theme.HistoryBackground, UpdateSourceTrigger=PropertyChanged}"
+                                                 FontFamily="Consolas" FontSize="12" Padding="4,3"
+                                                 ToolTip="Type a hex colour code, e.g. #14141E"/>
+                                        <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}"
+                                                Background="{Binding Theme.HistoryBackground, Converter={StaticResource HexToBrushConverter}}"
+                                                Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="HistoryBackground"/>
+                                        <Button Grid.Column="3" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}"
+                                                Command="{Binding Theme.ResetColorCommand}" CommandParameter="HistoryBackground"
+                                                ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
                                     <!-- Overlay Corner Radius -->
                                     <Grid Margin="0,4">

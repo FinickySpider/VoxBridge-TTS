@@ -9,6 +9,27 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v1.0.3] -- 2026-05-05
+
+### Bug Fixes
+
+- **Symbol corruption**: Fixed `?` replacement characters in eyedropper button tooltips, window title, and diagnostic-log comments throughout `SettingsWindow.xaml` — all replaced with correct em dash (`—`)
+- **Overlay corner radius**: Status bar strip at the bottom of the overlay window now uses `OverlayStatusBarCornerRadiusResource` (dynamic, bottom corners only) instead of hardcoded `CornerRadius="0,0,10,10"`. ThemeService and `Default.xaml` both seeded with the new resource. Corner radius now visually updates correctly on the full overlay frame including the status bar.
+- **Status Bar Background misclassified**: "Phrase History Background" colour row removed from the main Background section and re-added as "Status Bar Background" in the Overlay Only section with the correct tooltip ("Background of the status bar strip at the bottom of the overlay window").
+- **Build configuration**: All builds now use `-Configuration Release` so the shipped executable is the Release binary, not Debug.
+
+### Improvements
+
+- Eyedropper tooltip text now uses XML entity `&#x2014;` to prevent encoding-induced corruption in future saves
+
+- (add bug fixes here)
+
+### Improvements
+
+- (add improvements here)
+
+---
 ## [v1.0.2] - 2026-05-05
 
 ### Bug Fixes
