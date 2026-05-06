@@ -2494,7 +2494,7 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.OverlayBackgroundHex, UpdateSourceTrigger=PropertyChanged}"
                                                  FontFamily="Consolas" FontSize="12" Padding="4,3"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}"
-                                                Background="{Binding Theme.OverlayBackgroundHex, Converter={StaticResource HexToBrushConverter}, FallbackValue={DynamicResource OverlayBackgroundBrush}}"
+                                                Background="{Binding Theme.OverlayBackgroundHex, Converter={StaticResource HexToBrushConverter}}"
                                                 Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="OverlayBackgroundHex"/>
                                         <Button Grid.Column="3" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}"
                                                 Command="{Binding Theme.ResetColorCommand}" CommandParameter="OverlayBackgroundHex"/>
@@ -2507,7 +2507,7 @@
                                         <TextBox Grid.Column="1" Text="{Binding Theme.OverlayBorderHex, UpdateSourceTrigger=PropertyChanged}"
                                                  FontFamily="Consolas" FontSize="12" Padding="4,3"/>
                                         <Button Grid.Column="2" Style="{StaticResource ColorSwatchButton}"
-                                                Background="{Binding Theme.OverlayBorderHex, Converter={StaticResource HexToBrushConverter}, FallbackValue={DynamicResource OverlayBorderBrush}}"
+                                                Background="{Binding Theme.OverlayBorderHex, Converter={StaticResource HexToBrushConverter}}"
                                                 Command="{Binding Theme.PickColorDialogCommand}" CommandParameter="OverlayBorderHex"/>
                                         <Button Grid.Column="3" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}"
                                                 Command="{Binding Theme.ResetColorCommand}" CommandParameter="OverlayBorderHex"/>
@@ -2712,8 +2712,8 @@
                                         </Border>
 
                                         <!-- Overlay snippet (reflects actual OverlayWindow structure) -->
-                                        <Border Background="{Binding Theme.OverlayBackgroundHex, Converter={StaticResource HexToBrushConverter}, FallbackValue={DynamicResource OverlayBackgroundBrush}}"
-                                                BorderBrush="{Binding Theme.OverlayBorderHex, Converter={StaticResource HexToBrushConverter}, FallbackValue={DynamicResource OverlayBorderBrush}}"
+                                        <Border Background="{Binding Theme.OverlayBackgroundHex, Converter={StaticResource HexToBrushConverter}, TargetNullValue=#1E1E2E}"
+                                                BorderBrush="{Binding Theme.OverlayBorderHex, Converter={StaticResource HexToBrushConverter}, TargetNullValue=#45475A}"
                                                 BorderThickness="1" CornerRadius="6" Padding="0"
                                                 Margin="0,0,0,8">
                                             <StackPanel>
