@@ -8,6 +8,23 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v1.0.2] - 2026-05-05
+
+### Bug Fixes
+
+- **Splitter position not persisted**: `SettingsViewModel.SaveWindowDimensionsAsync()` was not writing `ThemePreviewColumnWidth` to the config JSON. Now persists and restores correctly.
+- **Symbol corruption**: Previous PowerShell `Set-Content` calls used system (ANSI) encoding, replacing Unicode characters (⚠ ℹ ↻ ▲ ▼) with `?`. All symbol replacements now use `[System.IO.File]::WriteAllText(..., UTF8)`. Corrupted symbols restored: ⚠ (warnings), ℹ (info), ↻ (Refresh button), ▲/▼ (Up/Down buttons in Replacements tab).
+- **Theme shape/spacing changes not applying**: `CommitAsync` returned early without calling `_themeService.Apply()` when `IsDirty` was `false` after inner Save. Now always calls `Apply()` so shape and spacing edits take effect on global Save.
+- **Overlay corner radius not reflected in preview**: Preview overlay border had `CornerRadius="6"` hardcoded. Now bound to `OverlayCornerRadius` via `DoubleToCornerRadiusConverter`.
+
+### Improvements
+
+- Eyedrop and Reset button columns fixed to `Width="70"` and `Width="58"` — no longer stretch to fill available width.
+- Removed non-functional "Border Thickness" and "Control Height" inputs from Shape & Density. These resource keys are reserved for future style wiring.
+- Preview button state rows now use `{DynamicResource ControlPaddingResource}` so Spacing Density changes are visible in the preview pane after global Save.
+
+---
 ## [v1.0.1] - 2026-05-05
 
 ### Bug Fixes
