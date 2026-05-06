@@ -282,8 +282,9 @@ public sealed class SettingsViewModel : ViewModelBase
     public async Task SaveWindowDimensionsAsync()
     {
         var cfg = _config.CurrentConfig;
-        cfg.GeneralSettings.SettingsWindowWidth = General.SettingsWindowWidth;
+        cfg.GeneralSettings.SettingsWindowWidth  = General.SettingsWindowWidth;
         cfg.GeneralSettings.SettingsWindowHeight = General.SettingsWindowHeight;
+        cfg.GeneralSettings.ThemePreviewColumnWidth = General.ThemePreviewColumnWidth;
         await _config.SaveAsync(cfg);
     }
 
