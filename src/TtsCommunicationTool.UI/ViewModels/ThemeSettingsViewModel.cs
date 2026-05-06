@@ -40,6 +40,11 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     // Cleared (without deleting) when CommitAsync / SaveAsync succeeds.
     private readonly HashSet<string> _pendingNews = new(StringComparer.OrdinalIgnoreCase);
 
+    // True only when the user has actually edited a colour value this session.
+    // Selecting a preset alone does NOT set this. Only set by SetColor().
+    // Used to decide whether a built-in preset must be forked on Save.
+    private bool _hasColourEdits;
+
     // ── Dirty / state ────────────────────────────────────────────────────────
     public bool IsDirty
     {
@@ -135,6 +140,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     {
         _pendingDeletes.Clear();
         _pendingNews.Clear();
+        _hasColourEdits = false;
         AvailableThemes.Clear();
         foreach (var t in _themeService.LoadAll())
             AvailableThemes.Add(t);
@@ -187,6 +193,8 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         RaiseAllColourProperties();
         OnPropertyChanged(nameof(ThemeName));
         OnPropertyChanged(nameof(IsEditingBuiltIn));
+        _hasColourEdits = false;
+        _hasColourEdits = false;
         IsDirty = false;
     }
 
@@ -210,38 +218,49 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         // Flush pending deletes first
         await FlushPendingDeletesAsync();
 
-        if (IsEditingBuiltIn)
+        if (IsEditingBuiltIn && _hasColourEdits)
         {
-            // Fork: generate a unique name so we never collide with the built-in.
+            // User actually edited colours on a built-in — fork to a new user theme.
             var forkName = GenerateUniqueName(_workingCopy.Name);
             _workingCopy.Name = forkName;
             OnPropertyChanged(nameof(ThemeName));
             await _themeService.SaveAsUserThemeAsync(_workingCopy, forkName);
+            _pendingNews.Clear();
+            _savedSnapshot = _workingCopy.Clone();
+            _savedSnapshot.IsBuiltIn = false;
+            _originalSnapshot = _savedSnapshot.Clone();
+            RefreshPresetList();
+            _hasColourEdits = false;
+            IsDirty = false;
+            OnPropertyChanged(nameof(IsEditingBuiltIn));
             _log.Info($"Built-in theme forked as new user theme '{forkName}'.");
         }
-        else
+        else if (!IsEditingBuiltIn)
         {
             // Rename: if the user changed the theme name, delete the old file first.
             if (!string.Equals(_savedSnapshot.Name, _workingCopy.Name, StringComparison.OrdinalIgnoreCase))
             {
                 await _themeService.DeleteUserThemeAsync(_savedSnapshot.Name);
-                _pendingNews.Remove(_savedSnapshot.Name); // old file gone; track new name below
+                _pendingNews.Remove(_savedSnapshot.Name);
                 _log.Info($"Theme renamed '{_savedSnapshot.Name}' → '{_workingCopy.Name}'.");
             }
             await _themeService.SaveAsUserThemeAsync(_workingCopy, _workingCopy.Name);
+            _pendingNews.Clear();
+            _savedSnapshot = _workingCopy.Clone();
+            _originalSnapshot = _savedSnapshot.Clone();
+            RefreshPresetList();
+            _hasColourEdits = false;
+            IsDirty = false;
             _log.Info($"User theme '{_workingCopy.Name}' saved.");
         }
-
-        // All changes are committed — clear the pending-news set (keep files on disk).
-        _pendingNews.Clear();
-
-        // Update snapshots and preset list
-        _savedSnapshot = _workingCopy.Clone();
-        _savedSnapshot.IsBuiltIn = false;
-        _originalSnapshot = _savedSnapshot.Clone();
-        RefreshPresetList();
-        IsDirty = false;
-        OnPropertyChanged(nameof(IsEditingBuiltIn));
+        else
+        {
+            // IsEditingBuiltIn && !_hasColourEdits: user just selected a built-in preset
+            // without changing any colours.  ActiveThemeName is already written above;
+            // no file I/O needed — just reset state.
+            _hasColourEdits = false;
+            IsDirty = false;
+        }
     }
 
     // ── Private command implementations ──────────────────────────────────────
@@ -251,9 +270,9 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         // Flush pending deletes regardless of which branch runs below
         await FlushPendingDeletesAsync();
 
-        if (IsEditingBuiltIn)
+        if (IsEditingBuiltIn && _hasColourEdits)
         {
-            // Fork: generate a unique name so we never collide with the built-in.
+            // User actually edited colours on a built-in — fork to a new user theme.
             var forkName = GenerateUniqueName(_workingCopy.Name);
             _workingCopy.Name = forkName;
             OnPropertyChanged(nameof(ThemeName));
@@ -262,12 +281,13 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             _savedSnapshot.IsBuiltIn = false;
             _originalSnapshot = _savedSnapshot.Clone();
             _pendingNews.Clear();
+            _hasColourEdits = false;
             RefreshPresetList();
             IsDirty = false;
             OnPropertyChanged(nameof(IsEditingBuiltIn));
             _log.Info($"New theme '{forkName}' created from built-in.");
         }
-        else
+        else if (!IsEditingBuiltIn)
         {
             // Rename: if the user changed the theme name, delete the old file first.
             if (!string.Equals(_savedSnapshot.Name, _workingCopy.Name, StringComparison.OrdinalIgnoreCase))
@@ -280,9 +300,17 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             _savedSnapshot = _workingCopy.Clone();
             _originalSnapshot = _savedSnapshot.Clone();
             _pendingNews.Clear();
+            _hasColourEdits = false;
             RefreshPresetList();
             IsDirty = false;
             _log.Info($"Theme '{_workingCopy.Name}' saved.");
+        }
+        else
+        {
+            // IsEditingBuiltIn && !_hasColourEdits: user just selected a built-in preset.
+            // No file I/O needed — just reset state.
+            _hasColourEdits = false;
+            IsDirty = false;
         }
     }
 
@@ -330,6 +358,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         _themeService.Apply(_workingCopy);
         RaiseAllColourProperties();
         OnPropertyChanged(nameof(ThemeName));
+        _hasColourEdits = false;
         IsDirty = false;
     }
 
@@ -380,6 +409,8 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsEditingBuiltIn));
         // Switching to a different preset IS a change — mark dirty so Cancel knows to revert,
         // and so the parent Save button is enabled.
+        // Selecting a preset does NOT count as a colour edit — only actual colour mutations do.
+        _hasColourEdits = false;
         IsDirty = !string.Equals(preset.Name, _originalSnapshot.Name, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -411,6 +442,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         setter(value);
         _themeService.Apply(_workingCopy);
         if (propName is not null) OnPropertyChanged(propName);
+        _hasColourEdits = true;
         MarkDirty();
     }
 
