@@ -19,67 +19,21 @@ All notable changes to TTS Communication Tool are documented here.
 - `App.xaml.cs` live-font-preview wiring removed (no longer needed).
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## [v0.17.0] -- 2026-05-05
-
-### Features
-
-- (add features here)
-
-### Bug Fixes
-
-- (add bug fixes here)
-
-### Improvements
-
-- (add improvements here)
-
 ---
 ## [v0.16.10] -- 2026-05-05
 
-### Features
-
-- (add features here)
-
 ### Bug Fixes
 
-- (add bug fixes here)
-
-### Improvements
-
-- (add improvements here)
+- **Built-in themes no longer force a fork on preset-selection-only saves** — introduced `_hasColourEdits` flag set exclusively by `SetColor()`. `CommitAsync` and `SaveAsync` now only fork a built-in theme when colours were actually edited; merely switching to a built-in preset and pressing Save (or OK) records the new active name without creating an unwanted copy.
+- **Save flow now refreshes preset list and updates snapshots in every branch** — previously `RefreshPresetList()` and snapshot updates were only executed on the happy path; added explicit `else` branches so all three cases (fork built-in / save user / no-op select built-in) each correctly update `_savedSnapshot`, `_originalSnapshot`, and the dropdown.
+- **`LoadThemes` and `RevertChangesAsync` reset `_hasColourEdits`** to prevent a stale flag from triggering spurious forks on the next save.
 
 ---
 ## [v0.16.9] -- 2026-05-05
 
-### Features
-
-- (add features here)
-
 ### Bug Fixes
 
-- (add bug fixes here)
-
-### Improvements
-
-- (add improvements here)
+- **Active theme name not persisted after preset-switch without colour edits** — `CommitAsync` had an early `if (!IsDirty) return` before the `config.CurrentConfig.ActiveThemeName = …` write. If the user switched preset, pressed OK without touching any colour, the new active theme name was silently dropped and the old theme would reload on next launch. Fixed by moving the name write above the early-return guard.
 
 ---
 ## [v0.16.8] -- 2026-05-05
@@ -126,17 +80,12 @@ All notable changes to TTS Communication Tool are documented here.
 ---
 ## [v0.16.6] -- 2026-05-05
 
-### Features
-
-- (add features here)
-
 ### Bug Fixes
 
-- (add bug fixes here)
-
-### Improvements
-
-- (add improvements here)
+- **Cancel now correctly reverts to the state at Settings open, not just the last inner-Save** — added `_originalSnapshot` (separate from `_savedSnapshot`) that captures the active theme when Settings is opened. `RevertChangesAsync` restores from `_originalSnapshot`, so mid-session saves don’t shift the Cancel baseline.
+- **Built-in fork naming collision** — forking a built-in on Save now calls `GenerateUniqueName()` to produce “Default Dark Copy”, “Default Dark Copy (2)” … instead of always writing the literal theme name and potentially overwriting an existing user theme.
+- **Preset combobox desync after Cancel** — `RevertChanges` now raises `SelectedPreset` and `IsEditingBuiltIn` property-changed events so the dropdown snaps back to the originally-active theme.
+- **`LoadThemes` calls `ThemeService.Apply`** on the loaded working copy to guarantee the live brushes match the loaded state even if they drifted between sessions.
 
 ---
 ## [v0.16.5] -- 2026-05-05
@@ -149,17 +98,6 @@ All notable changes to TTS Communication Tool are documented here.
 ### Features
 - **Save button added to Theme tab** — the theme preset toolbar now has a "Save" button (bound to the existing `Theme.SaveCommand`) so user themes can be overwritten in-place without going through "Save As…". For built-in themes the existing fork behaviour applies (banner explains this).
 
-### Features
-
-- (add features here)
-
-### Bug Fixes
-
-- (add bug fixes here)
-
-### Improvements
-
-- (add improvements here)
 
 ---
 ## [v0.16.4] -- 2026-05-05
@@ -170,17 +108,6 @@ All notable changes to TTS Communication Tool are documented here.
 - **Comprehensive tooltips** — every row's label, hex text box ("Type a hex colour code, e.g. …"), Eyedrop button ("Open screen eyedropper…"), and Reset button ("Reset to the default value for this colour") now carries a descriptive tooltip.
 - **Pick button renamed** — "Pick…" button relabelled to "Eyedrop" to better communicate the new interaction.
 
-### Features
-
-- (add features here)
-
-### Bug Fixes
-
-- (add bug fixes here)
-
-### Improvements
-
-- (add improvements here)
 
 ---
 ## [v0.16.3] -- 2026-05-05
@@ -235,17 +162,7 @@ All notable changes to TTS Communication Tool are documented here.
 ---
 ## [v0.15.5] -- 2026-05-03
 
-### Features
-
-- (add features here)
-
-### Bug Fixes
-
-- (add bug fixes here)
-
-### Improvements
-
-- (add improvements here)
+*Version bump only — no code changes. Consolidates the v0.15.x patch series.*
 
 ---
 ## [v0.15.4] -- 2026-05-03
@@ -501,10 +418,6 @@ All notable changes to TTS Communication Tool are documented here.
 
 - **DataGrid filled-row styling**: Rows that already have Trigger/Replacement text now display as plain blending text (no visible box). Only empty/new rows show the input-styled border, making it visually clear which rows are empty vs. configured. The full edit styling still appears when a row is in edit mode.
 - **Phrases tab button layout**: Fav and Pin action buttons commented out (code preserved, not deleted) to unclutter the button row. Import and Export moved to their own second row on both the Phrases tab and the Replacements tab.
-
-### Improvements
-
-- (add improvements here)
 
 ---
 ## [v0.10.2] -- 2026-05-03
