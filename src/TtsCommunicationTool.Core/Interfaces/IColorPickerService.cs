@@ -7,9 +7,14 @@ namespace TtsCommunicationTool.Core.Interfaces;
 public interface IColorPickerService
 {
     /// <summary>
-    /// Shows a modal color picker pre-seeded with <paramref name="currentHex"/>.
-    /// Returns the selected colour as a 7-character hex string (e.g. "#CBA6F7")
-    /// or <c>null</c> if the user dismissed the dialog without choosing.
+    /// Shows the screen eyedropper overlay pre-seeded with <paramref name="currentHex"/>.
+    /// Returns the selected colour as a 7-character hex string or <c>null</c> if cancelled.
     /// </summary>
     string? PickColor(string currentHex);
+
+    /// <summary>
+    /// Shows the Windows system colour-chooser dialog pre-seeded with <paramref name="currentHex"/>.
+    /// Returns the selected colour as a 7-character hex string or <c>null</c> if cancelled.
+    /// </summary>
+    string? PickColorWithDialog(string currentHex);
 }

@@ -6,9 +6,9 @@ using TtsCommunicationTool.UI.Views;
 namespace TtsCommunicationTool.App;
 
 /// <summary>
-/// Screen eyedropper color picker.
-/// Shows a full-screen overlay of the current desktop; the user hovers to preview, clicks to pick.
-/// All open application windows are briefly hidden so the desktop and other apps are fully visible.
+/// Color picker implementations:
+/// - PickColor: Screen eyedropper (custom overlay)
+/// - PickColorWithDialog: Windows system ColorDialog
 /// </summary>
 public sealed class WinFormsColorPickerService : IColorPickerService
 {
@@ -37,6 +37,31 @@ public sealed class WinFormsColorPickerService : IColorPickerService
         }
 
         return result;
+    }
+
+    public string? PickColorWithDialog(string currentHex)
+    {
+        using var dialog = new System.Windows.Forms.ColorDialog
+        {
+            FullOpen     = true,
+            AnyColor     = true,
+            SolidColorOnly = false,
+        };
+
+        try
+        {
+            var c = (System.Windows.Media.Color)
+                System.Windows.Media.ColorConverter.ConvertFromString(currentHex);
+            dialog.Color = System.Drawing.Color.FromArgb(c.R, c.G, c.B);
+        }
+        catch { /* leave dialog at default colour */ }
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            var c = dialog.Color;
+            return $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+        }
+        return null;
     }
 }
 

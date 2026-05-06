@@ -136,6 +136,33 @@ public sealed class ThemeService : IThemeService
 
         _activeThemeName = theme.Name;
 
+        // ── Overlay overrides ────────────────────────────────────────────────
+        try
+        {
+            var overlayBgHex     = string.IsNullOrWhiteSpace(theme.OverlayBackgroundHex)
+                                       ? theme.WindowBackground
+                                       : theme.OverlayBackgroundHex;
+            var overlayBorderHex = string.IsNullOrWhiteSpace(theme.OverlayBorderHex)
+                                       ? theme.BorderColor
+                                       : theme.OverlayBorderHex;
+
+            var overlayColor  = (Color)ColorConverter.ConvertFromString(overlayBgHex);
+            var borderColor   = (Color)ColorConverter.ConvertFromString(overlayBorderHex);
+
+            // Bake opacity into brush so it can be used as a plain Background without extra nesting
+            var overlayBrush = new SolidColorBrush(overlayColor);
+            overlayBrush.Opacity = Math.Clamp(theme.OverlayOpacity, 0.05, 1.0);
+
+            res["OverlayBackgroundBrush"]    = overlayBrush;
+            res["OverlayBackgroundColor"]    = overlayColor;
+            res["OverlayBorderBrush"]        = new SolidColorBrush(borderColor);
+            res["OverlayCornerRadiusResource"] = new CornerRadius(Math.Clamp(theme.OverlayCornerRadius, 0, 30));
+        }
+        catch (Exception ex)
+        {
+            _log.Warn($"ThemeService.Apply: overlay resource error: {ex.Message}");
+        }
+
         // ── Typography ────────────────────────────────────────────────────────
         try
         {

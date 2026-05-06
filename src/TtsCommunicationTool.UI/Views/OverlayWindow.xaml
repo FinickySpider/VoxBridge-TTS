@@ -23,13 +23,11 @@
     </Window.Resources>
 
     <Border x:Name="OverlayBorder"
-            CornerRadius="12"
-            BorderBrush="{DynamicResource BorderBrush}"
+            CornerRadius="{DynamicResource OverlayCornerRadiusResource}"
+            BorderBrush="{DynamicResource OverlayBorderBrush}"
             BorderThickness="1"
+            Background="{DynamicResource OverlayBackgroundBrush}"
             Margin="8">
-        <Border.Background>
-            <SolidColorBrush Color="{DynamicResource WindowBackgroundColor}" Opacity="0.93"/>
-        </Border.Background>
         <Border.Effect>
             <DropShadowEffect Color="Black" BlurRadius="20" Opacity="0.55" ShadowDepth="3"/>
         </Border.Effect>
@@ -127,7 +125,7 @@
                                     <TextBlock x:Name="ResendText"
                                                Text="↩ Resend"
                                                FontSize="11"
-                                               FontFamily="Segoe UI"
+                                               FontFamily="{DynamicResource UiFontFamilyResource}"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                VerticalAlignment="Center"/>
                                 </Border>
@@ -182,14 +180,14 @@
                                VerticalAlignment="Center"
                                Foreground="#45475A"
                                FontSize="11"
-                               FontFamily="Segoe UI"/>
+                               FontFamily="{DynamicResource UiFontFamilyResource}"/>
                     <!-- ElevenLabs credit estimate — right of char counter, only visible when ElevenLabs active -->
                     <TextBlock DockPanel.Dock="Right"
                                Text="{Binding EstimatedCreditDisplay}"
                                VerticalAlignment="Center"
                                Foreground="{DynamicResource MutedTextBrush}"
                                FontSize="11"
-                               FontFamily="Segoe UI"
+                               FontFamily="{DynamicResource UiFontFamilyResource}"
                                Margin="0,0,8,0"
                                ToolTip="Estimated ElevenLabs characters that will be consumed from your quota."
                                Visibility="{Binding EstimatedCreditDisplay,
@@ -200,7 +198,7 @@
                                VerticalAlignment="Center"
                                Foreground="{Binding StatusSeverity, Converter={StaticResource StatusSeverityColorConverter}}"
                                FontSize="12"
-                               FontFamily="Segoe UI"
+                               FontFamily="{DynamicResource UiFontFamilyResource}"
                                TextTrimming="CharacterEllipsis"
                                Margin="0,0,8,0"/>
                 </DockPanel>

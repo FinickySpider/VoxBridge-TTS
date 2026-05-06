@@ -40,22 +40,33 @@ public sealed class SettingsViewModel : ViewModelBase
                 OnPropertyChanged(nameof(ShowImportExport));
                 OnPropertyChanged(nameof(ImportCommand));
                 OnPropertyChanged(nameof(ExportCommand));
+                OnPropertyChanged(nameof(ImportButtonLabel));
+                OnPropertyChanged(nameof(ExportButtonLabel));
             }
         }
     }
 
-    /// <summary>True when the active tab is Replacements (5) or Phrases (6) — shows Import/Export in the bottom bar.</summary>
-    public bool ShowImportExport => _selectedTabIndex is 5 or 6;
+    /// <summary>True when the active tab is Replacements (5), Phrases (6), or Theme (7) — shows Import/Export in the bottom bar.</summary>
+    public bool ShowImportExport => _selectedTabIndex is 5 or 6 or 7;
 
-    /// <summary>Delegates to the active tab's ImportCommand (Replacements or Phrases).</summary>
-    public ICommand ImportCommand => _selectedTabIndex == 5
-        ? (ICommand)TextReplacements.ImportCommand
-        : Phrases.ImportCommand;
+    public string ImportButtonLabel => _selectedTabIndex == 7 ? "Import Theme…" : "Import…";
+    public string ExportButtonLabel => _selectedTabIndex == 7 ? "Export Theme…" : "Export…";
 
-    /// <summary>Delegates to the active tab's ExportCommand (Replacements or Phrases).</summary>
-    public ICommand ExportCommand => _selectedTabIndex == 5
-        ? (ICommand)TextReplacements.ExportCommand
-        : Phrases.ExportCommand;
+    /// <summary>Delegates to the active tab's ImportCommand (Replacements, Phrases, or Theme).</summary>
+    public ICommand ImportCommand => _selectedTabIndex switch
+    {
+        5 => (ICommand)TextReplacements.ImportCommand,
+        7 => Theme.ImportCommand,
+        _ => Phrases.ImportCommand,
+    };
+
+    /// <summary>Delegates to the active tab's ExportCommand (Replacements, Phrases, or Theme).</summary>
+    public ICommand ExportCommand => _selectedTabIndex switch
+    {
+        5 => (ICommand)TextReplacements.ExportCommand,
+        7 => Theme.ExportCommand,
+        _ => Phrases.ExportCommand,
+    };
 
     public bool IsRegenerating
     {

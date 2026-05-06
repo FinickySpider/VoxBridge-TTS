@@ -6,6 +6,30 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v1.0.0] -- 2026-05-05
+
+### Features
+
+- **Overlay-Only theme controls**: New "OVERLAY ONLY" card in the Theme editor with independent Background, Border, Opacity, and Corner Radius sliders for the floating overlay window. Empty colour fields inherit from the main theme.
+- **Overlay DynamicResources**: `OverlayBackgroundBrush`, `OverlayBorderBrush`, `OverlayCornerRadiusResource` added to Default.xaml and applied by `ThemeService.Apply()`. The overlay now uses these resources instead of the main window colours.
+- **Windows colour picker dialog**: Clicking any colour swatch in the theme editor opens the full Windows native colour dialog (`ColorDialog`). The eyedropper button remains available as an alternative.
+- **Delete theme confirmation**: Deleting a user theme now shows a confirmation dialog ("Are you sure?") before queuing the deletion.
+- **Theme Import/Export in global action bar**: Import/Export buttons now appear in the bottom action bar when the Theme tab (tab 7) is active, consistent with Replacements and Phrases tabs. The redundant card inside the Theme editor has been removed.
+- **Draggable column splitter**: A `GridSplitter` divides the colour editor and preview panels in the Theme tab, allowing the user to resize them.
+
+### Bug Fixes
+
+- **Corner radius / shape / density controls now work**: `ActionButton`, `SecondaryButton`, `DangerButton` styles now use `{DynamicResource ControlCornerRadiusResource}` and `{DynamicResource ControlPaddingResource}` instead of hardcoded `CornerRadius="6"` and `Padding="16,8"`.
+- **UI font now applies**: `SettingsWindow` root element now binds `FontFamily` and `FontSize` to `{DynamicResource UiFontFamilyResource}` / `{DynamicResource BaseFontSizeResource}`, enabling WPF font inheritance throughout the settings window. Button styles also use DynamicResource `FontSize`.
+- **Overlay preview corrected**: The "Previous phrase" mock in the live preview was incorrect. The preview now shows the actual overlay structure: input field + Send button on top, status bar (with status text, char counter, resend, gear) on the bottom strip.
+- **OverlayWindow hardcoded font fixed**: All `FontFamily="Segoe UI"` references in `OverlayWindow.xaml` replaced with `{DynamicResource UiFontFamilyResource}`.
+
+### Improvements
+
+- All 18 colour swatches in the theme editor are now clickable `Button` elements (using the new `ColorSwatchButton` style) that open the Windows colour dialog directly.
+
+---
 ## [v0.17.2] -- 2026-05-05
 
 ### Bug Fixes

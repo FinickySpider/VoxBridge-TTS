@@ -80,6 +80,16 @@ public sealed class ThemeSettings
     /// <summary>Font size (pt) for the overlay input.  Resource key: OverlayFontSizeResource</summary>
     public double OverlayFontSize { get; set; } = 18;
 
+    // ── Overlay — independent overrides ─────────────────────────────────
+    /// <summary>Overlay window background hex (empty = WindowBackground).  Resource key: OverlayBackgroundBrush</summary>
+    public string OverlayBackgroundHex { get; set; } = "";
+    /// <summary>Overlay window border hex (empty = BorderColor).  Resource key: OverlayBorderBrush</summary>
+    public string OverlayBorderHex { get; set; } = "";
+    /// <summary>Overlay window background opacity 0.0–1.0.  Baked into OverlayBackgroundBrush.</summary>
+    public double OverlayOpacity { get; set; } = 0.93;
+    /// <summary>Overlay window corner radius.  Resource key: OverlayCornerRadiusResource</summary>
+    public double OverlayCornerRadius { get; set; } = 12;
+
     // ── Shape & Density ────────────────────────────────────────────────────────
     /// <summary>Uniform corner radius applied to all rounded containers.  Resource key: ControlCornerRadiusResource</summary>
     public double CornerRadius { get; set; } = 6;

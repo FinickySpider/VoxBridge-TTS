@@ -41,6 +41,12 @@
     <!-- Raw Color values (used where a Color — not a Brush — is required, e.g. overlay opacity) -->
     <Color x:Key="WindowBackgroundColor">#1E1E2E</Color>
 
+    <!-- Overlay-independent resources (default = same as core; overridden independently by ThemeService) -->
+    <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#1E1E2E" Opacity="0.93"/>
+    <Color x:Key="OverlayBackgroundColor">#1E1E2E</Color>
+    <SolidColorBrush x:Key="OverlayBorderBrush"     Color="#45475A"/>
+    <CornerRadius x:Key="OverlayCornerRadiusResource">12</CornerRadius>
+
     <!-- ── Typography ──────────────────────────────────────────────── -->
     <FontFamily x:Key="UiFontFamilyResource">Segoe UI</FontFamily>
     <sys:Double  x:Key="BaseFontSizeResource">13</sys:Double>

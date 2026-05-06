@@ -159,6 +159,45 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     public IReadOnlyList<SpacingDensity> SpacingDensityValues { get; } =
         (SpacingDensity[])Enum.GetValues(typeof(SpacingDensity));
 
+    // ── Overlay-specific properties ───────────────────────────────────────────
+    /// <summary>Empty string = inherit from WindowBackground.</summary>
+    public string OverlayBackgroundHex
+    {
+        get => _workingCopy.OverlayBackgroundHex;
+        set
+        {
+            // Allow empty string (means "use WindowBackground")
+            if (value != "" && !IsValidHex(value)) return;
+            _workingCopy.OverlayBackgroundHex = value;
+            OnPropertyChanged();
+            _hasColourEdits = true;
+            MarkDirty();
+        }
+    }
+    /// <summary>Empty string = inherit from BorderColor.</summary>
+    public string OverlayBorderHex
+    {
+        get => _workingCopy.OverlayBorderHex;
+        set
+        {
+            if (value != "" && !IsValidHex(value)) return;
+            _workingCopy.OverlayBorderHex = value;
+            OnPropertyChanged();
+            _hasColourEdits = true;
+            MarkDirty();
+        }
+    }
+    public double OverlayOpacity
+    {
+        get => _workingCopy.OverlayOpacity;
+        set => SetShape(() => { _workingCopy.OverlayOpacity = Math.Clamp(value, 0.05, 1.0); });
+    }
+    public double OverlayCornerRadius
+    {
+        get => _workingCopy.OverlayCornerRadius;
+        set => SetShape(() => { _workingCopy.OverlayCornerRadius = value; });
+    }
+
     // ── Contrast computed properties (WCAG 2.1) ───────────────────────────────
     public double ContrastPrimaryOnWindow        => ContrastCalculator.GetRatio(_workingCopy.PrimaryText,   _workingCopy.WindowBackground);
     public string ContrastPrimaryOnWindowStatus  => ContrastCalculator.GetStatus(ContrastPrimaryOnWindow);
@@ -177,6 +216,8 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     public ICommand DeleteCommand         { get; }
     /// <summary>Parameter: property name string (e.g. "Accent").</summary>
     public ICommand PickColorCommand      { get; }
+    /// <summary>Opens a full Windows colour dialog for the named colour property.</summary>
+    public ICommand PickColorDialogCommand { get; }
     /// <summary>Parameter: property name string — resets that single colour to its default value.</summary>
     public ICommand ResetColorCommand     { get; }
     /// <summary>Exports the current working copy to a .ttstheme file chosen by the user.</summary>
@@ -196,8 +237,9 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         DuplicateCommand  = new AsyncRelayCommand(DuplicateAsync);
         ResetEditsCommand = new RelayCommand(RevertToSaved,        () => IsDirty);
         DeleteCommand     = new RelayCommand(QueueDelete,          () => !IsEditingBuiltIn);
-        PickColorCommand  = new RelayCommand(obj => PickColor(obj as string));
-        ResetColorCommand = new RelayCommand(obj => ResetColorToDefault(obj as string));
+        PickColorCommand       = new RelayCommand(obj => PickColor(obj as string));
+        PickColorDialogCommand = new RelayCommand(obj => PickColorWithDialog(obj as string));
+        ResetColorCommand      = new RelayCommand(obj => ResetColorToDefault(obj as string));
         ExportCommand     = new AsyncRelayCommand(ExecuteExportAsync);
         ImportCommand     = new AsyncRelayCommand(ExecuteImportAsync);
     }
@@ -466,6 +508,14 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         var nameToDelete = _savedSnapshot.Name;
         if (_pendingDeletes.Contains(nameToDelete)) return;
 
+        var confirm = System.Windows.MessageBox.Show(
+            $"Delete theme \u2018{nameToDelete}\u2019?\nThis cannot be undone.",
+            "Delete Theme",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning,
+            System.Windows.MessageBoxResult.No);
+        if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
         _pendingDeletes.Add(nameToDelete);
         _log.Info($"Theme '{nameToDelete}' queued for deletion (will be removed on Save).");
 
@@ -513,6 +563,18 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         if (currentHex is null) return;
 
         var hex = _colorPicker.PickColor(currentHex);
+        if (hex is null) return;
+        SetColorByName(propertyName, hex);
+    }
+
+    private void PickColorWithDialog(string? propertyName)
+    {
+        if (propertyName is null) return;
+        // Overlay fields allow empty string (= inherit); fall back to white for the picker seed
+        var currentHex = GetColorProperty(propertyName) ?? "#FFFFFF";
+        if (string.IsNullOrWhiteSpace(currentHex)) currentHex = "#FFFFFF";
+
+        var hex = _colorPicker.PickColorWithDialog(currentHex);
         if (hex is null) return;
         SetColorByName(propertyName, hex);
     }
@@ -605,6 +667,10 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(ThemeBorderThickness));
         OnPropertyChanged(nameof(ThemeControlHeight));
         OnPropertyChanged(nameof(SpacingDensity));
+        OnPropertyChanged(nameof(OverlayOpacity));
+        OnPropertyChanged(nameof(OverlayCornerRadius));
+        OnPropertyChanged(nameof(OverlayBackgroundHex));
+        OnPropertyChanged(nameof(OverlayBorderHex));
     }
 
     private static readonly string[] ColourPropertyNames =
@@ -614,6 +680,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         nameof(Accent), nameof(AccentHover),
         nameof(PrimaryText), nameof(SecondaryText), nameof(MutedText), nameof(MutedIcon),
         nameof(InfoColor), nameof(ErrorColor), nameof(ErrorHover), nameof(Warning), nameof(Success),
+        nameof(OverlayBackgroundHex), nameof(OverlayBorderHex),
     };
 
     private string? GetColorProperty(string propertyName) =>
@@ -639,6 +706,8 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         nameof(ErrorHover)          => t.ErrorHover,
         nameof(Warning)             => t.Warning,
         nameof(Success)             => t.Success,
+        nameof(OverlayBackgroundHex) => t.OverlayBackgroundHex,
+        nameof(OverlayBorderHex)     => t.OverlayBorderHex,
         _ => null
     };
 
@@ -664,6 +733,8 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             case nameof(ErrorHover):          ErrorHover          = hex; break;
             case nameof(Warning):             Warning             = hex; break;
             case nameof(Success):             Success             = hex; break;
+            case nameof(OverlayBackgroundHex): OverlayBackgroundHex = hex; break;
+            case nameof(OverlayBorderHex):     OverlayBorderHex     = hex; break;
         }
     }
 

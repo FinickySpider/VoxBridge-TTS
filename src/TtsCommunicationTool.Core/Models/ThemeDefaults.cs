@@ -39,5 +39,10 @@ public static class ThemeDefaults
         BorderThickness   = 1,
         ControlHeight     = 28,
         SpacingDensity    = SpacingDensity.Comfortable,
+        // Overlay overrides (empty = inherit from main colours)
+        OverlayBackgroundHex = "",
+        OverlayBorderHex     = "",
+        OverlayOpacity       = 0.93,
+        OverlayCornerRadius  = 12,
     };
 }
