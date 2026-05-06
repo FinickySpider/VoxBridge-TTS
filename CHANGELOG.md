@@ -6,10 +6,6 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
-
-
-
-
 ## [v1.0.3] -- 2026-05-05
 
 ### Bug Fixes
