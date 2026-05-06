@@ -4,6 +4,14 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+
+## [v0.17.1] -- 2026-05-05
+
+### Features
+
+- **Theme tab live preview panel**: A 260 px sticky right column now appears on the Theme tab alongside the colour editor. The preview renders representative controls (window surface, panel card, primary/secondary/danger buttons, a text input field, primary/secondary/muted text samples, status chips for success/warning/error/info, an accent chip, and an overlay snippet with the configured overlay font). All elements bind via `DynamicResource` so every colour, font, corner radius, border thickness, and control height change is reflected instantly without saving.
+
+---
 ## [0.17.0]
 
 ### Features

@@ -2044,8 +2044,15 @@
                         </TextBlock>
                     </Border>
 
-                    <!-- Colour editor — grouped cards -->
-                    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Padding="10,12,10,16">
+                    <!-- Colour editor + Live preview -->
+                    <Grid Grid.Row="3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="260"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- LEFT: Colour editor — grouped cards -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10,12,10,16">
                         <StackPanel MaxWidth="600" HorizontalAlignment="Left">
 
                             <!-- ── A. Background ───────────────────────── -->
@@ -2515,7 +2522,158 @@
                             </Border>
 
                         </StackPanel>
-                    </ScrollViewer>
+                        </ScrollViewer>
+
+                        <!-- RIGHT: Live preview panel -->
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource WindowBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1,0,0,0">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12,12,12,16">
+                                <StackPanel>
+                                    <TextBlock Text="PREVIEW" FontSize="10" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,10"/>
+
+                                    <!-- Window surface swatch -->
+                                    <Border Background="{DynamicResource WindowBackgroundBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                            CornerRadius="6" Padding="10" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="WINDOW" FontSize="9" FontWeight="Bold"
+                                                       Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,6"/>
+                                            <!-- Panel inside window -->
+                                            <Border Background="{DynamicResource PanelBackgroundBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                                    CornerRadius="{DynamicResource ControlCornerRadiusResource}"
+                                                    Padding="8" Margin="0,0,0,6">
+                                                <StackPanel>
+                                                    <TextBlock Text="Primary text sample"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                                               FontFamily="{DynamicResource UiFontFamilyResource}"
+                                                               FontSize="{DynamicResource BaseFontSizeResource}"/>
+                                                    <TextBlock Text="Secondary label"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                                               FontFamily="{DynamicResource UiFontFamilyResource}"
+                                                               FontSize="{DynamicResource BaseFontSizeResource}" Margin="0,2"/>
+                                                    <TextBlock Text="Muted / disabled"
+                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                               FontFamily="{DynamicResource UiFontFamilyResource}"
+                                                               FontSize="{DynamicResource BaseFontSizeResource}" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <!-- Input field sample -->
+                                            <Border Background="{DynamicResource DeepPanelBackgroundBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}"
+                                                    BorderThickness="{DynamicResource ControlBorderThicknessResource}"
+                                                    CornerRadius="{DynamicResource ControlCornerRadiusResource}"
+                                                    Height="{DynamicResource ControlHeightResource}"
+                                                    Padding="8,0" Margin="0,0,0,6">
+                                                <TextBlock Text="Text input\u2026"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           FontFamily="{DynamicResource UiFontFamilyResource}"
+                                                           FontSize="{DynamicResource BaseFontSizeResource}"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+                                            <!-- Buttons -->
+                                            <WrapPanel Margin="0,0,0,6">
+                                                <Border Background="{DynamicResource AccentBrush}"
+                                                        CornerRadius="{DynamicResource ControlCornerRadiusResource}"
+                                                        Height="{DynamicResource ControlHeightResource}"
+                                                        Padding="10,0" Margin="0,0,4,4">
+                                                    <TextBlock Text="Primary"
+                                                               Foreground="{DynamicResource WindowBackgroundBrush}"
+                                                               FontFamily="{DynamicResource UiFontFamilyResource}"
+                                                               FontSize="{DynamicResource BaseFontSizeResource}"
+                                                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <Border Background="{DynamicResource Surface0Brush}"
+                                                        BorderBrush="{DynamicResource BorderBrush}"
+                                                        BorderThickness="{DynamicResource ControlBorderThicknessResource}"
+                                                        CornerRadius="{DynamicResource ControlCornerRadiusResource}"
+                                                        Height="{DynamicResource ControlHeightResource}"
+                                                        Padding="10,0" Margin="0,0,4,4">
+                                                    <TextBlock Text="Secondary"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                                               FontFamily="{DynamicResource UiFontFamilyResource}"
+                                                               FontSize="{DynamicResource BaseFontSizeResource}"
+                                                               VerticalAlignment="Center"/>
+                                                </Border>
+                                                <Border Background="{DynamicResource ErrorBrush}"
+                                                        CornerRadius="{DynamicResource ControlCornerRadiusResource}"
+                                                        Height="{DynamicResource ControlHeightResource}"
+                                                        Padding="10,0" Margin="0,0,0,4">
+                                                    <TextBlock Text="Delete"
+                                                               Foreground="{DynamicResource WindowBackgroundBrush}"
+                                                               FontFamily="{DynamicResource UiFontFamilyResource}"
+                                                               FontSize="{DynamicResource BaseFontSizeResource}"
+                                                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </WrapPanel>
+                                            <!-- Status chips -->
+                                            <WrapPanel>
+                                                <Border Background="{DynamicResource SuccessBrush}"
+                                                        CornerRadius="3" Padding="6,2" Margin="0,0,4,4">
+                                                    <TextBlock Text="Success" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource WindowBackgroundBrush}"/>
+                                                </Border>
+                                                <Border Background="{DynamicResource WarningBrush}"
+                                                        CornerRadius="3" Padding="6,2" Margin="0,0,4,4">
+                                                    <TextBlock Text="Warning" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource WindowBackgroundBrush}"/>
+                                                </Border>
+                                                <Border Background="{DynamicResource ErrorBrush}"
+                                                        CornerRadius="3" Padding="6,2" Margin="0,0,4,4">
+                                                    <TextBlock Text="Error" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource WindowBackgroundBrush}"/>
+                                                </Border>
+                                                <Border Background="{DynamicResource InfoBrush}"
+                                                        CornerRadius="3" Padding="6,2" Margin="0,0,0,4">
+                                                    <TextBlock Text="Info" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource WindowBackgroundBrush}"/>
+                                                </Border>
+                                            </WrapPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Accent chip -->
+                                    <TextBlock Text="ACCENT" FontSize="9" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentBrush}" Margin="0,2,0,4"/>
+                                    <Border Background="{DynamicResource AccentBrush}"
+                                            CornerRadius="3" Padding="8,3"
+                                            HorizontalAlignment="Left" Margin="0,0,0,10">
+                                        <TextBlock Text="Accent chip"
+                                                   Foreground="{DynamicResource WindowBackgroundBrush}"
+                                                   FontFamily="{DynamicResource UiFontFamilyResource}"
+                                                   FontSize="{DynamicResource BaseFontSizeResource}"
+                                                   FontWeight="SemiBold"/>
+                                    </Border>
+
+                                    <!-- Overlay snippet -->
+                                    <TextBlock Text="OVERLAY" FontSize="9" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentBrush}" Margin="0,2,0,4"/>
+                                    <Border Background="{DynamicResource HistoryBackgroundBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                            CornerRadius="6" Padding="8">
+                                        <StackPanel>
+                                            <TextBlock Text="Say something\u2026"
+                                                       FontFamily="{DynamicResource OverlayFontFamilyResource}"
+                                                       FontSize="{DynamicResource OverlayFontSizeResource}"
+                                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                                            <Border Background="{DynamicResource Surface0Brush}"
+                                                    CornerRadius="3" Padding="6,3" Margin="0,6,0,0">
+                                                <TextBlock Text="Previous phrase"
+                                                           FontFamily="{DynamicResource OverlayFontFamilyResource}"
+                                                           FontSize="{DynamicResource OverlayFontSizeResource}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+
+                    </Grid>
                 </Grid>
             </TabItem>
 
