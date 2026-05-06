@@ -19,6 +19,27 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.16.7] -- 2026-05-05
+
+### Bug Fixes
+
+- **Theme tab — delete is now buffered like the Phrases tab.** Clicking Delete no
+  longer writes to disk immediately; the theme is removed from the dropdown in memory
+  only. The actual file delete happens when the user confirms via Save (inner button)
+  or the outer Settings OK/Apply. Pressing Cancel restores the full theme list from
+  disk and the deleted theme reappears, unchanged.
+- **RevertChanges reloads theme list from disk** so any in-session pending deletes
+  are fully undone on Cancel.
+- **LoadThemes clears the pending-delete queue** so re-opening Settings always starts
+  with a clean slate.
+
+### Improvements
+
+- `DeleteCommand` changed from `AsyncRelayCommand` to `RelayCommand` — the operation
+  is now purely in-memory and requires no async I/O until Save.
+
+---
 ## [v0.16.6] -- 2026-05-05
 
 ### Features

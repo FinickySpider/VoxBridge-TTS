@@ -29,6 +29,11 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     private bool _isDirty;
     private ThemeSettings? _selectedPreset;
 
+    // ── Pending-delete buffer ─────────────────────────────────────────────────
+    // Names queued for deletion. Written to disk only when CommitAsync / SaveAsync runs.
+    // Cleared (themes restored in list) when RevertChanges is called.
+    private readonly HashSet<string> _pendingDeletes = new(StringComparer.OrdinalIgnoreCase);
+
     // ── Dirty / state ────────────────────────────────────────────────────────
     public bool IsDirty
     {
@@ -112,7 +117,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         SaveAsCommand     = new AsyncRelayCommand(SaveAsPromptAsync);
         DuplicateCommand  = new AsyncRelayCommand(DuplicateAsync);
         ResetEditsCommand = new RelayCommand(RevertToSaved,        () => IsDirty);
-        DeleteCommand     = new AsyncRelayCommand(DeleteAsync,     () => !IsEditingBuiltIn);
+        DeleteCommand     = new RelayCommand(QueueDelete,          () => !IsEditingBuiltIn);
         PickColorCommand  = new RelayCommand(obj => PickColor(obj as string));
         ResetColorCommand = new RelayCommand(obj => ResetColorToDefault(obj as string));
     }
@@ -122,6 +127,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     /// <summary>Called by SettingsViewModel when the settings window opens.</summary>
     public void LoadThemes(string activeThemeName)
     {
+        _pendingDeletes.Clear();
         AvailableThemes.Clear();
         foreach (var t in _themeService.LoadAll())
             AvailableThemes.Add(t);
@@ -150,6 +156,13 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     /// </summary>
     public void RevertChanges()
     {
+        // Discard all pending deletes — reload the full list from disk so queued-deleted
+        // themes reappear in the dropdown.
+        _pendingDeletes.Clear();
+        AvailableThemes.Clear();
+        foreach (var t in _themeService.LoadAll())
+            AvailableThemes.Add(t);
+
         // Restore to whatever was active when Settings was opened — not just the last Save.
         _workingCopy    = _originalSnapshot.Clone();
         _savedSnapshot  = _originalSnapshot.Clone();
@@ -171,6 +184,9 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     public async Task CommitAsync(IConfigService config)
     {
         if (!IsDirty) return;
+
+        // Flush pending deletes first
+        await FlushPendingDeletesAsync();
 
         if (IsEditingBuiltIn)
         {
@@ -203,6 +219,9 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
 
     private async Task SaveAsync()
     {
+        // Flush pending deletes regardless of which branch runs below
+        await FlushPendingDeletesAsync();
+
         if (IsEditingBuiltIn)
         {
             // Fork: generate a unique name so we never collide with the built-in.
@@ -223,6 +242,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             await _themeService.SaveAsUserThemeAsync(_workingCopy, _workingCopy.Name);
             _savedSnapshot = _workingCopy.Clone();
             _originalSnapshot = _savedSnapshot.Clone();
+            RefreshPresetList();
             IsDirty = false;
             _log.Info($"Theme '{_workingCopy.Name}' saved.");
         }
@@ -266,14 +286,38 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         IsDirty = false;
     }
 
-    private async Task DeleteAsync()
+    /// <summary>
+    /// Queues the current user theme for deletion without touching disk.
+    /// The delete is executed when the user clicks Save (inner or outer).
+    /// Cancel clears the queue and restores the full list from disk.
+    /// </summary>
+    private void QueueDelete()
     {
         if (IsEditingBuiltIn) return;
-        var deletedName = _savedSnapshot.Name;
-        await _themeService.DeleteUserThemeAsync(deletedName);
-        // Fall back to Default Dark and treat it as the new original
-        LoadThemes("Default Dark");
-        _log.Info($"Theme '{deletedName}' deleted. Reverted to Default Dark.");
+        var nameToDelete = _savedSnapshot.Name;
+        if (_pendingDeletes.Contains(nameToDelete)) return;
+
+        _pendingDeletes.Add(nameToDelete);
+        _log.Info($"Theme '{nameToDelete}' queued for deletion (will be removed on Save).");
+
+        // Remove from the visible list immediately so it disappears from the dropdown
+        var toRemove = AvailableThemes.FirstOrDefault(t =>
+            string.Equals(t.Name, nameToDelete, StringComparison.OrdinalIgnoreCase));
+        if (toRemove is not null) AvailableThemes.Remove(toRemove);
+
+        // Switch to the first remaining theme (prefer Default Dark)
+        var fallback = AvailableThemes.FirstOrDefault(t =>
+                           string.Equals(t.Name, "Default Dark", StringComparison.OrdinalIgnoreCase))
+                       ?? AvailableThemes.FirstOrDefault();
+
+        if (fallback is not null)
+        {
+            _selectedPreset = fallback;
+            ApplyPreset(fallback);
+            OnPropertyChanged(nameof(SelectedPreset));
+        }
+
+        MarkDirty();
     }
 
     private void ApplyPreset(ThemeSettings preset)
@@ -326,6 +370,17 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     private void MarkDirty()
     {
         IsDirty = true;
+    }
+
+    /// <summary>Executes all queued deletes against disk and clears the queue.</summary>
+    private async Task FlushPendingDeletesAsync()
+    {
+        foreach (var name in _pendingDeletes)
+        {
+            await _themeService.DeleteUserThemeAsync(name);
+            _log.Info($"Theme '{name}' deleted from disk.");
+        }
+        _pendingDeletes.Clear();
     }
 
     private void RaiseAllColourProperties()
