@@ -2030,8 +2030,25 @@
                             <ComboBox Width="200" DockPanel.Dock="Left"
                                       ItemsSource="{Binding Theme.AvailableThemes}"
                                       SelectedItem="{Binding Theme.SelectedPreset, Mode=TwoWay}"
-                                      DisplayMemberPath="Name"
-                                      Margin="0,0,12,0"/>
+                                      Margin="0,0,12,0">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsBuiltIn}" Value="True">
+                                                            <Setter Property="Foreground" Value="#CBA6F7"/>
+                                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                                 <!-- Save overwrites for user themes; forks to new for built-ins (banner explains) -->
                                 <Button Content="Save"

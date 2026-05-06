@@ -68,9 +68,9 @@ public sealed class ThemeService : IThemeService
     {
         var themes = new List<ThemeSettings>();
 
-        // Built-in themes first (immutable)
-        var defaultDark = ThemeDefaults.CreateDefault();
-        themes.Add(defaultDark);
+        // Built-in themes first (immutable, always before user themes)
+        foreach (var builtIn in ThemeDefaults.All())
+            themes.Add(builtIn);
 
         // User themes from disk
         if (Directory.Exists(UserThemesFolder))
