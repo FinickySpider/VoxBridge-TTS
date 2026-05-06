@@ -4,6 +4,19 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [0.17.0]
+
+### Features
+- **FEAT-044: Typography Controls** — `ThemeSettings` now owns `UiFontFamily`, `BaseFontSize`, `OverlayFontFamily`, `OverlayFontSize`. All four push to `DynamicResource` via `ThemeService.Apply()`. Theme tab Section E exposes UI Font and Overlay Font dropdowns (self-previewing) plus size textboxes. Overlay font family and size migrated out of the Appearance tab (which no longer shows font controls).
+- **FEAT-045: Shape & Density Controls** — `ThemeSettings` gains `CornerRadius`, `BorderThickness`, `ControlHeight`, `SpacingDensity` (new enum: Compact / Comfortable / Spacious). All values push to `DynamicResource` on every apply. Theme tab Section F exposes a corner-radius slider (0–16), border thickness input, control height input, and spacing density dropdown.
+- **FEAT-046: WCAG 2.1 Contrast Checker** — New `ContrastCalculator` static class (Core layer, no WPF deps) computes WCAG 2.1 relative luminance and ratio. `ThemeSettingsViewModel` exposes four computed pairs (Primary on Window, Primary on Panel, Muted on Window, Accent on Window) with numeric ratios and status chips (Good / Warning / Fail). New `ContrastStatusToBrushConverter` colours each chip green/amber/red. Theme tab Section G displays all four pairs live.
+- **FEAT-047: Theme Import / Export** — `IThemeService`/`ThemeService` gain `ExportAsync(ThemeSettings, filePath)` and `ImportAsync(filePath) → ThemeSettings`. Validates all 17 hex colour fields on import; applies typography/shape defaults for backward compat with older `.ttstheme` files. Theme tab Section H has Export and Import buttons backed by `SaveFileDialog`/`OpenFileDialog`.
+
+### Improvements
+- Overlay `InputBox` font now bound via `DynamicResource OverlayFontFamilyResource` / `OverlayFontSizeResource` instead of hardcoded values — changes take effect instantly when a theme is applied.
+- `OverlayCoordinator` no longer pushes font from `OverlaySettings` on overlay open; theme drives it.
+- `AppearanceSettingsViewModel` no longer owns `InstalledFonts`, `OverlayFontFamily`, or `FontSize` — these are now in `ThemeSettingsViewModel`.
+- `App.xaml.cs` live-font-preview wiring removed (no longer needed).
 
 
 

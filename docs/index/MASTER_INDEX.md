@@ -7,11 +7,10 @@ Single source of truth. The agent starts here.
 TTS Communication Tool
 
 ## Active Phase
-- [PHASE-05: Theme Polish & Advanced](../phases/PHASE-05-theme-polish-and-advanced.md) — active
+- (none — PHASE-05 complete)
 
 ## Active Sprint
-- [SPRINT-12](../sprints/SPRINT-12.md) — active (FEAT-044, FEAT-045)
-- [SPRINT-13](../sprints/SPRINT-13.md) — active (FEAT-046, FEAT-047)
+- (none)
 
 ## In Progress
 - (none)
@@ -21,7 +20,7 @@ TTS Communication Tool
 - [PHASE-02: Usability Hardening](../phases/PHASE-02-usability-hardening.md) — complete
 - [PHASE-03: Comfort & Expression](../phases/PHASE-03-comfort-and-expression.md) — complete
 - [PHASE-04: Dynamic Theming MVP](../phases/PHASE-04-dynamic-theming-mvp.md) — complete
-- [PHASE-05: Theme Polish & Advanced](../phases/PHASE-05-theme-polish-and-advanced.md) — planned
+- [PHASE-05: Theme Polish & Advanced](../phases/PHASE-05-theme-polish-and-advanced.md) — complete
 
 ## Sprints
 - [SPRINT-01](../sprints/SPRINT-01.md) — complete (PHASE-01)
@@ -35,8 +34,8 @@ TTS Communication Tool
 - [SPRINT-09](../sprints/SPRINT-09.md) — complete (v0.9.4 QoL pass)
 - [SPRINT-10](../sprints/SPRINT-10.md) — complete (PHASE-04)
 - [SPRINT-11](../sprints/SPRINT-11.md) — complete (PHASE-04)
-- [SPRINT-12](../sprints/SPRINT-12.md) — planned (PHASE-05)
-- [SPRINT-13](../sprints/SPRINT-13.md) — planned (PHASE-05)
+- [SPRINT-12](../sprints/SPRINT-12.md) — complete (PHASE-05)
+- [SPRINT-13](../sprints/SPRINT-13.md) — complete (PHASE-05)
 
 ## Features
 - [FEAT-001: Solution scaffold](../features/FEAT-001-solution-scaffold.md) — complete (SPRINT-01)
@@ -82,10 +81,10 @@ TTS Communication Tool
 - [FEAT-041: IThemeService + ThemeService](../features/FEAT-041-theme-service.md) — complete (SPRINT-10)
 - [FEAT-042: ThemeSettingsViewModel + Theme Tab UI](../features/FEAT-042-theme-settings-viewmodel-and-tab.md) — complete (SPRINT-11)
 - [FEAT-043: Tray Icon Reset Theme to Default](../features/FEAT-043-tray-reset-theme.md) — complete (SPRINT-11)
-- [FEAT-044: Typography Controls in Theme Tab](../features/FEAT-044-typography-controls.md) — planned (SPRINT-12)
-- [FEAT-045: Shape & Density Controls in Theme Tab](../features/FEAT-045-shape-and-density-controls.md) — planned (SPRINT-12)
-- [FEAT-046: WCAG 2.1 AA Contrast Checker](../features/FEAT-046-wcag-contrast-checker.md) — planned (SPRINT-13)
-- [FEAT-047: Theme Import / Export](../features/FEAT-047-theme-import-export.md) — planned (SPRINT-13)
+- [FEAT-044: Typography Controls in Theme Tab](../features/FEAT-044-typography-controls.md) — complete (SPRINT-12)
+- [FEAT-045: Shape & Density Controls in Theme Tab](../features/FEAT-045-shape-and-density-controls.md) — complete (SPRINT-12)
+- [FEAT-046: WCAG 2.1 AA Contrast Checker](../features/FEAT-046-wcag-contrast-checker.md) — complete (SPRINT-13)
+- [FEAT-047: Theme Import / Export](../features/FEAT-047-theme-import-export.md) — complete (SPRINT-13)
 
 ## Refactors
 - [REFACTOR-001: Config recovery](../refactors/REFACTOR-001-config-recovery.md) — complete (SPRINT-03)
