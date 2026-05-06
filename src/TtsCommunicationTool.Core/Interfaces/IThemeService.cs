@@ -27,6 +27,16 @@ public interface IThemeService
     /// <summary>Deletes a user theme file by name.  No-op if name belongs to a built-in.</summary>
     Task DeleteUserThemeAsync(string name);
 
+    /// <summary>Exports <paramref name="theme"/> to the specified file path as JSON.</summary>
+    Task ExportAsync(ThemeSettings theme, string filePath);
+
+    /// <summary>
+    /// Imports a theme from the specified file path.  Validates all required fields.
+    /// Returns the loaded theme (with IsBuiltIn=false) ready to be saved and applied.
+    /// Throws <see cref="InvalidOperationException"/> with a user-readable message on validation failure.
+    /// </summary>
+    Task<ThemeSettings> ImportAsync(string filePath);
+
     /// <summary>Name of the currently active theme.</summary>
     string ActiveThemeName { get; }
 

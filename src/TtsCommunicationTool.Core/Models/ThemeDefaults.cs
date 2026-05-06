@@ -29,5 +29,15 @@ public static class ThemeDefaults
         Warning           = "#F9E2AF",
         InfoColor         = "#FAB387",
         Success           = "#A6E3A1",
+        // Typography
+        UiFontFamily      = "Segoe UI",
+        BaseFontSize      = 13,
+        OverlayFontFamily = "Segoe UI",
+        OverlayFontSize   = 18,
+        // Shape & Density
+        CornerRadius      = 6,
+        BorderThickness   = 1,
+        ControlHeight     = 28,
+        SpacingDensity    = SpacingDensity.Comfortable,
     };
 }

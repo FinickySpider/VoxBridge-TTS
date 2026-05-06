@@ -7,10 +7,11 @@ Single source of truth. The agent starts here.
 TTS Communication Tool
 
 ## Active Phase
-- [PHASE-05: Theme Polish & Advanced](../phases/PHASE-05-theme-polish-and-advanced.md) — planned
+- [PHASE-05: Theme Polish & Advanced](../phases/PHASE-05-theme-polish-and-advanced.md) — active
 
 ## Active Sprint
-- none — PHASE-04 complete; PHASE-05 planned next
+- [SPRINT-12](../sprints/SPRINT-12.md) — active (FEAT-044, FEAT-045)
+- [SPRINT-13](../sprints/SPRINT-13.md) — active (FEAT-046, FEAT-047)
 
 ## In Progress
 - (none)

@@ -1,10 +1,13 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Microsoft.Win32;
 using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Core.Models;
+using TtsCommunicationTool.Core.Utilities;
 using TtsCommunicationTool.UI.Commands;
 
 namespace TtsCommunicationTool.UI.ViewModels;
@@ -106,6 +109,66 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     public string Warning     { get => _workingCopy.Warning;     set => SetColor(v => _workingCopy.Warning     = v, value); }
     public string Success     { get => _workingCopy.Success;     set => SetColor(v => _workingCopy.Success     = v, value); }
 
+    // ── Typography properties ─────────────────────────────────────────────────
+    public IReadOnlyList<string> InstalledFonts { get; } =
+        Fonts.SystemFontFamilies.Select(f => f.Source)
+             .OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
+
+    public string UiFontFamily
+    {
+        get => _workingCopy.UiFontFamily;
+        set => SetTypography(() => { _workingCopy.UiFontFamily = value; });
+    }
+    public double BaseFontSize
+    {
+        get => _workingCopy.BaseFontSize;
+        set => SetTypography(() => { _workingCopy.BaseFontSize = value; });
+    }
+    public string OverlayFontFamily
+    {
+        get => _workingCopy.OverlayFontFamily;
+        set => SetTypography(() => { _workingCopy.OverlayFontFamily = value; });
+    }
+    public double OverlayFontSize
+    {
+        get => _workingCopy.OverlayFontSize;
+        set => SetTypography(() => { _workingCopy.OverlayFontSize = value; });
+    }
+
+    // ── Shape & density properties ────────────────────────────────────────────
+    public double ThemeCornerRadius
+    {
+        get => _workingCopy.CornerRadius;
+        set => SetShape(() => { _workingCopy.CornerRadius = value; });
+    }
+    public double ThemeBorderThickness
+    {
+        get => _workingCopy.BorderThickness;
+        set => SetShape(() => { _workingCopy.BorderThickness = value; });
+    }
+    public double ThemeControlHeight
+    {
+        get => _workingCopy.ControlHeight;
+        set => SetShape(() => { _workingCopy.ControlHeight = value; });
+    }
+    public SpacingDensity SpacingDensity
+    {
+        get => _workingCopy.SpacingDensity;
+        set => SetShape(() => { _workingCopy.SpacingDensity = value; });
+    }
+    public IReadOnlyList<SpacingDensity> SpacingDensityValues { get; } =
+        (SpacingDensity[])Enum.GetValues(typeof(SpacingDensity));
+
+    // ── Contrast computed properties (WCAG 2.1) ───────────────────────────────
+    public double ContrastPrimaryOnWindow        => ContrastCalculator.GetRatio(_workingCopy.PrimaryText,   _workingCopy.WindowBackground);
+    public string ContrastPrimaryOnWindowStatus  => ContrastCalculator.GetStatus(ContrastPrimaryOnWindow);
+    public double ContrastPrimaryOnPanel         => ContrastCalculator.GetRatio(_workingCopy.PrimaryText,   _workingCopy.PanelBackground);
+    public string ContrastPrimaryOnPanelStatus   => ContrastCalculator.GetStatus(ContrastPrimaryOnPanel);
+    public double ContrastMutedOnWindow          => ContrastCalculator.GetRatio(_workingCopy.MutedText,     _workingCopy.WindowBackground);
+    public string ContrastMutedOnWindowStatus    => ContrastCalculator.GetStatus(ContrastMutedOnWindow);
+    public double ContrastAccentOnWindow         => ContrastCalculator.GetRatio(_workingCopy.Accent,        _workingCopy.WindowBackground);
+    public string ContrastAccentOnWindowStatus   => ContrastCalculator.GetStatus(ContrastAccentOnWindow);
+
     // ── Commands ─────────────────────────────────────────────────────────────
     public ICommand SaveCommand           { get; }
     public ICommand SaveAsCommand         { get; }
@@ -116,6 +179,10 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     public ICommand PickColorCommand      { get; }
     /// <summary>Parameter: property name string — resets that single colour to its default value.</summary>
     public ICommand ResetColorCommand     { get; }
+    /// <summary>Exports the current working copy to a .ttstheme file chosen by the user.</summary>
+    public ICommand ExportCommand         { get; }
+    /// <summary>Imports a .ttstheme file and applies it as a new working copy.</summary>
+    public ICommand ImportCommand         { get; }
 
     // ── Constructor ──────────────────────────────────────────────────────────
     public ThemeSettingsViewModel(IThemeService themeService, ILoggingService log, IColorPickerService colorPicker)
@@ -131,6 +198,8 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         DeleteCommand     = new RelayCommand(QueueDelete,          () => !IsEditingBuiltIn);
         PickColorCommand  = new RelayCommand(obj => PickColor(obj as string));
         ResetColorCommand = new RelayCommand(obj => ResetColorToDefault(obj as string));
+        ExportCommand     = new AsyncRelayCommand(ExecuteExportAsync);
+        ImportCommand     = new AsyncRelayCommand(ExecuteImportAsync);
     }
 
     // ── Load / revert ────────────────────────────────────────────────────────
@@ -442,6 +511,25 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         setter(value);
         _themeService.Apply(_workingCopy);
         if (propName is not null) OnPropertyChanged(propName);
+        RaiseContrastProperties();
+        _hasColourEdits = true;
+        MarkDirty();
+    }
+
+    private void SetTypography(Action setter, [CallerMemberName] string? propName = null)
+    {
+        setter();
+        _themeService.Apply(_workingCopy);
+        if (propName is not null) OnPropertyChanged(propName);
+        _hasColourEdits = true;
+        MarkDirty();
+    }
+
+    private void SetShape(Action setter, [CallerMemberName] string? propName = null)
+    {
+        setter();
+        _themeService.Apply(_workingCopy);
+        if (propName is not null) OnPropertyChanged(propName);
         _hasColourEdits = true;
         MarkDirty();
     }
@@ -466,6 +554,37 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     {
         foreach (var name in ColourPropertyNames)
             OnPropertyChanged(name);
+        RaiseContrastProperties();
+        RaiseTypographyProperties();
+        RaiseShapeProperties();
+    }
+
+    private void RaiseContrastProperties()
+    {
+        OnPropertyChanged(nameof(ContrastPrimaryOnWindow));
+        OnPropertyChanged(nameof(ContrastPrimaryOnWindowStatus));
+        OnPropertyChanged(nameof(ContrastPrimaryOnPanel));
+        OnPropertyChanged(nameof(ContrastPrimaryOnPanelStatus));
+        OnPropertyChanged(nameof(ContrastMutedOnWindow));
+        OnPropertyChanged(nameof(ContrastMutedOnWindowStatus));
+        OnPropertyChanged(nameof(ContrastAccentOnWindow));
+        OnPropertyChanged(nameof(ContrastAccentOnWindowStatus));
+    }
+
+    private void RaiseTypographyProperties()
+    {
+        OnPropertyChanged(nameof(UiFontFamily));
+        OnPropertyChanged(nameof(BaseFontSize));
+        OnPropertyChanged(nameof(OverlayFontFamily));
+        OnPropertyChanged(nameof(OverlayFontSize));
+    }
+
+    private void RaiseShapeProperties()
+    {
+        OnPropertyChanged(nameof(ThemeCornerRadius));
+        OnPropertyChanged(nameof(ThemeBorderThickness));
+        OnPropertyChanged(nameof(ThemeControlHeight));
+        OnPropertyChanged(nameof(SpacingDensity));
     }
 
     private static readonly string[] ColourPropertyNames =
@@ -562,6 +681,64 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(hex)) return false;
         try { ColorConverter.ConvertFromString(hex); return true; }
         catch { return false; }
+    }
+
+    // ── Import / Export command implementations ──────────────────────────────
+
+    private async Task ExecuteExportAsync()
+    {
+        var dlg = new SaveFileDialog
+        {
+            Title      = "Export Theme",
+            Filter     = "TTS Theme|*.ttstheme",
+            FileName   = _workingCopy.Name,
+            DefaultExt = ".ttstheme",
+        };
+        if (dlg.ShowDialog() != true) return;
+        try
+        {
+            await _themeService.ExportAsync(_workingCopy, dlg.FileName);
+            _log.Info($"Theme exported to '{dlg.FileName}'.");
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"Theme export failed: {ex.Message}");
+            MessageBox.Show($"Export failed: {ex.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private async Task ExecuteImportAsync()
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title  = "Import Theme",
+            Filter = "TTS Theme|*.ttstheme",
+        };
+        if (dlg.ShowDialog() != true) return;
+        try
+        {
+            var imported = await _themeService.ImportAsync(dlg.FileName);
+            // Ensure a unique name before saving
+            if (AvailableThemes.Any(t => string.Equals(t.Name, imported.Name, StringComparison.OrdinalIgnoreCase)))
+                imported.Name = GenerateUniqueName(imported.Name);
+            await _themeService.SaveAsUserThemeAsync(imported, imported.Name);
+            _pendingNews.Add(imported.Name);
+            _workingCopy = imported.Clone();
+            _savedSnapshot = imported.Clone();
+            _themeService.Apply(_workingCopy);
+            RefreshPresetList();
+            RaiseAllColourProperties();
+            OnPropertyChanged(nameof(ThemeName));
+            OnPropertyChanged(nameof(IsEditingBuiltIn));
+            _hasColourEdits = true;
+            IsDirty = true;
+            _log.Info($"Theme imported from '{dlg.FileName}' as '{imported.Name}'.");
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"Theme import failed: {ex.Message}");
+            MessageBox.Show($"Import failed: {ex.Message}", "Import Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     // ── Name prompt (minimal WPF input window) ────────────────────────────────

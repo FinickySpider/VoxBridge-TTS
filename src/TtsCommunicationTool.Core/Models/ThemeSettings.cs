@@ -70,6 +70,26 @@ public sealed class ThemeSettings
     /// <summary>Success / positive.  Resource key: SuccessBrush</summary>
     public string Success { get; set; } = "#A6E3A1";
 
+    // ── Typography ───────────────────────────────────────────────────────────────────
+    /// <summary>Font family name for all non-overlay windows.  Resource key: UiFontFamilyResource</summary>
+    public string UiFontFamily { get; set; } = "Segoe UI";
+    /// <summary>Base font size (pt) for UI text.  Resource key: BaseFontSizeResource</summary>
+    public double BaseFontSize { get; set; } = 13;
+    /// <summary>Font family name for the overlay input.  Resource key: OverlayFontFamilyResource</summary>
+    public string OverlayFontFamily { get; set; } = "Segoe UI";
+    /// <summary>Font size (pt) for the overlay input.  Resource key: OverlayFontSizeResource</summary>
+    public double OverlayFontSize { get; set; } = 18;
+
+    // ── Shape & Density ────────────────────────────────────────────────────────
+    /// <summary>Uniform corner radius applied to all rounded containers.  Resource key: ControlCornerRadiusResource</summary>
+    public double CornerRadius { get; set; } = 6;
+    /// <summary>Default border thickness for panels and cards.  Resource key: ControlBorderThicknessResource</summary>
+    public double BorderThickness { get; set; } = 1;
+    /// <summary>Standard height for input controls (buttons, text boxes, combos).  Resource key: ControlHeightResource</summary>
+    public double ControlHeight { get; set; } = 28;
+    /// <summary>Spacing density preset for padding/margin throughout the UI.</summary>
+    public SpacingDensity SpacingDensity { get; set; } = SpacingDensity.Comfortable;
+
     /// <summary>Returns a shallow clone so edits don't mutate the source.</summary>
     public ThemeSettings Clone() => (ThemeSettings)MemberwiseClone();
 }

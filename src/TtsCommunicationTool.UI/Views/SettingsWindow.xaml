@@ -17,6 +17,7 @@
         <conv:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
         <conv:HexColorToBrushConverter x:Key="HexToBrushConverter"/>
+        <conv:ContrastStatusToBrushConverter x:Key="ContrastStatusToBrushConverter"/>
 
         <!-- Shared styles for dark-themed controls -->
         <Style x:Key="SectionHeader" TargetType="TextBlock">
@@ -1036,19 +1037,6 @@
                                      ToolTip="Height of the overlay input window in pixels."/>
                         </Grid>
 
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Font Size:" Style="{StaticResource FieldLabel}"
-                                       ToolTip="Font size of the text input field inside the overlay window."/>
-                            <TextBox Grid.Column="1"
-                                     Text="{Binding Appearance.FontSize, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource SettingsTextBox}"
-                                     ToolTip="Font size (points) of the input field inside the overlay window."/>
-                        </Grid>
-
                         <!-- Overlay transparency slider (0.20 = see-through, 0.95 = opaque) -->
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
@@ -1072,33 +1060,6 @@
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Right"
                                        Margin="4,0,0,0"/>
-                        </Grid>
-
-                        <!-- Overlay font family dropdown -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Font Type:" Style="{StaticResource FieldLabel}"
-                                       ToolTip="Font used in the overlay text input."/>
-                            <ComboBox Grid.Column="1"
-                                      ItemsSource="{Binding Appearance.InstalledFonts}"
-                                      SelectedItem="{Binding Appearance.OverlayFontFamily, UpdateSourceTrigger=PropertyChanged}"
-                                      MaxDropDownHeight="240"
-                                      Style="{StaticResource SettingsComboBox}"
-                                      ToolTip="Font family used in the overlay text input field.">
-                                <!-- Each font name rendered in its own typeface for quick visual preview.
-                                     WPF's built-in FontFamilyConverter converts the string automatically. -->
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding}"
-                                                   FontFamily="{Binding}"
-                                                   FontSize="17"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
                         </Grid>
 
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
@@ -2362,6 +2323,194 @@
                                         <Button Grid.Column="4" Content="Reset" Margin="4,0,0,0" Style="{StaticResource SecondaryButton}" Command="{Binding Theme.ResetColorCommand}" CommandParameter="Success"
                                                 ToolTip="Reset to the default value for this colour"/>
                                     </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ── E. Typography ───────────────────────────── -->
+                            <Border Margin="0,0,0,10"
+                                    Background="{DynamicResource PanelBackgroundBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1" CornerRadius="6" Padding="12,10">
+                                <StackPanel>
+                                    <TextBlock Text="TYPOGRAPHY" FontSize="10" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
+                                    <!-- UI Font Family -->
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="UI Font:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   ToolTip="Font family used throughout the settings and main application windows."/>
+                                        <ComboBox Grid.Column="1"
+                                                  ItemsSource="{Binding Theme.InstalledFonts}"
+                                                  SelectedItem="{Binding Theme.UiFontFamily, UpdateSourceTrigger=PropertyChanged}"
+                                                  MaxDropDownHeight="220"
+                                                  Style="{StaticResource SettingsComboBox}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding}" FontFamily="{Binding}" FontSize="14"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </Grid>
+                                    <!-- Base Font Size -->
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="UI Font Size:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   ToolTip="Base font size (pt) for the UI."/>
+                                        <TextBox Grid.Column="1" Text="{Binding Theme.BaseFontSize, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource SettingsTextBox}"/>
+                                    </Grid>
+                                    <!-- Overlay Font Family -->
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Overlay Font:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   ToolTip="Font family for the overlay input field."/>
+                                        <ComboBox Grid.Column="1"
+                                                  ItemsSource="{Binding Theme.InstalledFonts}"
+                                                  SelectedItem="{Binding Theme.OverlayFontFamily, UpdateSourceTrigger=PropertyChanged}"
+                                                  MaxDropDownHeight="220"
+                                                  Style="{StaticResource SettingsComboBox}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding}" FontFamily="{Binding}" FontSize="14"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </Grid>
+                                    <!-- Overlay Font Size -->
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Overlay Font Size:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   ToolTip="Font size (pt) for the overlay input field."/>
+                                        <TextBox Grid.Column="1" Text="{Binding Theme.OverlayFontSize, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource SettingsTextBox}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ── F. Shape &amp; Density ──────────────────────── -->
+                            <Border Margin="0,0,0,10"
+                                    Background="{DynamicResource PanelBackgroundBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1" CornerRadius="6" Padding="12,10">
+                                <StackPanel>
+                                    <TextBlock Text="SHAPE &amp; DENSITY" FontSize="10" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
+                                    <!-- Corner Radius -->
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/><ColumnDefinition Width="40"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Corner Radius:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   ToolTip="Corner radius applied to buttons, cards, and panels (0 = square, 12 = very rounded)."/>
+                                        <Slider Grid.Column="1" Minimum="0" Maximum="16" TickFrequency="1" IsSnapToTickEnabled="True"
+                                                Value="{Binding Theme.ThemeCornerRadius, UpdateSourceTrigger=PropertyChanged}"
+                                                VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Theme.ThemeCornerRadius}" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="4,0,0,0"/>
+                                    </Grid>
+                                    <!-- Border Thickness -->
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Border Thickness:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   ToolTip="Thickness of control borders."/>
+                                        <TextBox Grid.Column="1" Text="{Binding Theme.ThemeBorderThickness, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource SettingsTextBox}"/>
+                                    </Grid>
+                                    <!-- Control Height -->
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Control Height:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   ToolTip="Default height of buttons and input controls."/>
+                                        <TextBox Grid.Column="1" Text="{Binding Theme.ThemeControlHeight, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource SettingsTextBox}"/>
+                                    </Grid>
+                                    <!-- Spacing Density -->
+                                    <Grid Margin="0,4">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Spacing Density:" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   ToolTip="Compact = tighter padding; Comfortable = default; Spacious = more breathing room."/>
+                                        <ComboBox Grid.Column="1"
+                                                  ItemsSource="{Binding Theme.SpacingDensityValues}"
+                                                  SelectedItem="{Binding Theme.SpacingDensity, UpdateSourceTrigger=PropertyChanged}"
+                                                  Style="{StaticResource SettingsComboBox}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ── G. Contrast Checker ────────────────────── -->
+                            <Border Margin="0,0,0,10"
+                                    Background="{DynamicResource PanelBackgroundBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1" CornerRadius="6" Padding="12,10">
+                                <StackPanel>
+                                    <TextBlock Text="CONTRAST (WCAG 2.1)" FontSize="10" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
+                                    <TextBlock Text="Requires ≥4.5:1 for normal text (AA). Ratios below 3.0 may be difficult to read."
+                                               FontSize="11" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                    <!-- Primary on Window -->
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="60"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Primary Text on Window" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Theme.ContrastPrimaryOnWindow, StringFormat={}{0:F2}:1}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Theme.ContrastPrimaryOnWindowStatus}" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"
+                                                   Margin="4,0" Padding="6,2" HorizontalAlignment="Left"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                   Background="{Binding Theme.ContrastPrimaryOnWindowStatus, Converter={StaticResource ContrastStatusToBrushConverter}}"/>
+                                    </Grid>
+                                    <!-- Primary on Panel -->
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="60"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Primary Text on Panel" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Theme.ContrastPrimaryOnPanel, StringFormat={}{0:F2}:1}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Theme.ContrastPrimaryOnPanelStatus}" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"
+                                                   Margin="4,0" Padding="6,2" HorizontalAlignment="Left"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                   Background="{Binding Theme.ContrastPrimaryOnPanelStatus, Converter={StaticResource ContrastStatusToBrushConverter}}"/>
+                                    </Grid>
+                                    <!-- Muted on Window -->
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="60"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Muted Text on Window" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Theme.ContrastMutedOnWindow, StringFormat={}{0:F2}:1}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Theme.ContrastMutedOnWindowStatus}" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"
+                                                   Margin="4,0" Padding="6,2" HorizontalAlignment="Left"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                   Background="{Binding Theme.ContrastMutedOnWindowStatus, Converter={StaticResource ContrastStatusToBrushConverter}}"/>
+                                    </Grid>
+                                    <!-- Accent on Window -->
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="60"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Accent on Window" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Theme.ContrastAccentOnWindow, StringFormat={}{0:F2}:1}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Theme.ContrastAccentOnWindowStatus}" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"
+                                                   Margin="4,0" Padding="6,2" HorizontalAlignment="Left"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                   Background="{Binding Theme.ContrastAccentOnWindowStatus, Converter={StaticResource ContrastStatusToBrushConverter}}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ── H. Import / Export ──────────────────────── -->
+                            <Border Margin="0,0,0,10"
+                                    Background="{DynamicResource PanelBackgroundBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1" CornerRadius="6" Padding="12,10">
+                                <StackPanel>
+                                    <TextBlock Text="IMPORT / EXPORT" FontSize="10" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
+                                    <TextBlock Text="Export saves the current theme to a .ttstheme file. Import loads a .ttstheme file as a new user theme."
+                                               FontSize="11" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <Button Content="Export Theme…"
+                                                Command="{Binding Theme.ExportCommand}"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Margin="0,0,8,0"
+                                                ToolTip="Save the current theme colours and settings to a .ttstheme file"/>
+                                        <Button Content="Import Theme…"
+                                                Command="{Binding Theme.ImportCommand}"
+                                                Style="{StaticResource SecondaryButton}"
+                                                ToolTip="Load a .ttstheme file and add it as a new user theme"/>
+                                    </StackPanel>
                                 </StackPanel>
                             </Border>
 
