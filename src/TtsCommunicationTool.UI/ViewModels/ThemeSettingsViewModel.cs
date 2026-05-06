@@ -31,8 +31,14 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
 
     // ── Pending-delete buffer ─────────────────────────────────────────────────
     // Names queued for deletion. Written to disk only when CommitAsync / SaveAsync runs.
-    // Cleared (themes restored in list) when RevertChanges is called.
+    // Cleared (themes restored in list) when RevertChangesAsync is called.
     private readonly HashSet<string> _pendingDeletes = new(StringComparer.OrdinalIgnoreCase);
+
+    // ── Pending-new buffer ───────────────────────────────────────────────────────
+    // Names of themes created this session via Save As / Duplicate that have already
+    // been written to disk but should be deleted if the user hits Cancel.
+    // Cleared (without deleting) when CommitAsync / SaveAsync succeeds.
+    private readonly HashSet<string> _pendingNews = new(StringComparer.OrdinalIgnoreCase);
 
     // ── Dirty / state ────────────────────────────────────────────────────────
     public bool IsDirty
@@ -128,6 +134,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     public void LoadThemes(string activeThemeName)
     {
         _pendingDeletes.Clear();
+        _pendingNews.Clear();
         AvailableThemes.Clear();
         foreach (var t in _themeService.LoadAll())
             AvailableThemes.Add(t);
@@ -154,8 +161,14 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
     /// Called by SettingsViewModel.CancelAsync() — reverts the live app colours to the
     /// last-saved theme state without persisting anything.
     /// </summary>
-    public void RevertChanges()
+    public async Task RevertChangesAsync()
     {
+        // Delete all themes created this session via Save As / Duplicate — user hit Cancel
+        // so they never intended to keep them.
+        foreach (var name in _pendingNews)
+            await _themeService.DeleteUserThemeAsync(name);
+        _pendingNews.Clear();
+
         // Discard all pending deletes — reload the full list from disk so queued-deleted
         // themes reappear in the dropdown.
         _pendingDeletes.Clear();
@@ -199,12 +212,22 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         }
         else
         {
+            // Rename: if the user changed the theme name, delete the old file first.
+            if (!string.Equals(_savedSnapshot.Name, _workingCopy.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                await _themeService.DeleteUserThemeAsync(_savedSnapshot.Name);
+                _pendingNews.Remove(_savedSnapshot.Name); // old file gone; track new name below
+                _log.Info($"Theme renamed '{_savedSnapshot.Name}' → '{_workingCopy.Name}'.");
+            }
             await _themeService.SaveAsUserThemeAsync(_workingCopy, _workingCopy.Name);
             _log.Info($"User theme '{_workingCopy.Name}' saved.");
         }
 
         // Persist active theme name to config
         config.CurrentConfig.ActiveThemeName = _workingCopy.Name;
+
+        // All changes are committed — clear the pending-news set (keep files on disk).
+        _pendingNews.Clear();
 
         // Update snapshots and preset list
         _savedSnapshot = _workingCopy.Clone();
@@ -232,6 +255,7 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
             _savedSnapshot = _workingCopy.Clone();
             _savedSnapshot.IsBuiltIn = false;
             _originalSnapshot = _savedSnapshot.Clone();
+            _pendingNews.Clear();
             RefreshPresetList();
             IsDirty = false;
             OnPropertyChanged(nameof(IsEditingBuiltIn));
@@ -239,9 +263,17 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         }
         else
         {
+            // Rename: if the user changed the theme name, delete the old file first.
+            if (!string.Equals(_savedSnapshot.Name, _workingCopy.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                await _themeService.DeleteUserThemeAsync(_savedSnapshot.Name);
+                _pendingNews.Remove(_savedSnapshot.Name);
+                _log.Info($"Theme renamed '{_savedSnapshot.Name}' → '{_workingCopy.Name}'.");
+            }
             await _themeService.SaveAsUserThemeAsync(_workingCopy, _workingCopy.Name);
             _savedSnapshot = _workingCopy.Clone();
             _originalSnapshot = _savedSnapshot.Clone();
+            _pendingNews.Clear();
             RefreshPresetList();
             IsDirty = false;
             _log.Info($"Theme '{_workingCopy.Name}' saved.");
@@ -260,21 +292,30 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
         _workingCopy.Name = safeName;
         OnPropertyChanged(nameof(ThemeName));
         await _themeService.SaveAsUserThemeAsync(_workingCopy, safeName);
+        // Track this new file so RevertChangesAsync can delete it if the user hits Cancel.
+        _pendingNews.Add(safeName);
         _savedSnapshot = _workingCopy.Clone();
         _savedSnapshot.IsBuiltIn = false;
         _originalSnapshot = _savedSnapshot.Clone();
         RefreshPresetList();
         IsDirty = false;
         OnPropertyChanged(nameof(IsEditingBuiltIn));
-        _log.Info($"Theme saved as '{safeName}'.");
+        _log.Info($"Theme saved as '{safeName}' (pending session commit).");
     }
 
     private async Task DuplicateAsync()
     {
-        var name = _workingCopy.Name + " Copy";
-        await _themeService.SaveAsUserThemeAsync(_workingCopy, name);
+        // GenerateUniqueName handles "Copy", "Copy (2)", "Copy (3)" … so repeated
+        // duplicates never collide with an existing theme.
+        var name = GenerateUniqueName(_workingCopy.Name);
+        var dupe = _workingCopy.Clone();
+        dupe.Name = name;
+        dupe.IsBuiltIn = false;
+        await _themeService.SaveAsUserThemeAsync(dupe, name);
+        // Track so Cancel cleans it up.
+        _pendingNews.Add(name);
         RefreshPresetList();
-        _log.Info($"Theme duplicated as '{name}'.");
+        _log.Info($"Theme duplicated as '{name}' (pending session commit).");
     }
 
     private void RevertToSaved()

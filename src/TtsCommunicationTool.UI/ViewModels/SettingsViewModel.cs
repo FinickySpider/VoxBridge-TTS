@@ -258,7 +258,7 @@ public sealed class SettingsViewModel : ViewModelBase
         // Restore live pitch in memory so the overlay uses the saved value again
         _config.CurrentConfig.VoiceSettings.GlobalPitch = _savedPitch;
         await Phrases.RollbackAsync();
-        Theme.RevertChanges();   // re-applies the saved theme to live app resources
+        await Theme.RevertChangesAsync();   // re-applies the saved theme; deletes any unsaved new themes
         LoadFromConfig(); // reload other tabs to last-saved config state
         IsDirty = false;
         Cancelled?.Invoke(this, EventArgs.Empty);

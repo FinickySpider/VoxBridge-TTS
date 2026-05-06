@@ -20,6 +20,29 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v0.16.8] -- 2026-05-05
+
+### Bug Fixes
+
+- **New themes no longer persist after Cancel.** Themes created via "Save As" or
+  "Duplicate" are now tracked in a `_pendingNews` set. If the user hits Cancel
+  (`RevertChangesAsync`), those files are deleted from disk — the filesystem is
+  left exactly as it was when Settings opened.
+- **Duplicate now generates unique names on every press.** Previously the button
+  hard-coded `Name + " Copy"` and would silently overwrite (or fail) when that
+  name already existed. It now calls `GenerateUniqueName` to produce "Copy",
+  "Copy (2)", "Copy (3)" etc., matching the same logic used by Save-As forks.
+- **Rename-on-Save now renames instead of creating a duplicate file.** When the
+  user edits the theme name in the text box and hits Save, the old `.ttstheme`
+  file is deleted and the new name is written — no orphaned copies left behind.
+
+### Improvements
+
+- `RevertChanges` promoted to `async Task RevertChangesAsync` so pending-new
+  cleanup can properly await file I/O before reloading the preset list.
+
+---
 ## [v0.16.7] -- 2026-05-05
 
 ### Bug Fixes
