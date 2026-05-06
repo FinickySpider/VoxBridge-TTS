@@ -328,7 +328,9 @@ public sealed class ThemeSettingsViewModel : ViewModelBase
 
         if (!IsDirty)
         {
-            // Nothing else to flush or save — name is already written above.
+            // No file changes to flush — but always re-apply so shape/spacing edits
+            // that were persisted via inner Save take effect in the running session.
+            _themeService.Apply(_workingCopy);
             return;
         }
 
