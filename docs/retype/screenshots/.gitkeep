@@ -1,0 +1,17 @@
+# Screenshots directory
+
+Place screenshots here for the Retype documentation site.
+
+Naming convention: lowercase-kebab-case.png
+
+Expected screenshots (to be captured):
+- hero-overview.png
+- tray-icon.png
+- overlay-typing.png
+- first-run-settings.png
+- settings-window.png
+- settings-voice-elevenlabs.png
+- settings-theme.png
+- settings-replacements.png
+- phrase-manager.png
+- phrase-editor.png

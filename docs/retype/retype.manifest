@@ -1,0 +1,276 @@
+{
+  "version": "4.5.2",
+  "created": "2026-06-14T11:21:31Z",
+  "files": [
+    {
+      "path": ".nojekyll"
+    },
+    {
+      "path": "404.html"
+    },
+    {
+      "path": "developer-guide\\adding-features.md"
+    },
+    {
+      "path": "developer-guide\\adding-features\\index.html"
+    },
+    {
+      "path": "developer-guide\\architecture.md"
+    },
+    {
+      "path": "developer-guide\\architecture\\index.html"
+    },
+    {
+      "path": "developer-guide\\data-flow.md"
+    },
+    {
+      "path": "developer-guide\\data-flow\\index.html"
+    },
+    {
+      "path": "developer-guide\\debugging.md"
+    },
+    {
+      "path": "developer-guide\\debugging\\index.html"
+    },
+    {
+      "path": "developer-guide\\project-structure.md"
+    },
+    {
+      "path": "developer-guide\\project-structure\\index.html"
+    },
+    {
+      "path": "developer-guide\\testing.md"
+    },
+    {
+      "path": "developer-guide\\testing\\index.html"
+    },
+    {
+      "path": "developer-guide\\tts-engine-integration.md"
+    },
+    {
+      "path": "developer-guide\\tts-engine-integration\\index.html"
+    },
+    {
+      "path": "getting-started\\configuration.md"
+    },
+    {
+      "path": "getting-started\\configuration\\index.html"
+    },
+    {
+      "path": "getting-started\\installation.md"
+    },
+    {
+      "path": "getting-started\\installation\\index.html"
+    },
+    {
+      "path": "getting-started\\quickstart.md"
+    },
+    {
+      "path": "getting-started\\quickstart\\index.html"
+    },
+    {
+      "path": "index.html"
+    },
+    {
+      "path": "index.md"
+    },
+    {
+      "path": "llms.txt"
+    },
+    {
+      "path": "needs-verification.md"
+    },
+    {
+      "path": "needs-verification\\index.html"
+    },
+    {
+      "path": "reference\\config-files.md"
+    },
+    {
+      "path": "reference\\config-files\\index.html"
+    },
+    {
+      "path": "reference\\environment-variables.md"
+    },
+    {
+      "path": "reference\\environment-variables\\index.html"
+    },
+    {
+      "path": "reference\\file-formats.md"
+    },
+    {
+      "path": "reference\\file-formats\\index.html"
+    },
+    {
+      "path": "resources\\css\\retype.css"
+    },
+    {
+      "path": "resources\\fonts\\Inter-italic-latin-var.woff2"
+    },
+    {
+      "path": "resources\\fonts\\Inter-roman-latin-var.woff2"
+    },
+    {
+      "path": "resources\\js\\config.js"
+    },
+    {
+      "path": "resources\\js\\instagram.js"
+    },
+    {
+      "path": "resources\\js\\lunr.js"
+    },
+    {
+      "path": "resources\\js\\mermaid.js"
+    },
+    {
+      "path": "resources\\js\\prism.js"
+    },
+    {
+      "path": "resources\\js\\retype.js"
+    },
+    {
+      "path": "resources\\js\\search.json"
+    },
+    {
+      "path": "resources\\lunr.js.LICENSE.txt"
+    },
+    {
+      "path": "resources\\mermaid.js.LICENSE.txt"
+    },
+    {
+      "path": "resources\\prism.js.LICENSE.txt"
+    },
+    {
+      "path": "resources\\retype.js.LICENSE.txt"
+    },
+    {
+      "path": "resources\\retype.LICENSE.txt"
+    },
+    {
+      "path": "robots.txt"
+    },
+    {
+      "path": "screenshots\\first-run-settings.png"
+    },
+    {
+      "path": "screenshots\\hero-overview.png"
+    },
+    {
+      "path": "screenshots\\overlay-typing.png"
+    },
+    {
+      "path": "screenshots\\phrase-editor.png"
+    },
+    {
+      "path": "screenshots\\phrase-manager.png"
+    },
+    {
+      "path": "screenshots\\settings-replacements.png"
+    },
+    {
+      "path": "screenshots\\settings-theme.png"
+    },
+    {
+      "path": "screenshots\\settings-voice-elevenlabs.png"
+    },
+    {
+      "path": "screenshots\\settings-window.png"
+    },
+    {
+      "path": "screenshots\\tray-icon.png"
+    },
+    {
+      "path": "sitemap.xml"
+    },
+    {
+      "path": "troubleshooting\\audio-problems.md"
+    },
+    {
+      "path": "troubleshooting\\audio-problems\\index.html"
+    },
+    {
+      "path": "troubleshooting\\common-issues.md"
+    },
+    {
+      "path": "troubleshooting\\common-issues\\index.html"
+    },
+    {
+      "path": "troubleshooting\\dependency-problems.md"
+    },
+    {
+      "path": "troubleshooting\\dependency-problems\\index.html"
+    },
+    {
+      "path": "troubleshooting\\platform-notes.md"
+    },
+    {
+      "path": "troubleshooting\\platform-notes\\index.html"
+    },
+    {
+      "path": "user-guide\\audio-output.md"
+    },
+    {
+      "path": "user-guide\\audio-output\\index.html"
+    },
+    {
+      "path": "user-guide\\features.md"
+    },
+    {
+      "path": "user-guide\\features\\index.html"
+    },
+    {
+      "path": "user-guide\\importing-exporting.md"
+    },
+    {
+      "path": "user-guide\\importing-exporting\\index.html"
+    },
+    {
+      "path": "user-guide\\overview.md"
+    },
+    {
+      "path": "user-guide\\overview\\index.html"
+    },
+    {
+      "path": "user-guide\\phrase-system.md"
+    },
+    {
+      "path": "user-guide\\phrase-system\\index.html"
+    },
+    {
+      "path": "user-guide\\settings.md"
+    },
+    {
+      "path": "user-guide\\settings\\index.html"
+    },
+    {
+      "path": "user-guide\\shortcuts.md"
+    },
+    {
+      "path": "user-guide\\shortcuts\\index.html"
+    },
+    {
+      "path": "user-guide\\text-replacements.md"
+    },
+    {
+      "path": "user-guide\\text-replacements\\index.html"
+    },
+    {
+      "path": "user-guide\\themes.md"
+    },
+    {
+      "path": "user-guide\\themes\\index.html"
+    },
+    {
+      "path": "user-guide\\tts-workflow.md"
+    },
+    {
+      "path": "user-guide\\tts-workflow\\index.html"
+    },
+    {
+      "path": "user-guide\\voices.md"
+    },
+    {
+      "path": "user-guide\\voices\\index.html"
+    }
+  ]
+}
