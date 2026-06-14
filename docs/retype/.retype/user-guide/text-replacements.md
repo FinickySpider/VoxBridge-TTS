@@ -13,7 +13,7 @@ Text replacements automatically transform your input text before it's sent to th
 
 In **Settings → Replacements**:
 
-<Screenshot: Replacements tab showing a list of text replacement rules with trigger/replacement fields and enable toggles.| docs/retype/screenshots/settings-replacements.png>
+![Replacements tab showing a list of text replacement rules with trigger/replacement fields and enable toggles.](../screenshots/settings-replacements.png)
 
 ### Rule Fields
 

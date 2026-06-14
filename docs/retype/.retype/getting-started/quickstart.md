@@ -6,7 +6,7 @@ Get from a fresh install to speaking your first message in under two minutes.
 
 Run `TtsCommunicationTool.App.exe`. The app starts in the system tray.
 
-<Screenshot: System tray area showing the TTS Communication Tool icon (a speech bubble icon) highlighted.| docs/retype/screenshots/tray-icon.png>
+![System tray area showing the TTS Communication Tool icon (a speech bubble icon) highlighted.](../screenshots/tray-icon.png)
 
 ## Step 2: Configure Audio (First Run Only)
 
@@ -36,7 +36,7 @@ In Discord, VRChat, or your voice app:
 2. Type your message
 3. Press **Enter** — the message is spoken aloud
 
-<Screenshot: The overlay window with typed text and the Send button visible.| docs/retype/screenshots/overlay-typing.png>
+![The overlay window with typed text and the Send button visible.](../screenshots/overlay-typing.png)
 
 ## Step 5: Stop Playback (If Needed)
 

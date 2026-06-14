@@ -28,20 +28,6 @@ This application is **Windows-only**. It uses WPF, NAudio (WASAPI), and Win32 P/
 2. Download the latest `TtsCommunicationTool.App.exe`
 3. Place it anywhere on your system (no installer required)
 
-### Build from Source
-
-```powershell
-# Clone the repository
-git clone https://github.com/FinickySpider/TtsCommunicationTool.git
-cd TtsCommunicationTool
-
-# Build Release configuration
-.\build.ps1 -Configuration Release
-
-# The executable will be at:
-# src\TtsCommunicationTool.App\bin\Release\net10.0-windows\TtsCommunicationTool.App.exe
-```
-
 ## Prerequisites
 
 ### Install VB-Cable
@@ -82,7 +68,7 @@ When you launch the app for the first time:
    - Confirming your overlay hotkey (default: Ctrl+Shift+Space)
 4. Save your settings
 
-<Screenshot: First-run settings window showing device selection dropdowns and test buttons.| docs/retype/screenshots/first-run-settings.png>
+![First-run settings window showing device selection dropdowns and test buttons.](../screenshots/first-run-settings.png)
 
 ## Updating
 

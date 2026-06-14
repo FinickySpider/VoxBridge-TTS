@@ -21,7 +21,7 @@ The theme system allows complete visual customization of the application.
 
 In **Settings → Theme**:
 
-<Screenshot: Theme editor showing the colour swatches, preview pane, and preset dropdown.| docs/retype/screenshots/settings-theme.png>
+![Theme editor showing the colour swatches, preview pane, and preset dropdown.](../screenshots/settings-theme.png)
 
 ### Colour Categories
 

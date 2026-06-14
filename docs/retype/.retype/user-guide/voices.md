@@ -39,7 +39,7 @@ ElevenLabs provides high-quality cloud-based AI voices. This is an optional inte
 4. The app fetches your available voices and subscription info
 5. Select a voice from the list
 
-<Screenshot: Voice settings tab showing ElevenLabs engine selected with API key entry field and voice dropdown.| docs/retype/screenshots/settings-voice-elevenlabs.png>
+![Voice settings tab showing ElevenLabs engine selected with API key entry field and voice dropdown.](../screenshots/settings-voice-elevenlabs.png)
 
 ### API Key Security
 

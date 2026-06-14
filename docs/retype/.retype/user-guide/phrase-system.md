@@ -8,7 +8,7 @@ Open the Phrase Manager from:
 - **Settings → Phrases** tab
 - Tray icon → **Open Phrase Manager**
 
-<Screenshot: Phrase Manager showing the list of saved phrases with search, category filter, and favorites toggle.| docs/retype/screenshots/phrase-manager.png>
+![Phrase Manager showing the list of saved phrases with search, category filter, and favorites toggle.](../screenshots/phrase-manager.png)
 
 ### Phrase Fields
 
@@ -41,7 +41,7 @@ Open the Phrase Manager from:
 
 The Phrase Editor is a dedicated window for detailed phrase editing.
 
-<Screenshot: Phrase Editor window showing text fields, voice override options, and preview controls.| docs/retype/screenshots/phrase-editor.png>
+![Phrase Editor window showing text fields, voice override options, and preview controls.](../screenshots/phrase-editor.png)
 
 ### Voice Override Settings
 

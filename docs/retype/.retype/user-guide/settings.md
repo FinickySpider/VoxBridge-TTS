@@ -4,7 +4,7 @@ The Settings window provides access to all configuration options. Open it by:
 - Right-clicking the tray icon → **Settings**
 - Pressing the Settings hotkey (if configured)
 
-<Screenshot: Settings window showing the tabbed interface with General, Hotkeys, Audio, Voice, Phrases, Appearance, and Theme tabs.| docs/retype/screenshots/settings-window.png>
+![Settings window showing the tabbed interface with General, Hotkeys, Audio, Voice, Phrases, Appearance, and Theme tabs.](../screenshots/settings-window.png)
 
 ## General Tab
 

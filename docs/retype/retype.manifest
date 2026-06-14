@@ -1,6 +1,6 @@
 {
   "version": "4.5.2",
-  "created": "2026-06-14T11:21:31Z",
+  "created": "2026-06-14T12:31:09Z",
   "files": [
     {
       "path": ".nojekyll"
@@ -9,46 +9,60 @@
       "path": "404.html"
     },
     {
-      "path": "developer-guide\\adding-features.md"
+      "path": "developer-guide\\adding-features.md",
+      "old": true
     },
     {
-      "path": "developer-guide\\adding-features\\index.html"
+      "path": "developer-guide\\adding-features\\index.html",
+      "old": true
     },
     {
-      "path": "developer-guide\\architecture.md"
+      "path": "developer-guide\\architecture.md",
+      "old": true
     },
     {
-      "path": "developer-guide\\architecture\\index.html"
+      "path": "developer-guide\\architecture\\index.html",
+      "old": true
     },
     {
-      "path": "developer-guide\\data-flow.md"
+      "path": "developer-guide\\data-flow.md",
+      "old": true
     },
     {
-      "path": "developer-guide\\data-flow\\index.html"
+      "path": "developer-guide\\data-flow\\index.html",
+      "old": true
     },
     {
-      "path": "developer-guide\\debugging.md"
+      "path": "developer-guide\\debugging.md",
+      "old": true
     },
     {
-      "path": "developer-guide\\debugging\\index.html"
+      "path": "developer-guide\\debugging\\index.html",
+      "old": true
     },
     {
-      "path": "developer-guide\\project-structure.md"
+      "path": "developer-guide\\project-structure.md",
+      "old": true
     },
     {
-      "path": "developer-guide\\project-structure\\index.html"
+      "path": "developer-guide\\project-structure\\index.html",
+      "old": true
     },
     {
-      "path": "developer-guide\\testing.md"
+      "path": "developer-guide\\testing.md",
+      "old": true
     },
     {
-      "path": "developer-guide\\testing\\index.html"
+      "path": "developer-guide\\testing\\index.html",
+      "old": true
     },
     {
-      "path": "developer-guide\\tts-engine-integration.md"
+      "path": "developer-guide\\tts-engine-integration.md",
+      "old": true
     },
     {
-      "path": "developer-guide\\tts-engine-integration\\index.html"
+      "path": "developer-guide\\tts-engine-integration\\index.html",
+      "old": true
     },
     {
       "path": "getting-started\\configuration.md"
@@ -78,28 +92,36 @@
       "path": "llms.txt"
     },
     {
-      "path": "needs-verification.md"
+      "path": "needs-verification.md",
+      "old": true
     },
     {
-      "path": "needs-verification\\index.html"
+      "path": "needs-verification\\index.html",
+      "old": true
     },
     {
-      "path": "reference\\config-files.md"
+      "path": "reference\\config-files.md",
+      "old": true
     },
     {
-      "path": "reference\\config-files\\index.html"
+      "path": "reference\\config-files\\index.html",
+      "old": true
     },
     {
-      "path": "reference\\environment-variables.md"
+      "path": "reference\\environment-variables.md",
+      "old": true
     },
     {
-      "path": "reference\\environment-variables\\index.html"
+      "path": "reference\\environment-variables\\index.html",
+      "old": true
     },
     {
-      "path": "reference\\file-formats.md"
+      "path": "reference\\file-formats.md",
+      "old": true
     },
     {
-      "path": "reference\\file-formats\\index.html"
+      "path": "reference\\file-formats\\index.html",
+      "old": true
     },
     {
       "path": "resources\\css\\retype.css"
@@ -150,6 +172,9 @@
       "path": "robots.txt"
     },
     {
+      "path": "screenshots\\axolotl_rounded_icon.png"
+    },
+    {
       "path": "screenshots\\first-run-settings.png"
     },
     {
@@ -178,6 +203,9 @@
     },
     {
       "path": "screenshots\\tray-icon.png"
+    },
+    {
+      "path": "screenshots\\Veli.png"
     },
     {
       "path": "sitemap.xml"
