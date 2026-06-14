@@ -1,0 +1,32 @@
+﻿#  | VoxBridge AKA (TTS Swirlotl) Docs
+
+> A lightweight Windows desktop text-to-speech application for fast, reliable voice communication in Discord, VRChat, and other voice-enabled applications.
+
+- [VoxBridge AKA (The Traveling Star Swirlotl)](https://finickyspider.github.io/TTS-Swirlotl/index.md): VoxBridge AKA (The Traveling Star Swirlotl)
+
+## Getting Started
+
+- [Installation](https://finickyspider.github.io/TTS-Swirlotl/getting-started/installation.md): Requirement
+- [Quickstart](https://finickyspider.github.io/TTS-Swirlotl/getting-started/quickstart.md): Get from a fresh install to speaking your first message in under two minutes.
+- [Configuration](https://finickyspider.github.io/TTS-Swirlotl/getting-started/configuration.md): The app stores all settings in a JSON configuration file. Most settings are managed through the Settings window, but understanding the file structure helps with troubleshooting and backup.
+
+## User Guide
+
+- [User Guide Overview](https://finickyspider.github.io/TTS-Swirlotl/user-guide/overview.md): The TTS Communication Tool is designed around a simple, fast workflow. This guide covers every user-facing feature.
+- [Features](https://finickyspider.github.io/TTS-Swirlotl/user-guide/features.md): Press a configurable global hotkey (default: Ctrl+Shift+Space) from anywhere to open a dark, always-on-top input overlay. The overlay auto-focuses the text input so you can start typing immediately.
+- [TTS Workflow](https://finickyspider.github.io/TTS-Swirlotl/user-guide/tts-workflow.md): This page explains the complete text-to-speech pipeline from keypress to audio output.
+- [Voices](https://finickyspider.github.io/TTS-Swirlotl/user-guide/voices.md): The app supports two TTS engines: Kokoro (offline, default) and ElevenLabs (cloud, optional).
+- [Audio Output](https://finickyspider.github.io/TTS-Swirlotl/user-guide/audio-output.md): The app plays audio simultaneously to two independent output devices:
+- [Settings](https://finickyspider.github.io/TTS-Swirlotl/user-guide/settings.md): The Settings window provides access to all configuration options. Open it by:
+- [Keyboard Shortcuts](https://finickyspider.github.io/TTS-Swirlotl/user-guide/shortcuts.md): These hotkeys work from anywhere in Windows, even when other applications are focused.
+- [Phrase System](https://finickyspider.github.io/TTS-Swirlotl/user-guide/phrase-system.md): The phrase system lets you save frequently-used messages and trigger them instantly.
+- [Text Replacements](https://finickyspider.github.io/TTS-Swirlotl/user-guide/text-replacements.md): Text replacements automatically transform your input text before it's sent to the TTS engine. This is useful for expanding abbreviations, correcting common typos, or substituting words.
+- [Themes](https://finickyspider.github.io/TTS-Swirlotl/user-guide/themes.md): The theme system allows complete visual customization of the application.
+- [Importing & Exporting](https://finickyspider.github.io/TTS-Swirlotl/user-guide/importing-exporting.md): The app supports importing and exporting data for portability and backup.
+
+## Troubleshooting
+
+- [Common Issues](https://finickyspider.github.io/TTS-Swirlotl/troubleshooting/common-issues.md): Symptoms: App starts but shows error: "TTS engine failed to initialize"
+- [Audio Problems](https://finickyspider.github.io/TTS-Swirlotl/troubleshooting/audio-problems.md): Check Windows volume mixer — ensure the app isn't muted
+- [Dependency Problems](https://finickyspider.github.io/TTS-Swirlotl/troubleshooting/dependency-problems.md): Symptoms: "Failed to load runtime" or app won't start
+- [Platform Notes](https://finickyspider.github.io/TTS-Swirlotl/troubleshooting/platform-notes.md): This application is Windows-only and will not run on Linux or macOS. It depends on:
