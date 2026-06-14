@@ -1,7 +1,7 @@
 input: .
 output: .retype
 
-url: https://finickyspider.github.io/TTS-Swirlotl
+url: https://finickyspider.github.io/VoxBridge
 
 branding:
   title: "VoxBridge AKA (TTS Swirlotl)"
@@ -10,7 +10,7 @@ branding:
 
 links:
   - text: GitHub
-    link: https://github.com/FinickySpider/TTS-Swirlotl
+    link: https://github.com/FinickySpider/VoxBridge
     icon: mark-github
     target: blank
 
