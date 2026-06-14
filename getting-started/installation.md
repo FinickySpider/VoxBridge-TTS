@@ -18,7 +18,7 @@ This application is **Windows-only**. It uses WPF, NAudio (WASAPI), and Win32 P/
 
 ### Pre-built Release
 
-1. Go to the [Releases page](https://github.com/FinickySpider/TtsCommunicationTool/releases)
+1. Go to the [Releases page](https://github.com/FinickySpider/TTS-Swirlotl/releases)
 2. Download the latest `TtsCommunicationTool.App.exe`
 3. Place it anywhere on your system (no installer required)
 
