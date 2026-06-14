@@ -74,3 +74,4 @@ node_modules/
 dist/
 kokoro.onnx
 *.onnx
+rtype.zip
