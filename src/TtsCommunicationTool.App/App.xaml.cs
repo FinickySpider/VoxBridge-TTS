@@ -2,6 +2,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using TtsCommunicationTool.Core;
 using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Infrastructure.Config;
 using TtsCommunicationTool.UI.ViewModels;
@@ -27,7 +28,7 @@ public partial class App : System.Windows.Application
         if (!createdNew)
         {
             System.Windows.MessageBox.Show(
-                "TTS Swirlotl is already running.",
+                $"{AppMetadata.AppName} is already running.",
                 "Already Running",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);

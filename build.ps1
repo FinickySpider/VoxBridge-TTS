@@ -44,7 +44,7 @@ param(
     [string]$VersionBump = 'none',
     
     [ValidateSet('Debug', 'Release')]
-    [string]$Configuration = 'Debug'
+    [string]$Configuration = 'Release'
 )
 
 $ErrorActionPreference = 'Stop'

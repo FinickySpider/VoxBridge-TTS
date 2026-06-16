@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Windows;
 using System.Windows.Forms;
+using TtsCommunicationTool.Core;
 using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Core.State;
 
@@ -30,7 +31,7 @@ public sealed class TrayIconManager : IDisposable
     {
         _notifyIcon = new NotifyIcon
         {
-            Text = "TTS Swirlotl",
+            Text = AppMetadata.AppName,
             Icon = LoadAppIcon(),
             Visible = true,
             ContextMenuStrip = CreateContextMenu()

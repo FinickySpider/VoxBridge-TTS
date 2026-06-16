@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using TtsCommunicationTool.Core;
 using TtsCommunicationTool.Core.Models;
 using TtsCommunicationTool.UI.ViewModels;
 
@@ -34,7 +35,7 @@ public partial class SettingsWindow : Window
         var ver = System.Reflection.Assembly.GetEntryAssembly()
             ?.GetName().Version;
         if (ver is not null)
-            Title = $"Settings — The Traveling Star Swirlotl v{ver.Major}.{ver.Minor}.{ver.Build}";
+            Title = $"{AppMetadata.SettingsTitle} v{ver.Major}.{ver.Minor}.{ver.Build}";
         // After Save, IsDirty and HasSessionChanges are both reset to false, so the
         // Closing guard is already satisfied — _committed does NOT need to be set here.
         // Setting it here caused a bug: any phrase change made AFTER a Save in the same

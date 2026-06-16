@@ -1,16 +1,16 @@
 input: .
 output: .retype
 
-url: https://finickyspider.github.io/TTS-Swirlotl
+url: https://finickyspider.github.io/VoxBridge-TTS
 
 branding:
-  title: "VoxBridge AKA (TTS Swirlotl)"
+  title: "VoxBridge "
   label: Docs
   logo: screenshots/axolotl_rounded_icon.png
 
 links:
   - text: GitHub
-    link: https://github.com/FinickySpider/TTS-Swirlotl
+    link: https://github.com/FinickySpider/VoxBridge-TTS
     icon: mark-github
     target: blank
 
@@ -18,7 +18,7 @@ footer:
   copyright: "&copy; Copyright {{ year }}. All rights reserved."
 
 meta:
-  title: " | VoxBridge AKA (TTS Swirlotl) Docs"
+  title: " | VoxBridge Docs"
 
 search:
   mode: full
