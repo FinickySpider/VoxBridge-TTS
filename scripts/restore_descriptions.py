@@ -8,7 +8,7 @@ from pathlib import Path
 # Mapping of image filenames to their descriptions
 IMAGE_DESCRIPTIONS = {
     "first-run-settings.png": "First-run settings window showing device selection dropdowns and test buttons.",
-    "tray-icon.png": "System tray area showing the TTS Communication Tool icon (a speech bubble icon) highlighted.",
+    "tray-icon.png": "System tray area showing the VoxBridge icon (a speech bubble icon) highlighted.",
     "overlay-typing.png": "The overlay window with typed text and the Send button visible.",
     "hero-overview.png": "Main application showing the system tray icon, overlay input window, and settings window demonstrating the core workflow.",
     "phrase-manager.png": "Phrase Manager showing the list of saved phrases with search, category filter, and favorites toggle.",

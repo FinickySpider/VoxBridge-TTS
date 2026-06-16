@@ -4,7 +4,7 @@ icon: home
 order: 1000
 ---
 
-# VoxBridge AKA (The Traveling Star Swirlotl)
+# VoxBridge
 
 > A lightweight Windows desktop text-to-speech application for fast, reliable voice communication in Discord, VRChat, and other voice-enabled applications.
 
@@ -12,7 +12,7 @@ order: 1000
 
 ## What is it?
 
-TTS Communication Tool is a **communication prosthetic** for mute users who need instant, reliable speech in live voice conversations. It lives unobtrusively in the system tray and provides a hotkey-driven overlay for typing messages that are spoken aloud through both your headphones and a virtual audio cable (used as microphone input by Discord, VRChat, etc.).
+VoxBridge is a **communication prosthetic** for mute users who need instant, reliable speech in live voice conversations. It lives unobtrusively in the system tray and provides a hotkey-driven overlay for typing messages that are spoken aloud through both your headphones and a virtual audio cable (used as microphone input by Discord, VRChat, etc.).
 
 ## Start Here
 
