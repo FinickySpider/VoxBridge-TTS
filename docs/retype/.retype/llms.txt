@@ -2,7 +2,8 @@
 
 > A lightweight Windows desktop text-to-speech application for fast, reliable voice communication in Discord, VRChat, and other voice-enabled applications.
 
-- [VoxBridge AKA (The Traveling Star Swirlotl)](https://finickyspider.github.io/VoxBridge-TTS/index.md): VoxBridge AKA (The Traveling Star Swirlotl)
+- [VoxBridge](https://finickyspider.github.io/VoxBridge-TTS/index.md): VoxBridge
+- [VoxBridge](https://finickyspider.github.io/VoxBridge-TTS/index-copy.md): A lightweight Windows desktop text-to-speech application for fast, reliable voice communication in Discord, VRChat, and other voice-enabled applications.
 
 ## Getting Started
 
@@ -12,7 +13,7 @@
 
 ## User Guide
 
-- [User Guide Overview](https://finickyspider.github.io/VoxBridge-TTS/user-guide/overview.md): The TTS Communication Tool is designed around a simple, fast workflow. This guide covers every user-facing feature.
+- [User Guide Overview](https://finickyspider.github.io/VoxBridge-TTS/user-guide/overview.md): The VoxBridge is designed around a simple, fast workflow. This guide covers every user-facing feature.
 - [Features](https://finickyspider.github.io/VoxBridge-TTS/user-guide/features.md): Press a configurable global hotkey (default: Ctrl+Shift+Space) from anywhere to open a dark, always-on-top input overlay. The overlay auto-focuses the text input so you can start typing immediately.
 - [TTS Workflow](https://finickyspider.github.io/VoxBridge-TTS/user-guide/tts-workflow.md): This page explains the complete text-to-speech pipeline from keypress to audio output.
 - [Voices](https://finickyspider.github.io/VoxBridge-TTS/user-guide/voices.md): The app supports two TTS engines: Kokoro (offline, default) and ElevenLabs (cloud, optional).

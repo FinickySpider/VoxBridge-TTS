@@ -6,6 +6,8 @@ order: 1000
 
 # VoxBridge
 
+![](screenshots/VoxBridge.png)
+
 > A lightweight Windows desktop text-to-speech application for fast, reliable voice communication in Discord, VRChat, and other voice-enabled applications.
 
 ![Main application showing the system tray icon, overlay input window, and settings window demonstrating the core workflow.](screenshots/hero-overview.png)

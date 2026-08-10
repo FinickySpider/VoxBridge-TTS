@@ -1,6 +1,6 @@
 {
   "version": "4.5.2",
-  "created": "2026-06-16T03:48:33Z",
+  "created": "2026-06-16T19:58:34Z",
   "files": [
     {
       "path": ".nojekyll"
@@ -81,6 +81,12 @@
     },
     {
       "path": "getting-started\\quickstart\\index.html"
+    },
+    {
+      "path": "index-copy.md"
+    },
+    {
+      "path": "index-copy\\index.html"
     },
     {
       "path": "index.html"
@@ -206,6 +212,9 @@
     },
     {
       "path": "screenshots\\Veli.png"
+    },
+    {
+      "path": "screenshots\\VoxBridge.png"
     },
     {
       "path": "sitemap.xml"

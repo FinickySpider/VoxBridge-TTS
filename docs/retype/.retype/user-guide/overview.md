@@ -1,6 +1,6 @@
 # User Guide Overview
 
-The TTS Communication Tool is designed around a simple, fast workflow. This guide covers every user-facing feature.
+The VoxBridge is designed around a simple, fast workflow. This guide covers every user-facing feature.
 
 ## Core Workflow
 

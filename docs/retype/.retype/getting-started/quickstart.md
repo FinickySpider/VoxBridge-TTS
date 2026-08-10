@@ -6,7 +6,7 @@ Get from a fresh install to speaking your first message in under two minutes.
 
 Run `TtsCommunicationTool.App.exe`. The app starts in the system tray.
 
-![System tray area showing the TTS Communication Tool icon (a speech bubble icon) highlighted.](../screenshots/tray-icon.png)
+![System tray area showing the VoxBridge icon (a speech bubble icon) highlighted.](../screenshots/tray-icon.png)
 
 ## Step 2: Configure Audio (First Run Only)
 
