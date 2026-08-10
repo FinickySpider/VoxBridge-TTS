@@ -105,6 +105,9 @@ public sealed class GlobalHotkeyService : IHotkeyService
             "F1" => 0x70, "F2" => 0x71, "F3" => 0x72, "F4" => 0x73,
             "F5" => 0x74, "F6" => 0x75, "F7" => 0x76, "F8" => 0x77,
             "F9" => 0x78, "F10" => 0x79, "F11" => 0x7A, "F12" => 0x7B,
+            "F13" => 0x7C, "F14" => 0x7D, "F15" => 0x7E, "F16" => 0x7F,
+            "F17" => 0x80, "F18" => 0x81, "F19" => 0x82, "F20" => 0x83,
+            "F21" => 0x84, "F22" => 0x85, "F23" => 0x86, "F24" => 0x87,
             // Number keys (WPF Key.D0-D9 ToString gives "D0"-"D9")
             "D0" => 0x30, "D1" => 0x31, "D2" => 0x32, "D3" => 0x33,
             "D4" => 0x34, "D5" => 0x35, "D6" => 0x36, "D7" => 0x37,

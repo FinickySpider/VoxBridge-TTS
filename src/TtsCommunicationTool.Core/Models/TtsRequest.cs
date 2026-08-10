@@ -14,6 +14,11 @@ public sealed class TtsRequest
     public float Pitch { get; init; } = 1.0f;
 
     /// <summary>
+    /// Playback speed multiplier. 1.0 = normal. Phrases leave this at the neutral default.
+    /// </summary>
+    public float Speed { get; init; } = 1.0f;
+
+    /// <summary>
     /// When non-null, overrides the active TTS engine configured in VoiceSettings.
     /// Used by the phrase cache service and preview synthesis to honour per-phrase engine overrides.
     /// </summary>

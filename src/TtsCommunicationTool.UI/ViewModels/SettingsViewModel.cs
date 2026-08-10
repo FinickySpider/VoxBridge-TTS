@@ -19,6 +19,7 @@ public sealed class SettingsViewModel : ViewModelBase
     private string _saveError = string.Empty;
     private bool _isDirty;
     private float _savedPitch = 1.0f;          // snapshot of pitch at last load/save
+    private float _savedSpeed = 1.0f;          // snapshot of speed at last load/save
     private DateTime _lastSaveToast = DateTime.MinValue;  // debounce tracker
 
     public GeneralSettingsViewModel General { get; }
@@ -171,6 +172,7 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         var cfg = _config.CurrentConfig;
         _savedPitch = cfg.VoiceSettings.GlobalPitch;  // snapshot for cancel rollback
+        _savedSpeed = cfg.VoiceSettings.GlobalSpeed;  // snapshot for cancel rollback
         General.LoadFrom(cfg.GeneralSettings);
         General.LoadDiagnosticSettings(cfg.DiagnosticLogging);
         Hotkeys.LoadFrom(cfg.HotkeySettings);
@@ -221,6 +223,7 @@ public sealed class SettingsViewModel : ViewModelBase
             "Settings saved successfully");
         IsDirty = false;
         _savedPitch = cfg.VoiceSettings.GlobalPitch;  // update snapshot after save
+        _savedSpeed = cfg.VoiceSettings.GlobalSpeed;  // update snapshot after save
         Phrases.Commit(); // finalize phrase session — takes new snapshot and re-registers hotkeys
 
         // Detect voice change — regenerate all phrase caches with visible progress
@@ -268,6 +271,7 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         // Restore live pitch in memory so the overlay uses the saved value again
         _config.CurrentConfig.VoiceSettings.GlobalPitch = _savedPitch;
+        _config.CurrentConfig.VoiceSettings.GlobalSpeed = _savedSpeed;
         await Phrases.RollbackAsync();
         await Theme.RevertChangesAsync();   // re-applies the saved theme; deletes any unsaved new themes
         LoadFromConfig(); // reload other tabs to last-saved config state

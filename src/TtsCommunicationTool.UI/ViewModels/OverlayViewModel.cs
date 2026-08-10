@@ -239,6 +239,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
 
         text = _textReplacement.Apply(text);
         var pitch = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalPitch, 0.5f, 2.0f);
+        var speed = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalSpeed, 0.5f, 2.0f);
 
         // Generate a request ID for this TTS pipeline run
         var requestId = _log.IncludeRequestIds
@@ -270,7 +271,8 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
                 Text      = text,
                 VoiceId   = ResolveVoiceId(),
                 RequestId = requestId,
-                Pitch     = pitch
+                Pitch     = pitch,
+                Speed     = speed
             });
             if (!result.Success)
             {
@@ -356,6 +358,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
 
         text = _textReplacement.Apply(text);
         var pitch = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalPitch, 0.5f, 2.0f);
+        var speed = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalSpeed, 0.5f, 2.0f);
 
         InputText = string.Empty;
         _log.Info($"Fire-and-forget sending text: {text}");
@@ -378,7 +381,8 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
                 {
                     Text    = text,
                     VoiceId = ResolveVoiceId(),
-                    Pitch   = pitch
+                    Pitch   = pitch,
+                    Speed   = speed
                 });
                 if (!result.Success)
                 {
@@ -439,6 +443,7 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
 
         text = _textReplacement.Apply(text);
         var pitch = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalPitch, 0.5f, 2.0f);
+        var speed = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalSpeed, 0.5f, 2.0f);
 
         // Clear input and log transcript on the UI thread before going async
         InputText = string.Empty;
@@ -474,7 +479,8 @@ public sealed class OverlayViewModel : INotifyPropertyChanged, IDisposable
                 {
                     Text    = text,
                     VoiceId = ResolveVoiceId(),
-                    Pitch   = pitch
+                    Pitch   = pitch,
+                    Speed   = speed
                 });
 
                 if (!result.Success)

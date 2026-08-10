@@ -224,7 +224,8 @@ public sealed class HotkeyHostWindow : Window, IHotkeyHost
             {
                 Text = processed,
                 VoiceId = voiceId,
-                Pitch = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalPitch, 0.5f, 2.0f)
+                Pitch = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalPitch, 0.5f, 2.0f),
+                Speed = Math.Clamp(_config.CurrentConfig.VoiceSettings.GlobalSpeed, 0.5f, 2.0f)
             });
 
             if (!result.Success)

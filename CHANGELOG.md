@@ -6,6 +6,23 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+## [v1.0.4] -- 2026-08-09
+
+### Features
+
+- **Global TTS speed**: Added a persisted Voice settings slider for standard floating-overlay TTS playback speed, with live preview and Cancel rollback. Phrase playback remains speed-neutral.
+- **Modifier-free hotkeys**: Global hotkeys can now be bound to a single non-modifier key, including F13–F24.
+
+### Bug Fixes
+
+- (add bug fixes here)
+
+### Improvements
+
+- Added F13–F24 virtual-key mappings and removed the redundant ProtectedData package reference so Release builds complete with zero warnings.
+
+---
 ## [v1.0.3] -- 2026-05-05
 
 ### Bug Fixes

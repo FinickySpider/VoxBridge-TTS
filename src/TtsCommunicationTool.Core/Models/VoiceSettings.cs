@@ -14,4 +14,10 @@ public sealed class VoiceSettings
     /// Clamped to [0.5, 2.0] before use.
     /// </summary>
     public float GlobalPitch { get; set; } = 1.0f;
+
+    /// <summary>
+    /// Global playback speed multiplier applied to standard TTS output (not phrases).
+    /// 1.0 = normal speed. Clamped to [0.5, 2.0] before use.
+    /// </summary>
+    public float GlobalSpeed { get; set; } = 1.0f;
 }

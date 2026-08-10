@@ -52,6 +52,25 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     /// <summary>Pitch displayed as a percentage string, e.g. "100%".</summary>
     public string GlobalPitchPercent => $"{(int)(_globalPitch * 100)}%";
 
+    // ── Global speed ─────────────────────────────────────────────────────────
+    private float _globalSpeed = 1.0f;
+    /// <summary>Global playback speed for standard TTS (not phrases), applied live.</summary>
+    public float GlobalSpeed
+    {
+        get => _globalSpeed;
+        set
+        {
+            var clamped = Math.Clamp(value, 0.5f, 2.0f);
+            if (SetField(ref _globalSpeed, clamped))
+            {
+                _config.CurrentConfig.VoiceSettings.GlobalSpeed = clamped;
+                OnPropertyChanged(nameof(GlobalSpeedPercent));
+            }
+        }
+    }
+
+    public string GlobalSpeedPercent => $"{(int)(_globalSpeed * 100)}%";
+
     // ── Engine selection ─────────────────────────────────────────────────────
     private VoiceEngine _engine = VoiceEngine.Kokoro;
     public VoiceEngine Engine
@@ -332,7 +351,8 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         {
             Text = "Hello, this is a voice test.",
             VoiceId = voiceId,
-            Pitch = Math.Clamp(_globalPitch, 0.5f, 2.0f)
+            Pitch = Math.Clamp(_globalPitch, 0.5f, 2.0f),
+            Speed = Math.Clamp(_globalSpeed, 0.5f, 2.0f)
         });
 
         if (!result.Success || result.AudioData is null)
@@ -375,6 +395,10 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(GlobalPitch));
         OnPropertyChanged(nameof(GlobalPitchPercent));
 
+        _globalSpeed = Math.Clamp(s.GlobalSpeed, 0.5f, 2.0f);
+        OnPropertyChanged(nameof(GlobalSpeed));
+        OnPropertyChanged(nameof(GlobalSpeedPercent));
+
         var el = _config.CurrentConfig.ElevenLabs;
 
         // One-time migration: if a plain-text key was saved before v0.13, encrypt it now.
@@ -411,6 +435,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         s.Engine = _engine;
         s.EngineName = _engine.ToString();
         s.GlobalPitch = _globalPitch;
+        s.GlobalSpeed = _globalSpeed;
         // SelectedVoiceId always holds the Kokoro voice regardless of which engine is active,
         // because KokoroVoices is a separate collection that is never cleared on engine switch.
         var kokoroId = SelectedVoiceId.Length > 0 ? SelectedVoiceId : "af_heart";

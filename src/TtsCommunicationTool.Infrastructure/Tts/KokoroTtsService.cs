@@ -111,8 +111,13 @@ public sealed class KokoroTtsService : ITtsService, IDisposable
 
             // Apply global pitch by adjusting the declared sample rate.
             // Higher declared rate → audio plays faster/higher-pitched; lower → slower/lower.
-            var pitchSampleRate = (int)(SampleRate * Math.Clamp(request.Pitch, 0.5f, 2.0f));
-            return TtsResult.Ok(audioBytes, pitchSampleRate, channels: 1, bitsPerSample: 16);
+            // Adjusting the declared sample rate changes the generated audio's playback
+            // speed without rewriting the PCM buffer. The same approach is used for pitch;
+            // combine both multipliers so each setting remains independently persisted.
+            var playbackRate = Math.Clamp(request.Pitch, 0.5f, 2.0f)
+                              * Math.Clamp(request.Speed, 0.5f, 2.0f);
+            var playbackSampleRate = (int)(SampleRate * playbackRate);
+            return TtsResult.Ok(audioBytes, playbackSampleRate, channels: 1, bitsPerSample: 16);
         }
         catch (OperationCanceledException)
         {

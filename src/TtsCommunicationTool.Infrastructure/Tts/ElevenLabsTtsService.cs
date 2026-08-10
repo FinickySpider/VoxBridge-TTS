@@ -108,8 +108,10 @@ public sealed class ElevenLabsTtsService : ITtsService
             _ = _config.SaveAsync(_config.CurrentConfig);
 
             var (pcm, sampleRate, channels, bps) = DecodeMp3ToPcm(mp3Bytes);
-            var pitchSampleRate = (int)(sampleRate * Math.Clamp(request.Pitch, 0.5f, 2.0f));
-            return TtsResult.Ok(pcm, pitchSampleRate, channels, bps);
+            var playbackRate = Math.Clamp(request.Pitch, 0.5f, 2.0f)
+                              * Math.Clamp(request.Speed, 0.5f, 2.0f);
+            var playbackSampleRate = (int)(sampleRate * playbackRate);
+            return TtsResult.Ok(pcm, playbackSampleRate, channels, bps);
         }
         catch (Exception ex)
         {

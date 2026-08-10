@@ -46,6 +46,10 @@ Keep this file lightweight. Details live in phases and sprints.
 - WCAG 2.1 AA contrast checker live in Theme tab
 - Theme import / export (.ttstheme JSON files)
 
+### Phase 6 — Quality-of-Life Follow-up
+- Global standard TTS playback speed
+- Modifier-free global hotkeys, including F13–F24
+
 ## Notes
 - Strategic changes should be recorded as ADRs.
 - Post-MVP phases are tentative and will be refined based on real-world user feedback.

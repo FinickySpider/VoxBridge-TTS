@@ -7,7 +7,7 @@ Single source of truth. The agent starts here.
 TTS Communication Tool
 
 ## Active Phase
-- (none — PHASE-05 complete)
+- (none — PHASE-06 complete)
 
 ## Active Sprint
 - (none)
@@ -21,6 +21,7 @@ TTS Communication Tool
 - [PHASE-03: Comfort & Expression](../phases/PHASE-03-comfort-and-expression.md) — complete
 - [PHASE-04: Dynamic Theming MVP](../phases/PHASE-04-dynamic-theming-mvp.md) — complete
 - [PHASE-05: Theme Polish & Advanced](../phases/PHASE-05-theme-polish-and-advanced.md) — complete
+- [PHASE-06: Quality-of-Life Follow-up](../phases/PHASE-06-qol-follow-up.md) — complete
 
 ## Sprints
 - [SPRINT-01](../sprints/SPRINT-01.md) — complete (PHASE-01)
@@ -36,6 +37,7 @@ TTS Communication Tool
 - [SPRINT-11](../sprints/SPRINT-11.md) — complete (PHASE-04)
 - [SPRINT-12](../sprints/SPRINT-12.md) — complete (PHASE-05)
 - [SPRINT-13](../sprints/SPRINT-13.md) — complete (PHASE-05)
+- [SPRINT-14](../sprints/SPRINT-14.md) — complete (PHASE-06)
 
 ## Features
 - [FEAT-001: Solution scaffold](../features/FEAT-001-solution-scaffold.md) — complete (SPRINT-01)
@@ -85,6 +87,8 @@ TTS Communication Tool
 - [FEAT-045: Shape & Density Controls in Theme Tab](../features/FEAT-045-shape-and-density-controls.md) — complete (SPRINT-12)
 - [FEAT-046: WCAG 2.1 AA Contrast Checker](../features/FEAT-046-wcag-contrast-checker.md) — complete (SPRINT-13)
 - [FEAT-047: Theme Import / Export](../features/FEAT-047-theme-import-export.md) — complete (SPRINT-13)
+- [FEAT-048: Global standard TTS speed control](../features/FEAT-048-global-speed-control.md) — complete (SPRINT-14)
+- [FEAT-049: Modifier-free global hotkeys](../features/FEAT-049-modifier-free-hotkeys.md) — complete (SPRINT-14)
 
 ## Refactors
 - [REFACTOR-001: Config recovery](../refactors/REFACTOR-001-config-recovery.md) — complete (SPRINT-03)
