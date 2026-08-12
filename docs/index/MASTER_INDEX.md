@@ -99,6 +99,9 @@ TTS Communication Tool
 ## Decision Log
 - [DECISION_LOG](../decisions/DECISION_LOG.md)
 
+## Architecture Proposals
+- [TTS Engine Pipeline and SAPI5 Support Proposal](../design/TTS-ENGINE-PIPELINE-PROPOSAL.md) — proposed
+
 ## Operating Rules
 
 - Work only on items listed in the active sprint(UNLESS THE USER TELLS YOU OTHERWISE)

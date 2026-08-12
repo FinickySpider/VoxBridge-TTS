@@ -4,6 +4,15 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+## [v1.0.5] -- 2026-08-09
+
+### Documentation
+
+- Added a proposal for SAPI5 support and a manifest-driven, registry-based TTS provider pipeline.
+- Documented per-engine settings profiles, config migration, phrase-cache identity, provider capabilities, and engine-switch persistence requirements.
+
+---
+
 
 
 
