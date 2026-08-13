@@ -89,6 +89,8 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
             // Auto-fetch voices + subscription when switching to ElevenLabs
             if (_engine == VoiceEngine.ElevenLabs && _elevenLabs.HasApiKey())
                 _ = FetchElevenLabsVoicesAsync();
+            else if (_engine == VoiceEngine.Sapi5)
+                _ = RefreshSapi5VoicesAsync();
         }
     }
     public bool IsKokoro
@@ -308,6 +310,29 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
             KokoroVoices.Add(v);
     }
 
+    private async Task RefreshSapi5VoicesAsync()
+    {
+        try
+        {
+            var selectedId = Sapi5SelectedVoiceId;
+            var voices = await _sapi5.RefreshVoicesAsync().ConfigureAwait(true);
+            Sapi5Voices.Clear();
+            foreach (var voice in voices)
+                Sapi5Voices.Add(voice);
+
+            if (!string.IsNullOrWhiteSpace(selectedId) && Sapi5Voices.Any(v => v.Id == selectedId))
+                Sapi5SelectedVoiceId = selectedId;
+            else if (Sapi5Voices.Count > 0 && string.IsNullOrWhiteSpace(Sapi5SelectedVoiceId))
+                Sapi5SelectedVoiceId = Sapi5Voices[0].Id;
+
+            OnPropertyChanged(nameof(Sapi5Status));
+        }
+        catch (Exception ex)
+        {
+            _log.Error("Unable to refresh SAPI5 voices in the settings view.", ex);
+        }
+    }
+
     private async Task FetchElevenLabsVoicesAsync()
     {
         ElevenLabsStatus = "Fetching voices…";
@@ -427,6 +452,9 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         _globalSpeed = Math.Clamp(s.GlobalSpeed, 0.5f, 2.0f);
         OnPropertyChanged(nameof(GlobalSpeed));
         OnPropertyChanged(nameof(GlobalSpeedPercent));
+
+        if (_engine == VoiceEngine.Sapi5)
+            _ = RefreshSapi5VoicesAsync();
 
         var el = _config.CurrentConfig.ElevenLabs;
 

@@ -6,6 +6,38 @@ All notable changes to TTS Communication Tool are documented here.
 
 
 
+
+
+## [v1.0.9] -- 2026-08-12
+
+### Features
+
+- (add features here)
+
+### Bug Fixes
+
+- Fixed SAPI5 bridge responses being interpreted as unsuccessful because camelCase JSON properties were deserialized case-sensitively.
+
+### Improvements
+
+- SAPI5 voice enumeration now correctly populates the settings dropdown, including the 32-bit `VW Paul` voice.
+
+---
+## [v1.0.8] -- 2026-08-12
+
+### Features
+
+- (add features here)
+
+### Bug Fixes
+
+- Fixed the SAPI5 settings dropdown being empty when the settings view opened before the x86 bridge had finished initializing.
+
+### Improvements
+
+- SAPI5 voices now refresh automatically when the SAPI5 engine is selected or loaded as the active engine, including the installed Paul voice.
+
+---
 ## [v1.0.7] -- 2026-08-12
 
 ### Features

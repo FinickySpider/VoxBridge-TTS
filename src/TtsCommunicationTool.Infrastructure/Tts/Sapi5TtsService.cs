@@ -9,6 +9,10 @@ namespace TtsCommunicationTool.Infrastructure.Tts;
 /// <summary>SAPI5 adapter backed by an x86 helper process for 32-bit-only voices.</summary>
 public sealed class Sapi5TtsService : ITtsService
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        PropertyNameCaseInsensitive = true
+    };
     private readonly IConfigService _config;
     private readonly ILoggingService _log;
     private IReadOnlyList<VoiceInfo> _voices = Array.Empty<VoiceInfo>();
@@ -40,6 +44,14 @@ public sealed class Sapi5TtsService : ITtsService
     }
 
     public IReadOnlyList<VoiceInfo> GetAvailableVoices() => _voices;
+
+    /// <summary>Re-enumerates voices through the x86 bridge after application startup.</summary>
+    public async Task<IReadOnlyList<VoiceInfo>> RefreshVoicesAsync(CancellationToken ct = default)
+    {
+        _voices = await EnumerateVoicesAsync(ct).ConfigureAwait(false);
+        _initialized = true;
+        return _voices;
+    }
 
     public async Task<TtsResult> SynthesizeAsync(TtsRequest request, CancellationToken ct = default)
     {
@@ -116,7 +128,7 @@ public sealed class Sapi5TtsService : ITtsService
 
         try
         {
-            await process.StandardInput.WriteAsync(JsonSerializer.Serialize(request)).ConfigureAwait(false);
+            await process.StandardInput.WriteAsync(JsonSerializer.Serialize(request, JsonOptions)).ConfigureAwait(false);
             process.StandardInput.Close();
             var outputTask = process.StandardOutput.ReadToEndAsync(ct);
             var errorTask = process.StandardError.ReadToEndAsync(ct);
@@ -129,7 +141,7 @@ public sealed class Sapi5TtsService : ITtsService
                     ? $"The x86 SAPI5 bridge exited with code {process.ExitCode}."
                     : error.Trim());
 
-            return JsonSerializer.Deserialize<BridgeResponse>(output)
+            return JsonSerializer.Deserialize<BridgeResponse>(output, JsonOptions)
                 ?? throw new InvalidOperationException("The x86 SAPI5 bridge returned an empty response.");
         }
         catch (OperationCanceledException)
