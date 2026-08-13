@@ -7,7 +7,7 @@ Single source of truth. The agent starts here.
 TTS Communication Tool
 
 ## Active Phase
-- (none — PHASE-06 complete)
+- (none — PHASE-07 complete)
 
 ## Active Sprint
 - (none)
@@ -38,6 +38,7 @@ TTS Communication Tool
 - [SPRINT-12](../sprints/SPRINT-12.md) — complete (PHASE-05)
 - [SPRINT-13](../sprints/SPRINT-13.md) — complete (PHASE-05)
 - [SPRINT-14](../sprints/SPRINT-14.md) — complete (PHASE-06)
+- [SPRINT-15](../sprints/SPRINT-15.md) — complete (PHASE-07)
 
 ## Features
 - [FEAT-001: Solution scaffold](../features/FEAT-001-solution-scaffold.md) — complete (SPRINT-01)
@@ -89,6 +90,7 @@ TTS Communication Tool
 - [FEAT-047: Theme Import / Export](../features/FEAT-047-theme-import-export.md) — complete (SPRINT-13)
 - [FEAT-048: Global standard TTS speed control](../features/FEAT-048-global-speed-control.md) — complete (SPRINT-14)
 - [FEAT-049: Modifier-free global hotkeys](../features/FEAT-049-modifier-free-hotkeys.md) — complete (SPRINT-14)
+- [FEAT-050: x86 SAPI5 bridge](../features/FEAT-050-sapi5-x86-bridge.md) — complete (SPRINT-15)
 
 ## Refactors
 - [REFACTOR-001: Config recovery](../refactors/REFACTOR-001-config-recovery.md) — complete (SPRINT-03)

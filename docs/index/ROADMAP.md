@@ -50,6 +50,10 @@ Keep this file lightweight. Details live in phases and sprints.
 - Global standard TTS playback speed
 - Modifier-free global hotkeys, including F13–F24
 
+### Phase 7 — 32-bit SAPI5 Compatibility
+- Self-contained x86 SAPI5 bridge for 32-bit-only voices
+- SAPI5 voice enumeration and synthesis through the shared audio pipeline
+
 ## Notes
 - Strategic changes should be recorded as ADRs.
 - Post-MVP phases are tentative and will be refined based on real-world user feedback.

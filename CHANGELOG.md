@@ -5,6 +5,24 @@ All notable changes to TTS Communication Tool are documented here.
 ---
 
 
+
+## [v1.0.7] -- 2026-08-12
+
+### Features
+
+- Added a self-contained win-x86 SAPI5 bridge for 32-bit-only Windows voices.
+- Added bridge-backed voice enumeration and synthesis while keeping the main application and shared dual-output audio pipeline unchanged.
+
+### Bug Fixes
+
+- (add bug fixes here)
+
+### Improvements
+
+- The bridge is published as a single executable and copied beside the main application during Release builds, so no separate x86 .NET runtime is required.
+- Verified enumeration of the 32-bit SAPI voice list and successful synthesis using `VW Paul`.
+
+---
 ## [v1.0.6] -- 2026-08-12
 
 ### Features

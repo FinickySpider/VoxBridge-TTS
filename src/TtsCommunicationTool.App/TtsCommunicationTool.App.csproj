@@ -9,9 +9,9 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>TtsCommunicationTool.App</RootNamespace>
     <ApplicationIcon>icon.ico</ApplicationIcon>
-    <Version>1.0.6</Version>
-    <AssemblyVersion>1.0.6.0</AssemblyVersion>
-    <FileVersion>1.0.6.0</FileVersion>
+    <Version>1.0.7</Version>
+    <AssemblyVersion>1.0.7.0</AssemblyVersion>
+    <FileVersion>1.0.7.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,5 +28,13 @@
     <ProjectReference Include="..\TtsCommunicationTool.Core\TtsCommunicationTool.Core.csproj" />
     <ProjectReference Include="..\TtsCommunicationTool.Infrastructure\TtsCommunicationTool.Infrastructure.csproj" />
   </ItemGroup>
+
+  <Target Name="PublishSapi5Bridge" AfterTargets="Build">
+    <MSBuild Projects="..\TtsCommunicationTool.Sapi5Bridge\TtsCommunicationTool.Sapi5Bridge.csproj"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);PublishDir=$(MSBuildProjectDirectory)\bin\$(Configuration)\net10.0-windows\sapi5-bridge-publish\" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\bin\$(Configuration)\net10.0-windows\sapi5-bridge-publish\TtsCommunicationTool.Sapi5Bridge.exe"
+          DestinationFolder="$(TargetDir)" />
+  </Target>
 
 </Project>

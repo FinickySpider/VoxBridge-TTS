@@ -1,13 +1,12 @@
+using System.Diagnostics;
+using System.Text.Json;
 using NAudio.Wave;
 using TtsCommunicationTool.Core.Interfaces;
 using TtsCommunicationTool.Core.Models;
 
 namespace TtsCommunicationTool.Infrastructure.Tts;
 
-/// <summary>
-/// Windows SAPI5 adapter. Synthesis is rendered to an in-memory WAV stream so the
-/// shared dual-output audio router remains the only component that talks to devices.
-/// </summary>
+/// <summary>SAPI5 adapter backed by an x86 helper process for 32-bit-only voices.</summary>
 public sealed class Sapi5TtsService : ITtsService
 {
     private readonly IConfigService _config;
@@ -23,21 +22,24 @@ public sealed class Sapi5TtsService : ITtsService
 
     public bool IsInitialized => _initialized;
 
-    public Task InitializeAsync(CancellationToken ct = default)
+    public async Task InitializeAsync(CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        RefreshVoices();
-        _initialized = true;
-        _log.Info($"SAPI5 initialized. {_voices.Count} installed voice(s) found.");
-        return Task.CompletedTask;
+        try
+        {
+            _voices = await EnumerateVoicesAsync(ct).ConfigureAwait(false);
+            _initialized = true;
+            _log.Info($"SAPI5 initialized through x86 bridge. {_voices.Count} installed voice(s) found.");
+        }
+        catch (Exception ex)
+        {
+            _voices = Array.Empty<VoiceInfo>();
+            _initialized = true;
+            _log.Error("Unable to initialize the x86 SAPI5 bridge.", ex);
+        }
     }
 
-    public IReadOnlyList<VoiceInfo> GetAvailableVoices()
-    {
-        if (!_initialized)
-            RefreshVoices();
-        return _voices;
-    }
+    public IReadOnlyList<VoiceInfo> GetAvailableVoices() => _voices;
 
     public async Task<TtsResult> SynthesizeAsync(TtsRequest request, CancellationToken ct = default)
     {
@@ -47,23 +49,25 @@ public sealed class Sapi5TtsService : ITtsService
         try
         {
             var settings = _config.CurrentConfig.Sapi5;
-            var voiceId = request.VoiceId ?? string.Empty;
-            var rate = Math.Clamp(settings.Rate + SpeedToSapiRate(request.Speed), -10, 10);
-            var volume = Math.Clamp(settings.Volume, 0, 100);
+            var response = await RunBridgeAsync(new BridgeRequest
+            {
+                Operation = "synthesize",
+                Text = request.Text,
+                VoiceId = request.VoiceId ?? string.Empty,
+                Rate = Math.Clamp(settings.Rate + SpeedToSapiRate(request.Speed), -10, 10),
+                Volume = Math.Clamp(settings.Volume, 0, 100)
+            }, ct).ConfigureAwait(false);
 
-            var wavBytes = await Task.Run(() => SynthesizeWave(request.Text, voiceId, rate, volume, ct), ct)
-                .ConfigureAwait(false);
-            ct.ThrowIfCancellationRequested();
+            if (!response.Success || string.IsNullOrWhiteSpace(response.AudioBase64))
+                return TtsResult.Fail(response.Error ?? "The SAPI5 bridge generated no audio.");
 
-            using var stream = new MemoryStream(wavBytes, writable: false);
+            using var stream = new MemoryStream(Convert.FromBase64String(response.AudioBase64), writable: false);
             using var reader = new WaveFileReader(stream);
             var format = reader.WaveFormat;
             var audio = ReadAll(reader);
-
-            if (audio.Length == 0)
-                return TtsResult.Fail("SAPI5 generated no audio samples.");
-
-            return TtsResult.Ok(audio, format.SampleRate, format.Channels, format.BitsPerSample);
+            return audio.Length == 0
+                ? TtsResult.Fail("SAPI5 generated no audio samples.")
+                : TtsResult.Ok(audio, format.SampleRate, format.Channels, format.BitsPerSample);
         }
         catch (OperationCanceledException)
         {
@@ -71,55 +75,68 @@ public sealed class Sapi5TtsService : ITtsService
         }
         catch (Exception ex)
         {
-            _log.Error("SAPI5 synthesis failed.", ex);
+            _log.Error("SAPI5 bridge synthesis failed.", ex);
             return TtsResult.Fail($"SAPI5 speech generation failed: {ex.Message}");
         }
     }
 
-    private byte[] SynthesizeWave(string text, string voiceId, int rate, int volume, CancellationToken ct)
+    private async Task<IReadOnlyList<VoiceInfo>> EnumerateVoicesAsync(CancellationToken ct)
     {
-        ct.ThrowIfCancellationRequested();
-        using var synthesizer = new System.Speech.Synthesis.SpeechSynthesizer();
-        using var output = new MemoryStream();
+        var response = await RunBridgeAsync(new BridgeRequest { Operation = "enumerate" }, ct).ConfigureAwait(false);
+        if (!response.Success)
+            throw new InvalidOperationException(response.Error ?? "The SAPI5 bridge could not enumerate voices.");
 
-        if (!string.IsNullOrWhiteSpace(voiceId))
-        {
-            var installed = synthesizer.GetInstalledVoices()
-                .FirstOrDefault(v => string.Equals(v.VoiceInfo.Id, voiceId, StringComparison.OrdinalIgnoreCase));
-            if (installed is null || !installed.Enabled)
-                throw new InvalidOperationException($"The configured SAPI5 voice is not installed or enabled: {voiceId}");
-
-            synthesizer.SelectVoice(installed.VoiceInfo.Name);
-        }
-
-        synthesizer.Rate = rate;
-        synthesizer.Volume = volume;
-        synthesizer.SetOutputToWaveStream(output);
-        synthesizer.Speak(text);
-        synthesizer.SetOutputToNull();
-        ct.ThrowIfCancellationRequested();
-        return output.ToArray();
+        return (response.Voices ?? Array.Empty<BridgeVoice>())
+            .Select(v => new VoiceInfo { Id = v.Id, DisplayName = v.Name, EngineName = "SAPI5" })
+            .ToArray();
     }
 
-    private void RefreshVoices()
+    private async Task<BridgeResponse> RunBridgeAsync(BridgeRequest request, CancellationToken ct)
     {
+        var bridgePath = Path.Combine(AppContext.BaseDirectory, "TtsCommunicationTool.Sapi5Bridge.exe");
+        if (!File.Exists(bridgePath))
+            throw new FileNotFoundException("The x86 SAPI5 bridge executable was not found.", bridgePath);
+
+        using var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = bridgePath,
+                WorkingDirectory = AppContext.BaseDirectory,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            }
+        };
+
+        if (!process.Start())
+            throw new InvalidOperationException("The x86 SAPI5 bridge process could not be started.");
+
         try
         {
-            using var synthesizer = new System.Speech.Synthesis.SpeechSynthesizer();
-            _voices = synthesizer.GetInstalledVoices()
-                .Where(v => v.Enabled)
-                .Select(v => new VoiceInfo
-                {
-                    Id = v.VoiceInfo.Id,
-                    DisplayName = v.VoiceInfo.Name,
-                    EngineName = "SAPI5"
-                })
-                .ToArray();
+            await process.StandardInput.WriteAsync(JsonSerializer.Serialize(request)).ConfigureAwait(false);
+            process.StandardInput.Close();
+            var outputTask = process.StandardOutput.ReadToEndAsync(ct);
+            var errorTask = process.StandardError.ReadToEndAsync(ct);
+            await process.WaitForExitAsync(ct).ConfigureAwait(false);
+            var output = await outputTask.ConfigureAwait(false);
+            var error = await errorTask.ConfigureAwait(false);
+
+            if (process.ExitCode != 0 && string.IsNullOrWhiteSpace(output))
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(error)
+                    ? $"The x86 SAPI5 bridge exited with code {process.ExitCode}."
+                    : error.Trim());
+
+            return JsonSerializer.Deserialize<BridgeResponse>(output)
+                ?? throw new InvalidOperationException("The x86 SAPI5 bridge returned an empty response.");
         }
-        catch (Exception ex)
+        catch (OperationCanceledException)
         {
-            _voices = Array.Empty<VoiceInfo>();
-            _log.Error("Unable to enumerate SAPI5 voices.", ex);
+            if (!process.HasExited)
+                process.Kill(entireProcessTree: true);
+            throw;
         }
     }
 
@@ -140,4 +157,27 @@ public sealed class Sapi5TtsService : ITtsService
     }
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+    private sealed class BridgeRequest
+    {
+        public string Operation { get; init; } = string.Empty;
+        public string Text { get; init; } = string.Empty;
+        public string VoiceId { get; init; } = string.Empty;
+        public int Rate { get; init; }
+        public int Volume { get; init; } = 100;
+    }
+
+    private sealed class BridgeResponse
+    {
+        public bool Success { get; init; }
+        public string? Error { get; init; }
+        public BridgeVoice[]? Voices { get; init; }
+        public string? AudioBase64 { get; init; }
+    }
+
+    private sealed class BridgeVoice
+    {
+        public string Id { get; init; } = string.Empty;
+        public string Name { get; init; } = string.Empty;
+    }
 }
