@@ -802,6 +802,11 @@
                                          Foreground="{DynamicResource PrimaryTextBrush}" GroupName="EngineGroup"
                                          IsChecked="{Binding Voice.IsElevenLabs, Mode=TwoWay}"
                                          ToolTip="ElevenLabs is a cloud TTS engine. Requires an internet connection and a valid ElevenLabs API key."/>
+                            <RadioButton Content="SAPI5 (Windows)"
+                                         Foreground="{DynamicResource PrimaryTextBrush}" GroupName="EngineGroup"
+                                         IsChecked="{Binding Voice.IsSapi5, Mode=TwoWay}"
+                                         Margin="16,0,0,0"
+                                         ToolTip="Uses voices installed in Windows. 32-bit-only voices may require a 32-bit application host."/>
                         </StackPanel>
 
                         <!-- Kokoro section -->
@@ -821,6 +826,27 @@
                                           Style="{StaticResource SettingsComboBox}"
                                           ToolTip="Select the Kokoro voice model to use for speech generation."/>
                             </Grid>
+                        </StackPanel>
+
+                        <!-- SAPI5 section -->
+                        <StackPanel Visibility="{Binding Voice.IsSapi5, Converter={StaticResource BoolToVisConverter}}">
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Installed voice:" Style="{StaticResource FieldLabel}"/>
+                                <ComboBox Grid.Column="1"
+                                          ItemsSource="{Binding Voice.Sapi5Voices}"
+                                          SelectedValue="{Binding Voice.Sapi5SelectedVoiceId}"
+                                          SelectedValuePath="Id"
+                                          DisplayMemberPath="DisplayName"
+                                          Style="{StaticResource SettingsComboBox}"
+                                          ToolTip="Select an enabled Windows SAPI5 voice."/>
+                            </Grid>
+                            <TextBlock Text="{Binding Voice.Sapi5Status}"
+                                       Foreground="{DynamicResource MutedTextBrush}" FontSize="12" TextWrapping="Wrap"
+                                       Visibility="{Binding Voice.Sapi5Status, Converter={StaticResource NonEmptyToVisibleConverter}}"/>
                         </StackPanel>
 
                         <!-- ElevenLabs section -->

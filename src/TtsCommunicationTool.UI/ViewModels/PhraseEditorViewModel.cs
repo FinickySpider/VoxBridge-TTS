@@ -22,6 +22,7 @@ public sealed class PhraseEditorViewModel : ViewModelBase
     private readonly IPhraseCacheService _phraseCache;
     private readonly KokoroTtsService    _kokoro;
     private readonly ElevenLabsTtsService _elevenLabs;
+    private readonly Sapi5TtsService _sapi5;
     private readonly IAudioRouterService _audioRouter;
     private readonly IConfigService    _config;
     private readonly IHotkeyHost       _hotkeyHost;
@@ -96,6 +97,7 @@ public sealed class PhraseEditorViewModel : ViewModelBase
     // ── Voice / category lists ────────────────────────────────────────────────
     public ObservableCollection<VoiceInfo> KokoroVoices      { get; } = new();
     public ObservableCollection<VoiceInfo> ElevenLabsVoices  { get; } = new();
+    public ObservableCollection<VoiceInfo> Sapi5Voices      { get; } = new();
     public ObservableCollection<string>    Categories         { get; } = new();
 
     // ── Phrase field properties ───────────────────────────────────────────────
@@ -171,6 +173,7 @@ public sealed class PhraseEditorViewModel : ViewModelBase
             SetField(ref _editorEngine, value);
             OnPropertyChanged(nameof(IsKokoro));
             OnPropertyChanged(nameof(IsElevenLabs));
+            OnPropertyChanged(nameof(IsSapi5));
             OnPropertyChanged(nameof(CostEstimate));
             InvalidatePreviewCache();
         }
@@ -186,6 +189,12 @@ public sealed class PhraseEditorViewModel : ViewModelBase
     {
         get => _editorEngine == VoiceEngine.ElevenLabs;
         set { if (value) EditorEngine = VoiceEngine.ElevenLabs; }
+    }
+
+    public bool IsSapi5
+    {
+        get => _editorEngine == VoiceEngine.Sapi5;
+        set { if (value) EditorEngine = VoiceEngine.Sapi5; }
     }
 
     public bool UseVoiceOverride
@@ -218,9 +227,12 @@ public sealed class PhraseEditorViewModel : ViewModelBase
             if (SetField(ref _overrideVoiceId, value))
             {
                 // Sync display name from the active voice list
-                var voices = _editorEngine == VoiceEngine.ElevenLabs
-                    ? (IEnumerable<VoiceInfo>)ElevenLabsVoices
-                    : KokoroVoices;
+                var voices = _editorEngine switch
+                {
+                    VoiceEngine.ElevenLabs => ElevenLabsVoices,
+                    VoiceEngine.Sapi5 => Sapi5Voices,
+                    _ => KokoroVoices
+                };
                 var match = voices.FirstOrDefault(v => v.Id == value);
                 if (match is not null) OverrideVoiceName = match.DisplayName;
                 InvalidatePreviewCache();
@@ -308,6 +320,7 @@ public sealed class PhraseEditorViewModel : ViewModelBase
         IPhraseCacheService  phraseCache,
         KokoroTtsService     kokoro,
         ElevenLabsTtsService elevenLabs,
+        Sapi5TtsService sapi5,
         IAudioRouterService  audioRouter,
         IConfigService       config,
         IHotkeyHost          hotkeyHost,
@@ -317,6 +330,7 @@ public sealed class PhraseEditorViewModel : ViewModelBase
         _phraseCache   = phraseCache;
         _kokoro        = kokoro;
         _elevenLabs    = elevenLabs;
+        _sapi5         = sapi5;
         _audioRouter   = audioRouter;
         _config        = config;
         _hotkeyHost    = hotkeyHost;
@@ -365,6 +379,10 @@ public sealed class PhraseEditorViewModel : ViewModelBase
         ElevenLabsVoices.Clear();
         foreach (var v in _elevenLabs.GetAvailableVoices())
             ElevenLabsVoices.Add(v);
+
+        Sapi5Voices.Clear();
+        foreach (var v in _sapi5.GetAvailableVoices())
+            Sapi5Voices.Add(v);
 
         Categories.Clear();
         if (existingCategories is not null)

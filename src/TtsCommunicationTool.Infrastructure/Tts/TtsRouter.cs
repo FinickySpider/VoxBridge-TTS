@@ -11,19 +11,24 @@ public sealed class TtsRouter : ITtsService
 {
     private readonly KokoroTtsService _kokoro;
     private readonly ElevenLabsTtsService _elevenLabs;
+    private readonly Sapi5TtsService _sapi5;
     private readonly IConfigService _config;
 
-    public TtsRouter(KokoroTtsService kokoro, ElevenLabsTtsService elevenLabs, IConfigService config)
+    public TtsRouter(KokoroTtsService kokoro, ElevenLabsTtsService elevenLabs, Sapi5TtsService sapi5, IConfigService config)
     {
         _kokoro = kokoro;
         _elevenLabs = elevenLabs;
+        _sapi5 = sapi5;
         _config = config;
     }
 
     private ITtsService Active =>
-        _config.CurrentConfig.VoiceSettings.Engine == VoiceEngine.ElevenLabs
-            ? _elevenLabs
-            : _kokoro;
+        _config.CurrentConfig.VoiceSettings.Engine switch
+        {
+            VoiceEngine.ElevenLabs => _elevenLabs,
+            VoiceEngine.Sapi5 => _sapi5,
+            _ => _kokoro
+        };
 
     /// <summary>Selects the service to use, respecting a per-request engine override.</summary>
     private ITtsService Resolve(TtsRequest request) =>
@@ -31,13 +36,18 @@ public sealed class TtsRouter : ITtsService
         {
             VoiceEngine.ElevenLabs => _elevenLabs,
             VoiceEngine.Kokoro     => _kokoro,
+            VoiceEngine.Sapi5      => _sapi5,
             _                      => Active
         };
 
     public bool IsInitialized => Active.IsInitialized;
 
-    /// <summary>Always initialises Kokoro (offline model). ElevenLabs needs no local init.</summary>
-    public Task InitializeAsync(CancellationToken ct = default) => _kokoro.InitializeAsync(ct);
+    /// <summary>Initialises local providers. ElevenLabs needs no local init.</summary>
+    public async Task InitializeAsync(CancellationToken ct = default)
+    {
+        await _kokoro.InitializeAsync(ct).ConfigureAwait(false);
+        await _sapi5.InitializeAsync(ct).ConfigureAwait(false);
+    }
 
     public Task<TtsResult> SynthesizeAsync(TtsRequest request, CancellationToken ct = default)
         => Resolve(request).SynthesizeAsync(request, ct);
@@ -48,5 +58,6 @@ public sealed class TtsRouter : ITtsService
     {
         await _kokoro.DisposeAsync().ConfigureAwait(false);
         await _elevenLabs.DisposeAsync().ConfigureAwait(false);
+        await _sapi5.DisposeAsync().ConfigureAwait(false);
     }
 }

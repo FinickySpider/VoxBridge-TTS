@@ -4,6 +4,24 @@ All notable changes to TTS Communication Tool are documented here.
 
 ---
 
+
+## [v1.0.6] -- 2026-08-12
+
+### Features
+
+- Added SAPI5 as a third selectable TTS engine with installed Windows voice discovery and WAV output through the shared audio router.
+- Added independent persisted SAPI5 voice selection so switching between Kokoro, ElevenLabs, and SAPI5 preserves each engine's settings.
+- Added SAPI5 engine and voice override support to phrase editing and phrase-cache generation.
+
+### Bug Fixes
+
+- (add bug fixes here)
+
+### Improvements
+
+- Added a clear settings status when no SAPI5 voices are visible to the current process. The installed NeoSpeech voice was not visible from the current 64-bit process during verification, indicating it is likely 32-bit-only and requires a future x86 bridge.
+
+---
 ## [v1.0.5] -- 2026-08-09
 
 ### Documentation

@@ -85,11 +85,10 @@ public sealed class PhraseCacheService : IPhraseCacheService
             var globalCfg = _config.CurrentConfig;
             var effectiveEngine = phrase.OverrideEngine ?? globalCfg.VoiceSettings.Engine;
 
-            // Kokoro requires local model init; ElevenLabs (HTTP API) does not.
-            // Only block cache generation when Kokoro isn't ready yet.
+            // Kokoro and SAPI5 are local providers; both must be initialized before caching.
             if (effectiveEngine != VoiceEngine.ElevenLabs && !_tts.IsInitialized)
             {
-                _log.Warn($"Cannot cache phrase '{phrase.Name}': Kokoro TTS not initialized.");
+                _log.Warn($"Cannot cache phrase '{phrase.Name}': local TTS provider not initialized.");
                 return;
             }
 
@@ -101,6 +100,12 @@ public sealed class PhraseCacheService : IPhraseCacheService
                 voiceId = (phrase.UseVoiceOverride && !string.IsNullOrEmpty(phrase.OverrideVoiceId))
                     ? phrase.OverrideVoiceId
                     : string.Empty;
+            }
+            else if (effectiveEngine == VoiceEngine.Sapi5)
+            {
+                voiceId = (phrase.UseVoiceOverride && !string.IsNullOrEmpty(phrase.OverrideVoiceId))
+                    ? phrase.OverrideVoiceId
+                    : globalCfg.Sapi5.SelectedVoiceId;
             }
             else
             {

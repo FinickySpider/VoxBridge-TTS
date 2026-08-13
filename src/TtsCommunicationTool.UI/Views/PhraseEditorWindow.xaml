@@ -441,6 +441,9 @@
                                 <RadioButton Content="ElevenLabs"
                                              IsChecked="{Binding IsElevenLabs, Mode=TwoWay}"
                                              Style="{StaticResource EditorRadioButton}"/>
+                                <RadioButton Content="SAPI5"
+                                             IsChecked="{Binding IsSapi5, Mode=TwoWay}"
+                                             Style="{StaticResource EditorRadioButton}"/>
                             </StackPanel>
                         </Grid>
 
@@ -471,6 +474,17 @@
                                       IsEnabled="{Binding IsOverrideVoiceEnabled}"
                                       Style="{StaticResource EditorComboBox}"/>
                         </Grid>
+
+                                                <!-- SAPI5 voice ComboBox -->
+                                                <Grid Margin="80,0,0,8"
+                                                            Visibility="{Binding IsSapi5, Converter={StaticResource BoolToVisConverter}}">
+                                                        <ComboBox ItemsSource="{Binding Sapi5Voices}"
+                                                                            SelectedValue="{Binding OverrideVoiceId, Mode=TwoWay}"
+                                                                            SelectedValuePath="Id"
+                                                                            DisplayMemberPath="DisplayName"
+                                                                            IsEnabled="{Binding IsOverrideVoiceEnabled}"
+                                                                            Style="{StaticResource EditorComboBox}"/>
+                                                </Grid>
 
                         <!-- ElevenLabs voice ComboBox -->
                         <Grid Margin="80,0,0,8"

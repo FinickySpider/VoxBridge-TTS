@@ -33,6 +33,7 @@ public static class ServiceRegistration
         services.AddSingleton<HttpClient>();
         services.AddSingleton<KokoroTtsService>();
         services.AddSingleton<ElevenLabsTtsService>();
+        services.AddSingleton<Sapi5TtsService>();
         services.AddSingleton<TtsRouter>();
         services.AddSingleton<ITtsService>(sp => sp.GetRequiredService<TtsRouter>());
         services.AddSingleton<IPhraseService, PhraseService>();

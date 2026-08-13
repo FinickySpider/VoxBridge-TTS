@@ -4,5 +4,6 @@ namespace TtsCommunicationTool.Core.Models;
 public enum VoiceEngine
 {
     Kokoro,
-    ElevenLabs
+    ElevenLabs,
+    Sapi5
 }

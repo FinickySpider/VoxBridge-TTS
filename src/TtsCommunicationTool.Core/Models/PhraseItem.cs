@@ -34,6 +34,7 @@ public sealed class PhraseItem
     {
         VoiceEngine.ElevenLabs => "ElevenLabs",
         VoiceEngine.Kokoro     => "Kokoro",
+        VoiceEngine.Sapi5      => "SAPI5",
         _                      => "(Inherited)"
     };
 

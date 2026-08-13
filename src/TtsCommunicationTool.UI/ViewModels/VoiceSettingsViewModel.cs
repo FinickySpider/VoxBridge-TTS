@@ -18,6 +18,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     private readonly ITtsService _tts;
     private readonly KokoroTtsService _kokoro;
     private readonly ElevenLabsTtsService _elevenLabs;
+    private readonly Sapi5TtsService _sapi5;
     private readonly IAudioRouterService _audioRouter;
     private readonly IConfigService _config;
     private readonly ILoggingService _log;
@@ -26,6 +27,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     // ── Kokoro ───────────────────────────────────────────────────────────────
     private string _selectedVoiceId = string.Empty;
     private string _engineName = "Kokoro";
+    private string _sapi5SelectedVoiceId = string.Empty;
 
     // ── Global pitch ─────────────────────────────────────────────────────────
     private float _globalPitch = 1.0f;
@@ -82,6 +84,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
             SetField(ref _engine, value);
             OnPropertyChanged(nameof(IsKokoro));
             OnPropertyChanged(nameof(IsElevenLabs));
+            OnPropertyChanged(nameof(IsSapi5));
 
             // Auto-fetch voices + subscription when switching to ElevenLabs
             if (_engine == VoiceEngine.ElevenLabs && _elevenLabs.HasApiKey())
@@ -97,6 +100,11 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
     {
         get => _engine == VoiceEngine.ElevenLabs;
         set { if (value) Engine = VoiceEngine.ElevenLabs; }
+    }
+    public bool IsSapi5
+    {
+        get => _engine == VoiceEngine.Sapi5;
+        set { if (value) Engine = VoiceEngine.Sapi5; }
     }
 
     // ── Kokoro props ─────────────────────────────────────────────────────────
@@ -233,6 +241,16 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         set => SetField(ref _elevenLabsStatus, value);
     }
     public ObservableCollection<VoiceInfo> ElevenLabsVoices { get; } = new();
+    public ObservableCollection<VoiceInfo> Sapi5Voices { get; } = new();
+    public string Sapi5Status => Sapi5Voices.Count == 0
+        ? "No SAPI5 voices are visible to this process. A voice installed only for 32-bit applications may require an x86 bridge."
+        : $"{Sapi5Voices.Count} installed SAPI5 voice(s) detected.";
+
+    public string Sapi5SelectedVoiceId
+    {
+        get => _sapi5SelectedVoiceId;
+        set => SetField(ref _sapi5SelectedVoiceId, value);
+    }
 
     // ── Commands ─────────────────────────────────────────────────────────────
     public ICommand TestVoiceCommand              { get; }
@@ -248,6 +266,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         ITtsService tts,
         KokoroTtsService kokoro,
         ElevenLabsTtsService elevenLabs,
+        Sapi5TtsService sapi5,
         IAudioRouterService audioRouter,
         IConfigService config,
         INotificationService notifications,
@@ -256,6 +275,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         _tts           = tts;
         _kokoro        = kokoro;
         _elevenLabs    = elevenLabs;
+        _sapi5         = sapi5;
         _audioRouter   = audioRouter;
         _config        = config;
         _notifications = notifications;
@@ -271,6 +291,9 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         CancelApiKeyCommand          = new RelayCommand(CancelApiKey);
 
         PopulateKokoroVoices();
+        foreach (var v in _sapi5.GetAvailableVoices())
+            Sapi5Voices.Add(v);
+        OnPropertyChanged(nameof(Sapi5Status));
     }
 
     /// <summary>
@@ -341,7 +364,12 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
 
     private async Task TestVoiceAsync()
     {
-        string voiceId = _engine == VoiceEngine.ElevenLabs ? ElevenLabsSelectedVoiceId : SelectedVoiceId;
+        string voiceId = _engine switch
+        {
+            VoiceEngine.ElevenLabs => ElevenLabsSelectedVoiceId,
+            VoiceEngine.Sapi5 => Sapi5SelectedVoiceId,
+            _ => SelectedVoiceId
+        };
         if (string.IsNullOrEmpty(voiceId)) return;
 
         // Temporarily apply settings so the active service has the right values
@@ -389,6 +417,7 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         OnPropertyChanged(nameof(Engine));
         OnPropertyChanged(nameof(IsKokoro));
         OnPropertyChanged(nameof(IsElevenLabs));
+        OnPropertyChanged(nameof(IsSapi5));
 
         // Load pitch — do NOT write back to config to avoid dirty the snapshot
         _globalPitch = Math.Clamp(s.GlobalPitch, 0.5f, 2.0f);
@@ -412,6 +441,8 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         ElevenLabsModelId = el.ModelId;
         ElevenLabsSelectedVoiceId = el.SelectedVoiceId;
         ElevenLabsSelectedVoiceName = el.SelectedVoiceName;
+
+        Sapi5SelectedVoiceId = _config.CurrentConfig.Sapi5.SelectedVoiceId;
 
         // Restore persisted subscription info
         _subCharUsed  = el.SubscriptionCharacterCount;
@@ -455,6 +486,10 @@ public sealed class VoiceSettingsViewModel : ViewModelBase
         el.ModelId = ElevenLabsModelId;
         el.SelectedVoiceId = ElevenLabsSelectedVoiceId;
         el.SelectedVoiceName = ElevenLabsSelectedVoiceName;
+
+        var sapi5 = _config.CurrentConfig.Sapi5;
+        sapi5.SelectedVoiceId = Sapi5SelectedVoiceId;
+        sapi5.SelectedVoiceName = Sapi5Voices.FirstOrDefault(v => v.Id == Sapi5SelectedVoiceId)?.DisplayName ?? sapi5.SelectedVoiceName;
     }
 
     // ── API key command handlers ──────────────────────────────────────────────
